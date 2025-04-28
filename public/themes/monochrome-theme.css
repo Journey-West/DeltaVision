@@ -1,0 +1,48 @@
+/* Monochrome Theme - DeltaVision */
+:root {
+  --background-color: #f0f0f0;
+  --text-color: #000000;
+  --header-bg: #d8d8d8;
+  --header-text: #000000;
+  --container-bg: #ffffff;
+  --border-color: #c0c0c0;
+  --file-entry-bg: #e8e8e8;
+  --file-entry-hover: #d0d0d0;
+  --file-selected-bg: #b0b0b0;
+  --file-selected-border: #808080;
+  --removed-bg: #e0e0e0;
+  --added-bg: #c8c8c8;
+  --primary-color: #404040;
+  --secondary-color: #707070;
+  --accent-color: #202020;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --transition-speed: 0.3s;
+  --line-number-bg: #f0f0f0;
+  --table-row-bg: #f8f8f8;
+  --table-border-color: #d0d0d0;
+  --button-hover-bg: rgba(0, 0, 0, 0.05);
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #c0c0c0;
+  --tooltip-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --error-color: #808080;
+  --success-color: #505050;
+  --warning-color: #a0a0a0;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.3);
+  --modal-bg: #ffffff;
+  --input-bg: #f8f8f8;
+  --input-border: #c0c0c0;
+  --input-focus-border: #808080;
+  --input-focus-shadow: 0 0 0 0.25rem rgba(128, 128, 128, 0.25);
+  --input-placeholder: #909090;
+  --btn-primary-bg: #404040;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover-bg: #303030;
+  --btn-secondary-bg: #d0d0d0;
+  --btn-secondary-text: #202020;
+  --btn-secondary-hover-bg: #c0c0c0;
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #c0c0c0;
+  --scrollbar-thumb-hover: #a0a0a0;
+  --accent-color-transparent: rgba(32, 32, 32, 0.1);
+  --hover-bg: rgba(32, 32, 32, 0.05);
+}

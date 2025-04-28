@@ -1,0 +1,48 @@
+/* One Dark Pro Theme - DeltaVision */
+:root {
+  --background-color: #282c34;
+  --text-color: #abb2bf;
+  --header-bg: #21252b;
+  --header-text: #d7dae0;
+  --container-bg: #2c313a;
+  --border-color: #3e4451;
+  --file-entry-bg: #2c313a;
+  --file-entry-hover: #323842;
+  --file-selected-bg: #3a404b;
+  --file-selected-border: #61afef;
+  --removed-bg: rgba(224, 108, 117, 0.2);
+  --added-bg: rgba(152, 195, 121, 0.2);
+  --primary-color: #61afef;
+  --secondary-color: #98c379;
+  --accent-color: #c678dd;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --transition-speed: 0.3s;
+  --line-number-bg: #21252b;
+  --table-row-bg: #2c313a;
+  --table-border-color: #3e4451;
+  --button-hover-bg: rgba(255, 255, 255, 0.1);
+  --tooltip-bg: #21252b;
+  --tooltip-border: #3e4451;
+  --tooltip-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --error-color: #e06c75;
+  --success-color: #98c379;
+  --warning-color: #e5c07b;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-bg: #2c313a;
+  --input-bg: #21252b;
+  --input-border: #3e4451;
+  --input-focus-border: #61afef;
+  --input-focus-shadow: 0 0 0 0.25rem rgba(97, 175, 239, 0.25);
+  --input-placeholder: #6b727e;
+  --btn-primary-bg: #61afef;
+  --btn-primary-text: #282c34;
+  --btn-primary-hover-bg: #70b8f1;
+  --btn-secondary-bg: #3a404b;
+  --btn-secondary-text: #abb2bf;
+  --btn-secondary-hover-bg: #454c59;
+  --scrollbar-track: #282c34;
+  --scrollbar-thumb: #3e4451;
+  --scrollbar-thumb-hover: #4e5562;
+  --accent-color-transparent: rgba(97, 175, 239, 0.2);
+  --hover-bg: rgba(97, 175, 239, 0.1);
+}

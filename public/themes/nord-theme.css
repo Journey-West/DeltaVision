@@ -1,0 +1,48 @@
+/* Nord Theme - DeltaVision */
+:root {
+  --background-color: #2e3440;
+  --text-color: #d8dee9;
+  --header-bg: #3b4252;
+  --header-text: #eceff4;
+  --container-bg: #3b4252;
+  --border-color: #4c566a;
+  --file-entry-bg: #3b4252;
+  --file-entry-hover: #434c5e;
+  --file-selected-bg: #4c566a;
+  --file-selected-border: #88c0d0;
+  --removed-bg: rgba(191, 97, 106, 0.2);
+  --added-bg: rgba(163, 190, 140, 0.2);
+  --primary-color: #88c0d0;
+  --secondary-color: #a3be8c;
+  --accent-color: #ebcb8b;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+  --line-number-bg: #3b4252;
+  --table-row-bg: #2e3440;
+  --table-border-color: #4c566a;
+  --button-hover-bg: rgba(236, 239, 244, 0.1);
+  --tooltip-bg: #3b4252;
+  --tooltip-border: #4c566a;
+  --tooltip-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --error-color: #bf616a;
+  --success-color: #a3be8c;
+  --warning-color: #ebcb8b;
+  --modal-overlay-bg: rgba(46, 52, 64, 0.8);
+  --modal-bg: #3b4252;
+  --input-bg: #2e3440;
+  --input-border: #4c566a;
+  --input-focus-border: #88c0d0;
+  --input-focus-shadow: 0 0 0 0.2rem rgba(136, 192, 208, 0.25);
+  --input-placeholder: #d8dee9;
+  --btn-primary-bg: #88c0d0;
+  --btn-primary-text: #2e3440;
+  --btn-primary-hover-bg: #81a1c1;
+  --btn-secondary-bg: #4c566a;
+  --btn-secondary-text: #eceff4;
+  --btn-secondary-hover-bg: #5e81ac;
+  --scrollbar-track: #2e3440;
+  --scrollbar-thumb: #4c566a;
+  --scrollbar-thumb-hover: #5e81ac;
+  --primary-darker: #81a1c1;
+  --text-secondary: #9da7b5;
+}

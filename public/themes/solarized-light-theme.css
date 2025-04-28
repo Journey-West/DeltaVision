@@ -1,0 +1,48 @@
+/* Solarized Light Theme - DeltaVision */
+:root {
+  --background-color: #fdf6e3;
+  --text-color: #657b83;
+  --header-bg: #073642;
+  --header-text: #eee8d5;
+  --container-bg: #eee8d5;
+  --border-color: #93a1a1;
+  --file-entry-bg: #eee8d5;
+  --file-entry-hover: #fdf6e3;
+  --file-selected-bg: #ccc8b1;
+  --file-selected-border: #2aa198;
+  --removed-bg: #fbe9eb;
+  --added-bg: #ddf0e9;
+  --primary-color: #268bd2;
+  --secondary-color: #859900;
+  --accent-color: #b58900;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --transition-speed: 0.3s;
+  --line-number-bg: #eee8d5;
+  --table-row-bg: #fdf6e3;
+  --table-border-color: #93a1a1;
+  --button-hover-bg: rgba(0, 0, 0, 0.05);
+  --tooltip-bg: #eee8d5;
+  --tooltip-border: #93a1a1;
+  --tooltip-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --error-color: #dc322f;
+  --success-color: #859900;
+  --warning-color: #b58900;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.4);
+  --modal-bg: #fdf6e3;
+  --input-bg: #eee8d5;
+  --input-border: #93a1a1;
+  --input-focus-border: #268bd2;
+  --input-focus-shadow: 0 0 0 0.2rem rgba(38, 139, 210, 0.25);
+  --input-placeholder: #93a1a1;
+  --btn-primary-bg: #268bd2;
+  --btn-primary-text: #fdf6e3;
+  --btn-primary-hover-bg: #1e6ea7;
+  --btn-secondary-bg: #eee8d5;
+  --btn-secondary-text: #657b83;
+  --btn-secondary-hover-bg: #e0d8c3;
+  --scrollbar-track: #fdf6e3;
+  --scrollbar-thumb: #93a1a1;
+  --scrollbar-thumb-hover: #657b83;
+  --primary-darker: #1e6ea7;
+  --text-secondary: #93a1a1;
+}

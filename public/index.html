@@ -1,0 +1,3347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeltaVision</title>
+    <link href="/vendor/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/vendor/fonts/inter.css" rel="stylesheet">
+    <!-- Theme stylesheet will be injected here by theme-manager.js -->
+    <style>
+        /* Base styles that are theme-independent */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+        
+        .header {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center title */
+            position: relative;
+            z-index: 1000;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            text-align: center; /* Ensure text is centered */
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #c471ed, #f64f59);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 8px;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        
+        .header h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            border-radius: 3px;
+        }
+        
+        /* Center the header container */
+        .header {
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .header .settings-button {
+            position: absolute !important;
+            top: 50% !important;
+            right: 20px !important;
+            transform: translateY(-50%) !important;
+            background-color: transparent;
+            color: var(--header-text);
+            border: none;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 2000 !important;
+            height: 36px;
+        }
+        
+        .header .theme-toggle {
+            position: absolute;
+            top: 50%;
+            right: 80px;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--header-text);
+            border: none;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            height: 36px;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        .header .settings-button:hover, .header .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+        }
+        .header .settings-button svg, .header .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            margin-right: 5px;
+            transition: transform 0.3s ease;
+        }
+        .header .settings-button:hover svg, .header .theme-toggle:hover svg {
+            transform: rotate(15deg);
+        }
+        .header .settings-button span, .header .theme-toggle span {
+            font-size: 14px;
+            font-weight: 500;
+            transition: letter-spacing 0.3s ease;
+        }
+        .header .settings-button:hover span, .header .theme-toggle:hover span {
+            letter-spacing: 0.5px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0.5rem;
+            width: 100%;
+        }
+        .file-list {
+            margin-bottom: 2rem;
+        }
+        .file-list-section h3 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 12px 0 18px 5px;
+            padding: 6px 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-decoration: underline;
+            text-underline-offset: 5px;
+            text-decoration-thickness: 2px;
+            text-decoration-color: var(--primary-color);
+        }
+        /* Force layout structure */
+        .app-container {
+            display: flex;
+            width: 100%;
+            flex-wrap: nowrap;
+            transition: all 0.3s ease;
+        }
+        
+        .file-list-section {
+            width: 20% !important;
+            flex: 0 0 20% !important;
+            max-width: 20% !important;
+            transition: all 0.3s ease;
+            position: relative;
+            padding-right: 10px;
+        }
+        
+        .file-list-section.collapsed {
+            width: 40px !important;
+            flex: 0 0 40px !important;
+            min-width: 40px !important;
+            max-width: 40px !important;
+            overflow: hidden;
+        }
+        
+        .comparison-section {
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            position: relative;
+            width: 100%;
+            height: 40px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sidebar-title {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding-left: 10px;
+            margin-right: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+        
+        .file-list-section.collapsed .sidebar-title {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .toggle-sidebar {
+            position: relative;
+            right: -1px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            width: 20px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            z-index: 10; /* Ensure it's above other elements */
+            flex-shrink: 0;
+        }
+        
+        .toggle-sidebar:hover {
+            background: var(--primary-darker);
+        }
+        
+        .toggle-sidebar svg {
+            width: 10px;
+            height: 20px;
+            fill: white;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-sidebar.collapsed svg {
+            transform: rotate(180deg);
+        }
+        
+        .file-list-section.collapsed .file-list {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .file-list-section .file-list {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        
+        .file-list-section.collapsed h3,
+        .file-list-section.collapsed .highlight-toggle,
+        .file-list-section.collapsed .d-flex {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .comparison-container {
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            transition: box-shadow var(--transition-speed) ease;
+        }
+        .comparison-container:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .file-details {
+            margin-bottom: 0;
+            padding: 1rem;
+            background-color: var(--file-entry-hover);
+            border-radius: 8px 8px 0 0; /* Rounded corners only on top */
+            border-left: 4px solid var(--primary-color);
+            border-right: 1px solid var(--border-color);
+            border-top: 1px solid var(--border-color);
+        }
+        .file-details h5 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        .diff-container {
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 8px 8px; /* Rounded corners only on bottom */
+            overflow: auto;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+            border-top: none; /* Remove top border to connect with file-details */
+        }
+        .file-entry {
+            cursor: pointer;
+            padding: 12px 15px 12px 10px; /* Adjust left padding to account for indicator */
+            margin-bottom: 8px;
+            background-color: var(--file-entry-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .file-entry:hover {
+            background-color: var(--file-entry-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        .file-entry.selected {
+            background-color: var(--file-selected-bg);
+            border-color: var(--file-selected-border);
+            box-shadow: 0 0 0 1px var(--file-selected-border), 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        /* Type indicator bars */
+        .type-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+        
+        .type-old-new {
+            background-color: var(--primary-color);
+        }
+        
+        .type-time {
+            background-color: var(--secondary-color);
+        }
+        
+        .comparison-type {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .type-old-new-label {
+            color: var(--primary-color);
+            background-color: rgba(33, 150, 243, 0.1);
+        }
+        
+        .type-time-label {
+            color: var(--secondary-color);
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .file-entry strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .file-tooltip {
+            display: none;
+            position: absolute;
+            top: -70px; /* Position above the item */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Center adjustment */
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            padding: 0.7rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            z-index: 100; /* Ensure tooltip is above scrollbar */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            width: 170px;
+            pointer-events: none; /* Prevent tooltip from blocking interactions */
+        }
+        
+        /* Add arrow at bottom of tooltip */
+        .file-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: var(--container-bg) transparent transparent transparent;
+        }
+        
+        .file-entry:hover .file-tooltip {
+            display: block;
+        }
+        
+        .file-tooltip div {
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+        .diff-table {
+            border-collapse: collapse;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        .diff-table td {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            transition: background-color var(--transition-speed) ease;
+        }
+        .diff-table tr:nth-child(odd) {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        .line-number {
+            width: 2.5rem;
+            text-align: right;
+            padding-right: 1rem;
+            user-select: none;
+            color: #888;
+            background-color: rgba(0, 0, 0, 0.03);
+            border-right: 1px solid var(--border-color);
+        }
+        table {
+            width: 100%;
+        }
+        /* Improve visibility of diff highlighting, especially for small changes */
+        :root {
+            /* Existing color variables */
+            --added-bg: rgba(76, 175, 80, 0.2);
+            --removed-bg: rgba(244, 67, 54, 0.2);
+            --moved-bg: rgba(156, 39, 176, 0.15);
+            --moved-border: rgba(156, 39, 176, 0.5);
+        }
+        
+        /* Enhanced diff char highlighting for better visibility */
+        .diff-char-added {
+            background-color: var(--added-bg);
+            border: 1px solid rgba(76, 175, 80, 0.7);
+            border-radius: 2px;
+            padding: 1px 2px;
+            margin: 0 1px;
+            display: inline-block;
+            font-weight: 600;
+        }
+        
+        .diff-char-removed {
+            background-color: var(--removed-bg);
+            border: 1px solid rgba(244, 67, 54, 0.7);
+            border-radius: 2px;
+            padding: 1px 2px;
+            margin: 0 1px;
+            display: inline-block;
+            font-weight: 600;
+        }
+        
+        /* For unchanged text */
+        .diff-char-normal {
+            padding: 2px 0;
+        }
+        
+        /* Dark mode adjustments */
+        [data-theme="dark"] .diff-char-added {
+            background-color: rgba(76, 175, 80, 0.3);
+            border-color: rgba(76, 175, 80, 0.8);
+        }
+        
+        [data-theme="dark"] .diff-char-removed {
+            background-color: rgba(244, 67, 54, 0.3);
+            border-color: rgba(244, 67, 54, 0.8);
+        }
+        
+        /* Move detection highlight styling */
+        .moved {
+            background-color: var(--moved-bg);
+            border: 1px dashed var(--moved-border);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+        
+        [data-theme="dark"] .moved {
+            background-color: rgba(186, 104, 200, 0.25);
+            border-color: rgba(186, 104, 200, 0.7);
+        }
+        
+        /* Inline diff highlighting */
+        .added {
+            background-color: var(--added-bg);
+        }
+        .removed {
+            background-color: var(--removed-bg);
+        }
+        .moved {
+            background-color: var(--moved-bg);
+            border: 1px dashed var(--moved-border);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--header-text);
+            padding: 7px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+        .theme-toggle:active {
+            transform: translateY(1px);
+        }
+        .theme-toggle svg {
+            margin-right: 6px;
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        .alert.alert-info {
+            background-color: rgba(33, 150, 243, 0.15);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px auto;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color);
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 400px;
+        }
+        
+        .alert.alert-info::before {
+            content: "";
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        .settings-button {
+            position: absolute;
+            top: 1rem;
+            right: 8.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--header-text);
+            padding: 7px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .settings-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+        .settings-button svg {
+            margin-right: 6px;
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-container {
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        .close-modal-button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+        .close-modal-button:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 1.5rem;
+        }
+        .btn {
+            padding: 0.65rem 1.5rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #1976d2;
+        }
+        .btn-secondary {
+            background-color: var(--border-color);
+            color: var(--text-color);
+        }
+        .btn-secondary:hover {
+            background-color: #cdcdcd;
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            border-left: 4px solid;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1100;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .notification.success {
+            border-color: var(--secondary-color);
+        }
+        .notification.error {
+            border-color: #f44336;
+        }
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .error-message {
+            color: #f44336;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        .browse-button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .filename-display {
+            margin-bottom: 1.5rem;
+        }
+        .filename-box {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--container-bg);
+        }
+        .filename-box h5 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        .filename {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .old-file {
+            border-color: var(--primary-color);
+        }
+        .new-file {
+            border-color: var(--secondary-color);
+        }
+        /* Mode Switch Styles */
+        .mode-toggle {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            width: 100%;
+        }
+        .mode-toggle button {
+            flex: 1;
+            padding: 0.75rem;
+            background-color: var(--container-bg);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+        .mode-toggle button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .mode-toggle button:hover:not(.active) {
+            background-color: var(--file-entry-hover);
+        }
+        .time-diff {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-style: italic;
+            margin-left: 0.5rem;
+        }
+        /* Adjust file-entry for long commands */
+        .file-entry-content {
+            padding-left: 8px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        /* Keyword highlighting styles */
+        .keyword-upload-section {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: var(--file-entry-hover);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .keyword-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .keyword-upload {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .keyword-upload input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .keyword-upload button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        
+        .keyword-upload button:hover {
+            background-color: var(--primary-color-dark, #1976d2);
+        }
+        
+        .keyword-count {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Keyword highlighting */
+        .highlight-keyword {
+            text-decoration: underline;
+            font-weight: 600;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+        
+        .optional-label {
+            font-size: 0.85rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            font-weight: normal;
+        }
+        
+        .form-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+        
+        #settings-status {
+            margin-top: 1rem;
+            padding: 0.6rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        #settings-status.success {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #2e7d32;
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+        
+        #settings-status.error {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #d32f2f;
+            border: 1px solid rgba(244, 67, 54, 0.5);
+        }
+        /* Premium Toggle Switch Styling */
+        .highlight-toggle {
+            display: flex;
+            align-items: center;
+        }
+        
+        .toggle-label {
+            margin-left: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(127, 127, 127, 0.3);
+            transition: .3s ease-in-out;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+            transition: .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        input:checked + .slider {
+            background: linear-gradient(to right, var(--accent-color), var(--primary-color));
+        }
+        
+        input:focus + .slider {
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(var(--accent-color-rgb, 59, 130, 246), 0.2);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(22px);
+            background: linear-gradient(135deg, #ffffff, #f8f8f8);
+        }
+        
+        .slider.round {
+            border-radius: 24px;
+            backdrop-filter: blur(2px);
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        
+        /* Add subtle glow effect when on */
+        input:checked + .slider::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 24px;
+            box-shadow: 0 0 8px var(--accent-color);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        
+        /* Highlight Toggle Container */
+        .highlight-toggle-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            padding: 5px 15px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+        
+        .highlight-toggle {
+            display: flex;
+            align-items: center;
+        }
+        
+        .highlight-toggle .toggle-label {
+            margin-left: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Header Toggle Styling */
+        .highlight-toggle-header {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .highlight-toggle-header .toggle-label {
+            margin-left: 8px;
+            font-size: 0.9rem;
+            color: var(--header-text);
+            white-space: nowrap;
+        }
+        
+        /* Add a class to hide diff highlighting when toggle is off */
+        body.diff-highlighting-disabled .diff-char-added,
+        body.diff-highlighting-disabled .diff-char-removed,
+        body.diff-highlighting-disabled .added,
+        body.diff-highlighting-disabled .removed,
+        body.diff-highlighting-disabled .word-added,
+        body.diff-highlighting-disabled .word-removed,
+        body.diff-highlighting-disabled .moved {
+            background-color: transparent !important;
+            border-color: transparent !important;
+        }
+        
+        /* File time styling */
+        .file-time {
+            font-size: 0.8em;
+            font-weight: normal;
+            opacity: 0.8;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+        
+        /* Adjust heading for better alignment with time */
+        .filename-box h5 {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+            gap: 5px;
+        }
+        
+        /* Custom scrollbar styling for the entire application */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) var(--container-bg);
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--container-bg);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+            opacity: 0.8;
+            transition: background-color 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover-color, var(--accent-color));
+            opacity: 1;
+        }
+        
+        /* Add a subtle animation to the modal */
+        #theme-selector-modal {
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* File selection bar styling */
+        .file-selection-bar {
+            background: var(--welcome-bg, var(--container-bg));
+            border-radius: 12px;
+            padding: 32px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--welcome-text-color, var(--text-color));
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 680px;
+            margin: 60px auto;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .file-selection-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+        }
+        
+        .file-selection-bar h2 {
+            margin: 0 0 16px;
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #c471ed, #f64f59);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .file-selection-bar p {
+            margin: 0 0 24px;
+            font-size: 1.05rem;
+            opacity: 0.85;
+            max-width: 90%;
+            line-height: 1.5;
+        }
+        
+        .welcome-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            text-align: left;
+        }
+        
+        .welcome-list li {
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .welcome-list li::before {
+            content: '•';
+            color: #4a9eff;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-right: 8px;
+        }
+        
+        .welcome-list li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .welcome-list strong {
+            color: #4a9eff;
+            font-weight: 600;
+        }
+        
+        /* Fix file selection instruction styling */
+        .file-selection-instruction {
+            color: var(--text-color, #fff);
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            letter-spacing: 0.5px;
+        }
+        
+        /* CRITICAL FIX: Force theme button to be visible */
+        .header .theme-button-container {
+            position: absolute;
+            top: 50%;
+            right: 120px; /* Increased spacing to avoid overlap with settings */
+            transform: translateY(-50%);
+            z-index: 2000;
+        }
+        
+        .header .settings-button {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background-color: transparent;
+            color: var(--header-text);
+            border: none;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            height: 36px;
+        }
+        
+        .theme-button-container button {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: inherit;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            height: 36px;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-button-container button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .theme-button-container svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+        
+        /* Header Buttons Flex Wrapper */
+        .header-buttons {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 2000;
+        }
+        .header-buttons .settings-button,
+        .header-buttons .theme-toggle {
+            position: static !important;
+            transform: none !important;
+        }
+        
+        /* Diff mode toggle */
+        .diff-mode-toggle {
+            display: none;
+        }
+        
+        .diff-mode-controls { display: none !important; }
+        
+        /* Word-level diff styling - improved */
+        .diff-word-line {
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        span.word-added { background-color: var(--added-bg); }
+        span.word-removed { background-color: var(--removed-bg); }
+        
+        /* Search highlight box styling */
+        mark {
+            background-color: #fff59d;
+            border: 1px solid #fbc02d;
+            border-radius: 3px;
+            padding: 0.1em 0.3em;
+        }
+        
+        /* Move detection highlight styling */
+        .moved {
+            background-color: var(--moved-bg);
+            border: 1px dashed var(--moved-border);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+        
+        [data-theme="dark"] .moved {
+            background-color: rgba(186, 104, 200, 0.25);
+            border-color: rgba(186, 104, 200, 0.7);
+        }
+        
+        .moved-indicator {
+            font-size: 0.9em;
+            margin-left: 3px;
+            color: #753a88;
+            font-weight: bold;
+        }
+        
+        [data-theme="dark"] .moved-indicator {
+            color: #d8bfd8;
+        }
+        
+        .moved-indicator::before {
+            content: attr(data-arrow);
+            font-size: 1.2em;
+            margin-right: 1px;
+        }
+        
+        /* Add a common tooltip style for hotkey information */
+        .hotkey-tooltip {
+            position: absolute;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .hotkey-tooltip kbd {
+            background-color: rgba(0, 0, 0, 0.07);
+            border-radius: 3px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Inter', -apple-system, monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 5px;
+            margin: 0 2px;
+        }
+
+        /* Show tooltip on hover */
+        .has-hotkey:hover .hotkey-tooltip {
+            opacity: 1;
+        }
+
+        /* Add position relative to elements that will contain tooltips */
+        .theme-toggle, .settings-button, .toggle-sidebar, .highlight-toggle, .mode-toggle button {
+            position: relative;
+        }
+    </style>
+    <style>
+        /* Override: hide all diff highlights when diff toggle is off */
+        body.diff-highlighting-disabled .diff-char-added,
+        body.diff-highlighting-disabled .diff-char-removed,
+        body.diff-highlighting-disabled .added,
+        body.diff-highlighting-disabled .removed,
+        body.diff-highlighting-disabled .word-added,
+        body.diff-highlighting-disabled .word-removed,
+        body.diff-highlighting-disabled .moved {
+            background-color: transparent !important;
+            border-color: transparent !important;
+        }
+    </style>
+    <style>
+        /* Search highlight box styling */
+        mark {
+            background-color: #fff59d;
+            border: 1px solid #fbc02d;
+            border-radius: 3px;
+            padding: 0.1em 0.3em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="highlight-toggle-header">
+            <div class="highlight-toggle">
+                <label class="switch">
+                    <input 
+                        id="global-highlight-toggle"
+                        type="checkbox" 
+                    />
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Highlights</span>
+                <div class="hotkey-tooltip has-hotkey">Ctrl+H</div>
+            </div>
+            <div class="highlight-toggle">
+                <label class="switch">
+                    <input 
+                        id="diff-highlight-toggle"
+                        type="checkbox" 
+                        checked
+                    />
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Diff</span>
+                <div class="hotkey-tooltip has-hotkey">Ctrl+D</div>
+            </div>
+            <div class="highlight-toggle">
+                <label class="switch">
+                    <input 
+                        id="diff-mode-toggle"
+                        type="checkbox" 
+                    />
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Char Diff</span>
+                <div class="hotkey-tooltip has-hotkey">Ctrl+M</div>
+            </div>
+            <div class="highlight-toggle">
+                <label class="switch">
+                    <input 
+                        id="move-detection-toggle"
+                        type="checkbox" 
+                    />
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Detect Moves</span>
+                <div class="hotkey-tooltip has-hotkey">Ctrl+R</div>
+            </div>
+        </div>
+        <h1>DeltaVision</h1>
+        <div class="header-buttons">
+            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Dark Mode">
+                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                </svg>
+                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M9.5 2c-1.82 0-3.53.5-5 1.35 2.99 1.73 5 4.95 5 8.65s-2.01 6.92-5 8.65c1.47.85 3.18 1.35 5 1.35 5.52 0 10-4.48 10-10S15.02 2 9.5 2z"/>
+                </svg>
+                <span id="theme-text">Dark Mode</span>
+            </button>
+            <button class="settings-button" id="settings-button" aria-label="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+                <span>Settings</span>
+            </button>
+        </div>
+    </div>
+    <div class="container">
+        <div id="app" class="app-container">
+            <!-- App will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Folder Settings</h3>
+                <button class="close-modal-button" id="close-modal">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-group">
+                    <label for="old-folder-path">Old Folder Path:</label>
+                    <input type="text" id="old-folder-path" placeholder="Enter path to Old folder">
+                    <div id="old-folder-error" class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label for="new-folder-path">New Folder Path:</label>
+                    <input type="text" id="new-folder-path" placeholder="Enter path to New folder">
+                    <div id="new-folder-error" class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label for="keyword-file-path">Keyword File Path: <span class="optional-label">(Optional)</span></label>
+                    <input type="text" id="keyword-file-path" placeholder="Enter path to keyword file (format: keyword:color)">
+                    <div id="keyword-file-error" class="error-message"></div>
+                    <div class="form-hint">
+                        File format: one entry per line in the format "keyword:color" (e.g., "error:red")
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-settings" class="btn btn-secondary">Cancel</button>
+                <button id="save-settings" class="btn btn-primary">Save Changes</button>
+            </div>
+            <div id="settings-status" class=""></div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
+    </div>
+
+    <script src="/vendor/js/react.production.min.js"></script>
+    <script src="/vendor/js/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"></script>
+    <script src="/vendor/js/babel.min.js"></script>
+    
+    <!-- Header buttons fix - must come first -->
+    <script src="/js/header-buttons-fix.js"></script>
+    
+    <!-- Theme Manager -->
+    <script src="/themes/theme-manager.js"></script>
+    <script src="https://unpkg.com/diff@5.1.0/dist/diff.min.js"></script>
+    <script>
+        // Ensure Diff global is available for word-level diffs
+        window.Diff = window.Diff || window.JsDiff || window.diff;
+    </script>
+    <script>
+        // Initialize Theme Manager
+        document.addEventListener('DOMContentLoaded', function() {
+            window.themeManager = new ThemeManager();
+        });
+    </script>
+
+    <script type="text/babel">
+        // Create a global state object to facilitate communication between vanilla JS and React
+        window.appState = {
+            highlightingEnabled: localStorage.getItem('highlightingEnabled') === null 
+                ? true 
+                : localStorage.getItem('highlightingEnabled') === 'true',
+            diffHighlightingEnabled: localStorage.getItem('diffHighlightingEnabled') === null
+                ? true
+                : localStorage.getItem('diffHighlightingEnabled') === 'true',
+            moveDetectionEnabled: localStorage.getItem('moveDetectionEnabled') === null
+                ? true
+                : localStorage.getItem('moveDetectionEnabled') === 'true'
+        };
+
+        // Combined FileList component to display all comparison types
+        const FileList = ({ files, timeFiles, onSelectFile, onSelectTimeFile, selectedFile, selectedTimeFile, searchQuery, fileContents }) => {
+            if (files.length === 0 && timeFiles.length === 0) {
+                return (
+                    <div className="alert alert-info">
+                        No file comparisons available.
+                    </div>
+                );
+            }
+
+            // Combine both comparison types into a single array
+            const combinedFiles = [
+                ...files.map(file => ({
+                    ...file,
+                    type: 'oldNew',
+                    timestamp: Math.max(
+                        (file.oldFile && file.oldFile.mtime) || 0, 
+                        (file.newFile && file.newFile.mtime) || 0
+                    )
+                })),
+                ...timeFiles.map(file => ({
+                    ...file,
+                    type: 'time',
+                    timestamp: file.timestamp
+                }))
+            ];
+
+            // Sort combined files by timestamp (newest first)
+            combinedFiles.sort((a, b) => b.timestamp - a.timestamp);
+
+            const lowerQuery = (searchQuery || '').trim().toLowerCase();
+            const displayedFiles = lowerQuery
+                ? combinedFiles.filter(file => {
+                    const isOldNew = file.type === 'oldNew';
+                    const origIdx = isOldNew
+                        ? files.findIndex(f => 
+                            f.oldFile.path === file.oldFile.path && 
+                            f.newFile.path === file.newFile.path
+                        )
+                        : timeFiles.findIndex(f => 
+                            f.newerFile.path === file.newerFile.path && 
+                            f.olderFile.path === file.olderFile.path
+                        );
+                    
+                    const entry = fileContents[`${file.type}-${origIdx}`] || {};
+                    const hayArray = [file.commandRan || ''];
+                    if (isOldNew) {
+                        hayArray.push(
+                            (file.oldFile && file.oldFile.filename) || '',
+                            (file.newFile && file.newFile.filename) || ''
+                        );
+                    } else {
+                        hayArray.push(
+                            (file.olderFile && file.olderFile.filename) || '',
+                            (file.newerFile && file.newerFile.filename) || ''
+                        );
+                    }
+                    hayArray.push(entry.old || '', entry.new || '');
+                    const hay = hayArray.join(' ').toLowerCase();
+                    return hay.includes(lowerQuery);
+                  })
+                : combinedFiles;
+
+            return (
+                <div className="file-list">
+                    <div className="list-group">
+                        {displayedFiles.map((file, index) => {
+                            const isOldNew = file.type === 'oldNew';
+                            const isSelected = isOldNew 
+                                ? selectedFile === files.findIndex(f => 
+                                    f.oldFile.path === file.oldFile.path && 
+                                    f.newFile.path === file.newFile.path
+                                )
+                                : selectedTimeFile === timeFiles.findIndex(f => 
+                                    f.newerFile.path === file.newerFile.path && 
+                                    f.olderFile.path === file.olderFile.path
+                                );
+                            
+                            return (
+                                <div 
+                                    key={`${file.type}-${index}`} 
+                                    className={`file-entry ${isSelected ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        if (isOldNew) {
+                                            onSelectFile(files.findIndex(f => 
+                                                f.oldFile.path === file.oldFile.path && 
+                                                f.newFile.path === file.newFile.path
+                                            ));
+                                        } else {
+                                            onSelectTimeFile(timeFiles.findIndex(f => 
+                                                f.newerFile.path === file.newerFile.path && 
+                                                f.olderFile.path === file.olderFile.path
+                                            ));
+                                        }
+                                    }}
+                                >
+                                    <div className={`type-indicator ${isOldNew ? 'type-old-new' : 'type-time'}`}></div>
+                                    <div className="file-entry-content">
+                                        {isOldNew ? file.commandRan : file.commandRan}
+                                        {!isOldNew && (
+                                            <div>
+                                                <span className="comparison-type type-time-label">Time Comparison</span>
+                                                <span className="time-diff">{file.timeDiff}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        // Main App component
+        const App = () => {
+            const [files, setFiles] = React.useState([]);
+            const [timeFiles, setTimeFiles] = React.useState([]);
+            const [selectedFileIndex, setSelectedFileIndex] = React.useState(null);
+            const [selectedTimeFileIndex, setSelectedTimeFileIndex] = React.useState(null);
+            const [currentComparisonType, setCurrentComparisonType] = React.useState(null); // 'oldNew' or 'time'
+            const [oldContent, setOldContent] = React.useState("");
+            const [newContent, setNewContent] = React.useState("");
+            const [newerContent, setNewerContent] = React.useState("");
+            const [olderContent, setOlderContent] = React.useState("");
+            const [loading, setLoading] = React.useState(true);
+            const [error, setError] = React.useState(null);
+            const [keywords, setKeywords] = React.useState({});
+            const [highlightingEnabled, setHighlightingEnabled] = React.useState(window.appState.highlightingEnabled);
+            const [diffHighlightingEnabled, setDiffHighlightingEnabled] = React.useState(window.appState.diffHighlightingEnabled);
+            const [moveDetectionEnabled, setMoveDetectionEnabled] = React.useState(window.appState.moveDetectionEnabled);
+            const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+            const [diffMode, setDiffMode] = React.useState('char');
+            const [searchQuery, setSearchQuery] = React.useState('');
+            const [fileContents, setFileContents] = React.useState({});
+
+            // Direct connection between toggle and React state
+            const setHighlightState = (enabled) => {
+                // Update React state
+                setHighlightingEnabled(enabled);
+                
+                // Update global app state
+                window.appState.highlightingEnabled = enabled;
+                
+                // Update localStorage
+                localStorage.setItem('highlightingEnabled', enabled);
+                
+                // Update the DOM toggle
+                const globalToggle = document.getElementById('global-highlight-toggle');
+                if (globalToggle && globalToggle.checked !== enabled) {
+                    globalToggle.checked = enabled;
+                }
+                
+                // Update the toggle label
+                const label = document.querySelector('.highlight-toggle-header .toggle-label');
+                if (label) {
+                    label.textContent = `Highlights ${enabled ? 'ON' : 'OFF'}`;
+                }
+            };
+
+            const setDiffHighlightState = (enabled) => {
+                // Update React state
+                setDiffHighlightingEnabled(enabled);
+                
+                // Update global app state
+                window.appState.diffHighlightingEnabled = enabled;
+                
+                // Update localStorage
+                localStorage.setItem('diffHighlightingEnabled', enabled);
+                
+                // Update the DOM toggle
+                const diffToggle = document.getElementById('diff-highlight-toggle');
+                if (diffToggle && diffToggle.checked !== enabled) {
+                    diffToggle.checked = enabled;
+                }
+            };
+
+            const setMoveDetectionState = (enabled) => {
+                // Update React state
+                setMoveDetectionEnabled(enabled);
+                
+                // Update global app state
+                window.appState.moveDetectionEnabled = enabled;
+                
+                // Update localStorage
+                localStorage.setItem('moveDetectionEnabled', enabled);
+                
+                // Update the DOM toggle
+                const moveToggle = document.getElementById('move-detection-toggle');
+                if (moveToggle && moveToggle.checked !== enabled) {
+                    moveToggle.checked = enabled;
+                }
+            };
+
+            // Listen for highlight toggle events from the global toggle
+            React.useEffect(() => {
+                const handleHighlightToggle = (event) => {
+                    setHighlightState(event.detail.enabled);
+                };
+                
+                const handleDiffHighlightToggle = (event) => {
+                    setDiffHighlightState(event.detail.enabled);
+                };
+                
+                const handleMoveDetectionToggle = (event) => {
+                    setMoveDetectionState(event.detail.enabled);
+                };
+                
+                const handleDiffModeToggle = (event) => setDiffMode(event.detail.mode);
+                
+                document.addEventListener('highlightToggleChanged', handleHighlightToggle);
+                document.addEventListener('diffHighlightToggleChanged', handleDiffHighlightToggle);
+                document.addEventListener('moveDetectionToggleChanged', handleMoveDetectionToggle);
+                document.addEventListener('diffModeToggle', handleDiffModeToggle);
+                
+                // Initialize the toggle state
+                setHighlightState(window.appState.highlightingEnabled);
+                setDiffHighlightState(window.appState.diffHighlightingEnabled);
+                setMoveDetectionEnabled(window.appState.moveDetectionEnabled);
+                
+                // Initialize diff mode from header toggle
+                const initialModeToggle = document.getElementById('diff-mode-toggle');
+                if (initialModeToggle) setDiffMode(initialModeToggle.checked ? 'word' : 'char');
+                
+                return () => {
+                    document.removeEventListener('highlightToggleChanged', handleHighlightToggle);
+                    document.removeEventListener('diffHighlightToggleChanged', handleDiffHighlightToggle);
+                    document.removeEventListener('moveDetectionToggleChanged', handleMoveDetectionToggle);
+                    document.removeEventListener('diffModeToggle', handleDiffModeToggle);
+                };
+            }, []);
+
+            // Fetch all matching file pairs on component mount
+            React.useEffect(() => {
+                fetchFiles();
+                fetchTimeComparisons();
+                fetchKeywords();
+                
+                // Set up polling to check for new files (every 10 seconds)
+                const interval = setInterval(() => {
+                    fetchFiles();
+                    fetchTimeComparisons();
+                    fetchKeywords();
+                }, 10000);
+                
+                // Clear interval on component unmount
+                return () => clearInterval(interval);
+            }, []);
+
+            // Highlight search terms in diff view after each update
+            React.useEffect(() => {
+                if (!window.Mark) return;
+                document.querySelectorAll('.diff-container').forEach(container => {
+                    const marker = new Mark(container);
+                    marker.unmark({ done: () => {
+                        if (searchQuery) marker.mark(searchQuery);
+                    }});
+                });
+            }, [searchQuery, oldContent, newContent, newerContent, olderContent, diffMode, currentComparisonType]);
+
+            // Fetch files from the API
+            const fetchFiles = () => {
+                fetch('/api/files')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch files');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        setFiles(data);
+                        data.forEach((file, idx) => {
+                            fetch(
+                                `/api/compare?oldPath=${encodeURIComponent(file.oldFile.path)}&newPath=${encodeURIComponent(file.newFile.path)}`
+                            )
+                                .then(res => { if (!res.ok) throw new Error('Failed to fetch file content'); return res.json(); })
+                                .then(d => setFileContents(prev => ({
+                                    ...prev,
+                                    [`oldNew-${idx}`]: { old: d.oldContent, new: d.newContent }
+                                })))
+                                .catch(console.error);
+                        });
+                        setLoading(false);
+                    })
+                    .catch(err => {
+                        setError(err.message);
+                        setLoading(false);
+                    });
+            };
+
+            // Fetch time-based comparisons from the API
+            const fetchTimeComparisons = () => {
+                fetch('/api/time-comparisons')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch time comparisons');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        setTimeFiles(data);
+                        data.forEach((file, idx) => {
+                            fetch(
+                                `/api/compare?oldPath=${encodeURIComponent(file.olderFile.path)}&newPath=${encodeURIComponent(file.newerFile.path)}`
+                            )
+                                .then(res => { if (!res.ok) throw new Error('Failed to fetch time file content'); return res.json(); })
+                                .then(d => setFileContents(prev => ({
+                                    ...prev,
+                                    [`time-${idx}`]: { old: d.oldContent, new: d.newContent }
+                                })))
+                                .catch(console.error);
+                        });
+                        setLoading(false);
+                    })
+                    .catch(err => {
+                        setError(err.message);
+                        setLoading(false);
+                    });
+            };
+
+            // Fetch keywords from the API
+            const fetchKeywords = () => {
+                fetch('/api/keywords')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("Failed to fetch keywords");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        setKeywords(data);
+                        console.log("Loaded keywords:", Object.keys(data).length);
+                    })
+                    .catch(err => {
+                        console.error("Error fetching keywords:", err.message);
+                    });
+            };
+
+            // Handle file selection for Old vs New comparison
+            const handleFileSelect = (index) => {
+                // Clear any selected time comparison
+                setSelectedTimeFileIndex(null);
+                setSelectedFileIndex(index);
+                setCurrentComparisonType('oldNew');
+                
+                const selectedFile = files[index];
+                
+                // Fetch file contents for comparison
+                fetch(`/api/compare?oldPath=${encodeURIComponent(selectedFile.oldFile.path)}&newPath=${encodeURIComponent(selectedFile.newFile.path)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch file contents');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        setOldContent(data.oldContent);
+                        setNewContent(data.newContent);
+                    })
+                    .catch(err => {
+                        setError(err.message);
+                    });
+            };
+
+            // Handle file selection for Time Comparison
+            const handleTimeFileSelect = (index) => {
+                // Clear any selected old/new comparison
+                setSelectedFileIndex(null);
+                setSelectedTimeFileIndex(index);
+                setCurrentComparisonType('time');
+                
+                const selectedFile = timeFiles[index];
+                
+                // Fetch file contents for comparison
+                fetch(`/api/compare?oldPath=${encodeURIComponent(selectedFile.olderFile.path)}&newPath=${encodeURIComponent(selectedFile.newerFile.path)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch file contents');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        setOlderContent(data.oldContent);
+                        setNewerContent(data.newContent);
+                    })
+                    .catch(err => {
+                        setError(err.message);
+                    });
+            };
+
+            if (loading) {
+                return (
+                    <div className="app-container">
+                        <div className="file-list-section">
+                            <div className="loading">
+                                <div className="spinner-border text-primary" role="status">
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                                <p>Loading files...</p>
+                            </div>
+                        </div>
+                        <div className="comparison-section">
+                            <div className="loading">
+                                <p>Waiting for file selection...</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (error) {
+                return (
+                    <div className="alert alert-danger">
+                        Error: {error}
+                    </div>
+                );
+            }
+
+            // Function to highlight keywords in text
+            const highlightKeywords = (text, keywords, highlightingEnabled) => {
+                if (!highlightingEnabled || !keywords || Object.keys(keywords).length === 0) {
+                    return <span>{text}</span>;
+                }
+                
+                // Create a regex pattern from all keywords
+                const keywordPatterns = Object.keys(keywords).map(k => 
+                    k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
+                ).join('|');
+                
+                if (!keywordPatterns) {
+                    return <span>{text}</span>;
+                }
+                
+                const regex = new RegExp(`(${keywordPatterns})`, 'gi');
+                const parts = text.split(regex);
+                
+                return (
+                    <React.Fragment>
+                        {parts.map((part, i) => {
+                            const lowercasePart = part.toLowerCase();
+                            const keywordMatch = Object.keys(keywords).find(k => k.toLowerCase() === lowercasePart);
+                            
+                            if (keywordMatch) {
+                                const color = keywords[keywordMatch];
+                                return (
+                                    <span 
+                                        key={i} 
+                                        className="highlight-keyword" 
+                                        style={{ 
+                                            textDecoration: 'underline',
+                                            textDecorationColor: color,
+                                            textDecorationThickness: '2px'
+                                        }}>
+                                        {part}
+                                    </span>
+                                );
+                            }
+                            
+                            return <span key={i}>{part}</span>;
+                        })}
+                    </React.Fragment>
+                );
+            };
+
+            // Word-level diff function using jsdiff
+            const createWordDiff = (oldText, newText, diffHighlightingEnabled, moveDetectionEnabled, keywords, highlightingEnabled) => {
+                const oldLines = oldText.split('\n');
+                const newLines = newText.split('\n');
+                
+                if (!diffHighlightingEnabled && !moveDetectionEnabled) {
+                    // No highlighting: render plain text rows
+                    return (
+                        <table className="diff-table">
+                            <tbody>
+                                {Math.max(oldLines.length, newLines.length) > 0 &&
+                                    [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => (
+                                        <tr key={i}>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{oldLines[i] || ''}</td>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{newLines[i] || ''}</td>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                    );
+                }
+                
+                // Create a diff for each line pair
+                return (
+                    <table className="diff-table">
+                        <tbody>
+                            {Math.max(oldLines.length, newLines.length) > 0 && 
+                                [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => {
+                                    const oldLine = oldLines[i] || '';
+                                    const newLine = newLines[i] || '';
+
+                                    // Move detection: highlight lines present elsewhere
+                                    let oldMovedToLine = -1;
+                                    const oldMoved = moveDetectionEnabled && 
+                                        oldLine.trim() && // Not empty
+                                        oldLine !== newLine && // Current position has different content
+                                        newLines.some((line, index) => {
+                                            if (index !== i && line === oldLine) { // Different position & exact content match
+                                                oldMovedToLine = index + 1; // Store the target line number (1-based)
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    
+                                    let newMovedFromLine = -1;
+                                    const newMoved = moveDetectionEnabled && 
+                                        newLine.trim() && // Not empty
+                                        newLine !== oldLine && // Current position has different content
+                                        oldLines.some((line, index) => {
+                                            if (index !== i && line === newLine) { // Different position & exact content match
+                                                newMovedFromLine = index + 1; // Store the source line number (1-based)
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+
+                                    const oldWordDiff = () => {
+                                        if (!oldLine) return null;
+                                        if (!diffHighlightingEnabled) return highlightKeywords(oldLine, keywords, highlightingEnabled);
+                                        const parts = Diff.diffWordsWithSpace(oldLine, newLine);
+                                        return (
+                                            <div className="diff-word-line">
+                                                {parts.map((part, j) => 
+                                                    !part.added ? <span key={j} className={part.removed ? 'word-removed' : ''}>{part.value}</span> : null
+                                                )}
+                                            </div>
+                                        );
+                                    };
+                                    
+                                    const newWordDiff = () => {
+                                        if (!newLine) return null;
+                                        if (!diffHighlightingEnabled) return highlightKeywords(newLine, keywords, highlightingEnabled);
+                                        const parts = Diff.diffWordsWithSpace(oldLine, newLine);
+                                        return (
+                                            <div className="diff-word-line">
+                                                {parts.map((part, j) => 
+                                                    !part.removed ? <span key={j} className={part.added ? 'word-added' : ''}>{part.value}</span> : null
+                                                )}
+                                            </div>
+                                        );
+                                    };
+                                    
+                                    return (
+                                        <tr key={i}>
+                                            <td className={`line-number ${oldMoved ? 'moved' : ''}`}>
+                                                {i+1}
+                                                {oldMoved && oldMovedToLine > 0 && <span className="moved-indicator" data-arrow="→">{oldMovedToLine}</span>}
+                                            </td>
+                                            <td className={oldMoved ? 'moved' : ''}>{oldWordDiff()}</td>
+                                            <td className={`line-number ${newMoved ? 'moved' : ''}`}>
+                                                {i+1}
+                                                {newMoved && newMovedFromLine > 0 && <span className="moved-indicator" data-arrow="←">{newMovedFromLine}</span>}
+                                            </td>
+                                            <td className={newMoved ? 'moved' : ''}>{newWordDiff()}</td>
+                                        </tr>
+                                    );
+                                })
+                            }
+                        </tbody>
+                    </table>
+                );
+            };
+
+            // Function to find character-level differences within a line
+            const enhancedFindDiffInLines = (oldLine, newLine, keywords) => {
+                if (oldLine === newLine) {
+                    return {
+                        oldFormatted: highlightKeywords(oldLine, keywords, highlightingEnabled),
+                        newFormatted: highlightKeywords(newLine, keywords, highlightingEnabled)
+                    };
+                }
+                
+                // Simple character-level diff implementation
+                let i = 0;
+                let j = oldLine.length - 1;
+                let k = newLine.length - 1;
+                
+                // Find common prefix
+                while (i <= j && i <= k && oldLine.charAt(i) === newLine.charAt(i)) {
+                    i++;
+                }
+                
+                // Find common suffix
+                while (j >= i && k >= i && oldLine.charAt(j) === newLine.charAt(k)) {
+                    j--;
+                    k--;
+                }
+                
+                const oldPrefix = oldLine.substring(0, i);
+                const oldDiff = oldLine.substring(i, j + 1);
+                const oldSuffix = oldLine.substring(j + 1);
+                
+                const newPrefix = newLine.substring(0, i);
+                const newDiff = newLine.substring(i, k + 1);
+                const newSuffix = newLine.substring(k + 1);
+                
+                // Generate formatted output with inline highlighting and keyword highlighting
+                const oldFormatted = (
+                    <React.Fragment>
+                        {highlightKeywords(oldPrefix, keywords, highlightingEnabled)}
+                        <span className="diff-char-removed">{highlightKeywords(oldDiff, keywords, highlightingEnabled)}</span>
+                        {highlightKeywords(oldSuffix, keywords, highlightingEnabled)}
+                    </React.Fragment>
+                );
+                
+                const newFormatted = (
+                    <React.Fragment>
+                        {highlightKeywords(newPrefix, keywords, highlightingEnabled)}
+                        <span className="diff-char-added">{highlightKeywords(newDiff, keywords, highlightingEnabled)}</span>
+                        {highlightKeywords(newSuffix, keywords, highlightingEnabled)}
+                    </React.Fragment>
+                );
+                
+                return { oldFormatted, newFormatted };
+            };
+
+            // Create line-by-line diff
+            const createDiff = (oldText, newText, diffHighlightingEnabled, moveDetectionEnabled) => {
+                const oldLines = oldText.split('\n');
+                const newLines = newText.split('\n');
+                
+                if (!diffHighlightingEnabled && !moveDetectionEnabled) {
+                    // No highlighting: render plain text rows
+                    return (
+                        <table className="diff-table">
+                            <tbody>
+                                {Math.max(oldLines.length, newLines.length) > 0 &&
+                                    [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => (
+                                        <tr key={i}>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{oldLines[i] || ''}</td>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{newLines[i] || ''}</td>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                    );
+                }
+                
+                return (
+                    <table className="diff-table">
+                        <tbody>
+                            {Math.max(oldLines.length, newLines.length) > 0 && 
+                                [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => {
+                                    const oldLine = oldLines[i] || '';
+                                    const newLine = newLines[i] || '';
+
+                                    // Move detection: highlight lines that actually moved positions
+                                    let oldMovedToLine = -1;
+                                    const oldMoved = moveDetectionEnabled && 
+                                        oldLine.trim() && // Not empty
+                                        oldLine !== newLine && // Current position has different content
+                                        newLines.some((line, index) => {
+                                            if (index !== i && line === oldLine) { // Different position & exact content match
+                                                oldMovedToLine = index + 1; // Store the target line number (1-based)
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    
+                                    let newMovedFromLine = -1;
+                                    const newMoved = moveDetectionEnabled && 
+                                        newLine.trim() && // Not empty
+                                        newLine !== oldLine && // Current position has different content
+                                        oldLines.some((line, index) => {
+                                            if (index !== i && line === newLine) { // Different position & exact content match
+                                                newMovedFromLine = index + 1; // Store the source line number (1-based)
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    
+                                    let { oldFormatted, newFormatted } = 
+                                        oldLine !== newLine ? enhancedFindDiffInLines(oldLine, newLine, keywords) : 
+                                        { 
+                                            oldFormatted: highlightKeywords(oldLine, keywords, highlightingEnabled), 
+                                            newFormatted: highlightKeywords(newLine, keywords, highlightingEnabled) 
+                                        };
+                                    
+                                    // Choose content based on diffHighlightingEnabled
+                                    const oldContent = diffHighlightingEnabled ? oldFormatted : highlightKeywords(oldLine, keywords, highlightingEnabled);
+                                    const newContent = diffHighlightingEnabled ? newFormatted : highlightKeywords(newLine, keywords, highlightingEnabled);
+                                    
+                                    return (
+                                        <tr key={i}>
+                                            <td className={`line-number ${oldMoved ? 'moved' : ''}`}>
+                                                {i+1}
+                                                {oldMoved && oldMovedToLine > 0 && <span className="moved-indicator" data-arrow="→">{oldMovedToLine}</span>}
+                                            </td>
+                                            <td className={oldMoved ? 'moved' : ''}>{oldContent}</td>
+                                            <td className={`line-number ${newMoved ? 'moved' : ''}`}>
+                                                {i+1}
+                                                {newMoved && newMovedFromLine > 0 && <span className="moved-indicator" data-arrow="←">{newMovedFromLine}</span>}
+                                            </td>
+                                            <td className={newMoved ? 'moved' : ''}>{newContent}</td>
+                                        </tr>
+                                    );
+                                })
+                            }
+                        </tbody>
+                    </table>
+                );
+            };
+
+            return (
+                <div className="app-container">
+                    <div className={`file-list-section ${sidebarCollapsed ? 'collapsed' : ''}`}>
+                        <div className="sidebar-header">
+                            <h4 className="sidebar-title mb-0">Matching File Pairs</h4>
+                            <button 
+                                className={`toggle-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}
+                                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                            >
+                                <svg viewBox="0 0 8 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7.5 1.5 L0.5 10 L7.5 18.5" strokeWidth="1.5" stroke="white" fill="none"/>
+                                </svg>
+                                <div class="hotkey-tooltip has-hotkey">Ctrl+E</div>
+                            </button>
+                        </div>
+                        {!sidebarCollapsed && (
+                            <div className="search-container mb-2">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Search files & content"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        )}
+                        <FileList 
+                            files={files}
+                            timeFiles={timeFiles}
+                            onSelectFile={handleFileSelect}
+                            onSelectTimeFile={handleTimeFileSelect}
+                            selectedFile={selectedFileIndex}
+                            selectedTimeFile={selectedTimeFileIndex}
+                            searchQuery={searchQuery}
+                            fileContents={fileContents}
+                        />
+                    </div>
+                    <div className="comparison-section">
+                        {currentComparisonType === 'oldNew' ? (
+                            <FileComparison 
+                                oldContent={oldContent} 
+                                newContent={newContent} 
+                                fileInfo={selectedFileIndex !== null ? files[selectedFileIndex] : null} 
+                                keywords={keywords}
+                                highlightingEnabled={highlightingEnabled}
+                                diffHighlightingEnabled={diffHighlightingEnabled}
+                                moveDetectionEnabled={moveDetectionEnabled}
+                                diffMode={diffMode}
+                            />
+                        ) : currentComparisonType === 'time' ? (
+                            <TimeComparisonView 
+                                olderContent={olderContent} 
+                                newerContent={newerContent} 
+                                fileInfo={selectedTimeFileIndex !== null ? timeFiles[selectedTimeFileIndex] : null} 
+                                keywords={keywords}
+                                highlightingEnabled={highlightingEnabled}
+                                diffHighlightingEnabled={diffHighlightingEnabled}
+                                moveDetectionEnabled={moveDetectionEnabled}
+                                diffMode={diffMode}
+                            />
+                        ) : (
+                            <div className="file-selection-bar">
+                                <h2>Welcome to DeltaVision</h2>
+                                <p>Compare outputs with powerful diff tools and search capabilities</p>
+                                <ul className="welcome-list">
+                                    <li>Select a file pair from the sidebar to begin</li>
+                                    <li>Search files and content with the search box</li>
+                                    <li>Use Move Detection to spot relocated content</li>
+                                    <li>Switch between Word and Char diff modes</li>
+                                    <li>Toggle highlights: <strong>Ctrl+H</strong></li>
+                                    <li>Toggle diffs: <strong>Ctrl+D</strong></li>
+                                    <li>Toggle diff mode: <strong>Ctrl+M</strong></li>
+                                    <li>Toggle move detection: <strong>Ctrl+R</strong></li>
+                                    <li>Toggle sidebar: <strong>Ctrl+E</strong></li>
+                                    <li>Navigate pairs: <strong>↑</strong> &amp; <strong>↓</strong></li>
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // Function to highlight keywords in text
+        const highlightKeywords = (text, keywords, highlightingEnabled) => {
+            if (!highlightingEnabled || !keywords || Object.keys(keywords).length === 0) {
+                return <span>{text}</span>;
+            }
+            
+            // Create a regex pattern from all keywords
+            const keywordPatterns = Object.keys(keywords).map(k => 
+                k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
+            ).join('|');
+            
+            if (!keywordPatterns) {
+                return <span>{text}</span>;
+            }
+            
+            const regex = new RegExp(`(${keywordPatterns})`, 'gi');
+            const parts = text.split(regex);
+            
+            return (
+                <React.Fragment>
+                    {parts.map((part, i) => {
+                        const lowercasePart = part.toLowerCase();
+                        const keywordMatch = Object.keys(keywords).find(k => k.toLowerCase() === lowercasePart);
+                        
+                        if (keywordMatch) {
+                            const color = keywords[keywordMatch];
+                            return (
+                                <span 
+                                    key={i} 
+                                    className="highlight-keyword" 
+                                    style={{ 
+                                        textDecoration: 'underline',
+                                        textDecorationColor: color,
+                                        textDecorationThickness: '2px'
+                                    }}>
+                                    {part}
+                                </span>
+                            );
+                        }
+                        
+                        return <span key={i}>{part}</span>;
+                    })}
+                </React.Fragment>
+            );
+        };
+
+        // Word-level diff function using jsdiff
+        const createWordDiff = (oldText, newText, diffHighlightingEnabled, moveDetectionEnabled, keywords, highlightingEnabled) => {
+            const oldLines = oldText.split('\n');
+            const newLines = newText.split('\n');
+            
+            if (!diffHighlightingEnabled && !moveDetectionEnabled) {
+                // No highlighting: render plain text rows
+                return (
+                    <table className="diff-table">
+                        <tbody>
+                            {Math.max(oldLines.length, newLines.length) > 0 &&
+                                [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => (
+                                    <tr key={i}>
+                                        <td className="line-number">{i+1}</td>
+                                        <td>{oldLines[i] || ''}</td>
+                                        <td className="line-number">{i+1}</td>
+                                        <td>{newLines[i] || ''}</td>
+                                    </tr>
+                                ))
+                            }
+                        </tbody>
+                    </table>
+                );
+            }
+            
+            // Create a diff for each line pair
+            return (
+                <table className="diff-table">
+                    <tbody>
+                        {Math.max(oldLines.length, newLines.length) > 0 && 
+                            [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => {
+                                const oldLine = oldLines[i] || '';
+                                const newLine = newLines[i] || '';
+
+                                // Move detection: highlight lines present elsewhere
+                                let oldMovedToLine = -1;
+                                const oldMoved = moveDetectionEnabled && 
+                                    oldLine.trim() && // Not empty
+                                    oldLine !== newLine && // Current position has different content
+                                    newLines.some((line, index) => {
+                                        if (index !== i && line === oldLine) { // Different position & exact content match
+                                            oldMovedToLine = index + 1; // Store the target line number (1-based)
+                                            return true;
+                                        }
+                                        return false;
+                                    });
+                                
+                                let newMovedFromLine = -1;
+                                const newMoved = moveDetectionEnabled && 
+                                    newLine.trim() && // Not empty
+                                    newLine !== oldLine && // Current position has different content
+                                    oldLines.some((line, index) => {
+                                        if (index !== i && line === newLine) { // Different position & exact content match
+                                            newMovedFromLine = index + 1; // Store the source line number (1-based)
+                                            return true;
+                                        }
+                                        return false;
+                                    });
+
+                                const oldWordDiff = () => {
+                                    if (!oldLine) return null;
+                                    if (!diffHighlightingEnabled) return highlightKeywords(oldLine, keywords, highlightingEnabled);
+                                    const parts = Diff.diffWordsWithSpace(oldLine, newLine);
+                                    return (
+                                        <div className="diff-word-line">
+                                            {parts.map((part, j) => 
+                                                !part.added ? <span key={j} className={part.removed ? 'word-removed' : ''}>{part.value}</span> : null
+                                            )}
+                                        </div>
+                                    );
+                                };
+                                
+                                const newWordDiff = () => {
+                                    if (!newLine) return null;
+                                    if (!diffHighlightingEnabled) return highlightKeywords(newLine, keywords, highlightingEnabled);
+                                    const parts = Diff.diffWordsWithSpace(oldLine, newLine);
+                                    return (
+                                        <div className="diff-word-line">
+                                            {parts.map((part, j) => 
+                                                !part.removed ? <span key={j} className={part.added ? 'word-added' : ''}>{part.value}</span> : null
+                                            )}
+                                        </div>
+                                    );
+                                };
+                                
+                                return (
+                                    <tr key={i}>
+                                        <td className={`line-number ${oldMoved ? 'moved' : ''}`}>
+                                            {i+1}
+                                            {oldMoved && oldMovedToLine > 0 && <span className="moved-indicator" data-arrow="→">{oldMovedToLine}</span>}
+                                        </td>
+                                        <td className={oldMoved ? 'moved' : ''}>{oldWordDiff()}</td>
+                                        <td className={`line-number ${newMoved ? 'moved' : ''}`}>
+                                            {i+1}
+                                            {newMoved && newMovedFromLine > 0 && <span className="moved-indicator" data-arrow="←">{newMovedFromLine}</span>}
+                                        </td>
+                                        <td className={newMoved ? 'moved' : ''}>{newWordDiff()}</td>
+                                    </tr>
+                                );
+                            })
+                        }
+                    </tbody>
+                </table>
+            );
+        };
+
+        // FileComparison component to show the diff between two files
+        const FileComparison = ({ oldContent, newContent, fileInfo, keywords, highlightingEnabled, diffHighlightingEnabled, moveDetectionEnabled, diffMode }) => {
+            if (!fileInfo) {
+                return (
+                    <div className="file-selection-bar">
+                        <h2>Welcome to DeltaVision</h2>
+                        <p>Compare outputs with powerful diff tools and search capabilities</p>
+                        <ul className="welcome-list">
+                            <li>Select a file pair from the sidebar to begin</li>
+                            <li>Search files and content with the search box</li>
+                            <li>Use Move Detection to spot relocated content</li>
+                            <li>Switch between Word and Char diff modes</li>
+                            <li>Toggle highlights: <strong>Ctrl+H</strong></li>
+                            <li>Toggle diffs: <strong>Ctrl+D</strong></li>
+                            <li>Toggle diff mode: <strong>Ctrl+M</strong></li>
+                            <li>Toggle move detection: <strong>Ctrl+R</strong></li>
+                            <li>Toggle sidebar: <strong>Ctrl+E</strong></li>
+                            <li>Navigate pairs: <strong>↑</strong> &amp; <strong>↓</strong></li>
+                        </ul>
+                    </div>
+                );
+            }
+
+            // Function to find character-level differences within a line
+            const enhancedFindDiffInLines = (oldLine, newLine, keywords) => {
+                if (oldLine === newLine) {
+                    return {
+                        oldFormatted: highlightKeywords(oldLine, keywords, highlightingEnabled),
+                        newFormatted: highlightKeywords(newLine, keywords, highlightingEnabled)
+                    };
+                }
+                
+                // Simple character-level diff implementation
+                let i = 0;
+                let j = oldLine.length - 1;
+                let k = newLine.length - 1;
+                
+                // Find common prefix
+                while (i <= j && i <= k && oldLine.charAt(i) === newLine.charAt(i)) {
+                    i++;
+                }
+                
+                // Find common suffix
+                while (j >= i && k >= i && oldLine.charAt(j) === newLine.charAt(k)) {
+                    j--;
+                    k--;
+                }
+                
+                const oldPrefix = oldLine.substring(0, i);
+                const oldDiff = oldLine.substring(i, j + 1);
+                const oldSuffix = oldLine.substring(j + 1);
+                
+                const newPrefix = newLine.substring(0, i);
+                const newDiff = newLine.substring(i, k + 1);
+                const newSuffix = newLine.substring(k + 1);
+                
+                // Generate formatted output with inline highlighting and keyword highlighting
+                const oldFormatted = (
+                    <React.Fragment>
+                        {highlightKeywords(oldPrefix, keywords, highlightingEnabled)}
+                        <span className="diff-char-removed">{highlightKeywords(oldDiff, keywords, highlightingEnabled)}</span>
+                        {highlightKeywords(oldSuffix, keywords, highlightingEnabled)}
+                    </React.Fragment>
+                );
+                
+                const newFormatted = (
+                    <React.Fragment>
+                        {highlightKeywords(newPrefix, keywords, highlightingEnabled)}
+                        <span className="diff-char-added">{highlightKeywords(newDiff, keywords, highlightingEnabled)}</span>
+                        {highlightKeywords(newSuffix, keywords, highlightingEnabled)}
+                    </React.Fragment>
+                );
+                
+                return { oldFormatted, newFormatted };
+            };
+
+            // Create line-by-line diff
+            const createDiff = (oldText, newText, diffHighlightingEnabled, moveDetectionEnabled) => {
+                const oldLines = oldText.split('\n');
+                const newLines = newText.split('\n');
+                
+                if (!diffHighlightingEnabled && !moveDetectionEnabled) {
+                    // No highlighting: render plain text rows
+                    return (
+                        <table className="diff-table">
+                            <tbody>
+                                {Math.max(oldLines.length, newLines.length) > 0 &&
+                                    [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => (
+                                        <tr key={i}>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{oldLines[i] || ''}</td>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{newLines[i] || ''}</td>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                    );
+                }
+                
+                return (
+                    <table className="diff-table">
+                        <tbody>
+                            {Math.max(oldLines.length, newLines.length) > 0 && 
+                                [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => {
+                                    const oldLine = oldLines[i] || '';
+                                    const newLine = newLines[i] || '';
+
+                                    // Move detection: highlight lines that actually moved positions
+                                    let oldMovedToLine = -1;
+                                    const oldMoved = moveDetectionEnabled && 
+                                        oldLine.trim() && // Not empty
+                                        oldLine !== newLine && // Current position has different content
+                                        newLines.some((line, index) => {
+                                            if (index !== i && line === oldLine) { // Different position & exact content match
+                                                oldMovedToLine = index + 1; // Store the target line number (1-based)
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    
+                                    let newMovedFromLine = -1;
+                                    const newMoved = moveDetectionEnabled && 
+                                        newLine.trim() && // Not empty
+                                        newLine !== oldLine && // Current position has different content
+                                        oldLines.some((line, index) => {
+                                            if (index !== i && line === newLine) { // Different position & exact content match
+                                                newMovedFromLine = index + 1; // Store the source line number (1-based)
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    
+                                    let { oldFormatted, newFormatted } = 
+                                        oldLine !== newLine ? enhancedFindDiffInLines(oldLine, newLine, keywords) : 
+                                        { 
+                                            oldFormatted: highlightKeywords(oldLine, keywords, highlightingEnabled), 
+                                            newFormatted: highlightKeywords(newLine, keywords, highlightingEnabled) 
+                                        };
+                                    
+                                    // Choose content based on diffHighlightingEnabled
+                                    const oldContent = diffHighlightingEnabled ? oldFormatted : highlightKeywords(oldLine, keywords, highlightingEnabled);
+                                    const newContent = diffHighlightingEnabled ? newFormatted : highlightKeywords(newLine, keywords, highlightingEnabled);
+                                    
+                                    return (
+                                        <tr key={i}>
+                                            <td className={`line-number ${oldMoved ? 'moved' : ''}`}>
+                                                {i+1}
+                                                {oldMoved && oldMovedToLine > 0 && <span className="moved-indicator" data-arrow="→">{oldMovedToLine}</span>}
+                                            </td>
+                                            <td className={oldMoved ? 'moved' : ''}>{oldContent}</td>
+                                            <td className={`line-number ${newMoved ? 'moved' : ''}`}>
+                                                {i+1}
+                                                {newMoved && newMovedFromLine > 0 && <span className="moved-indicator" data-arrow="←">{newMovedFromLine}</span>}
+                                            </td>
+                                            <td className={newMoved ? 'moved' : ''}>{newContent}</td>
+                                        </tr>
+                                    );
+                                })
+                            }
+                        </tbody>
+                    </table>
+                );
+            };
+
+            return (
+                <div className="comparison-container">
+                    <h3>File Comparison</h3>
+                    <div className="filename-display">
+                        <div className="row align-items-center mb-3">
+                            <div className="col-md-6">
+                                <div className="filename-box old-file">
+                                    <h5>Old File <span className="file-time">({new Date(fileInfo.oldFile.mtime).toLocaleString()})</span></h5>
+                                    <div className="filename">{fileInfo.oldFile.filename}</div>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="filename-box new-file">
+                                    <h5>New File <span className="file-time">({new Date(fileInfo.newFile.mtime).toLocaleString()})</span></h5>
+                                    <div className="filename">{fileInfo.newFile.filename}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="file-details">
+                        <div>
+                            {fileInfo.commandRan}
+                        </div>
+                    </div>
+                    <div className="diff-container">
+                        {diffMode === 'char' ? createDiff(oldContent, newContent, diffHighlightingEnabled, moveDetectionEnabled) : createWordDiff(oldContent, newContent, diffHighlightingEnabled, moveDetectionEnabled, keywords, highlightingEnabled)}
+                    </div>
+                </div>
+            );
+        };
+
+        // TimeComparison component to show the diff between newest and older files
+        const TimeComparisonView = ({ olderContent, newerContent, fileInfo, keywords, highlightingEnabled, diffHighlightingEnabled, moveDetectionEnabled, diffMode }) => {
+            if (!fileInfo) {
+                return (
+                    <div className="file-selection-bar">
+                        <h2>Welcome to DeltaVision</h2>
+                        <p>Compare outputs with powerful diff tools and search capabilities</p>
+                        <ul className="welcome-list">
+                            <li>Select a file pair from the sidebar to begin</li>
+                            <li>Search files and content with the search box</li>
+                            <li>Use Move Detection to spot relocated content</li>
+                            <li>Switch between Word and Char diff modes</li>
+                            <li>Toggle highlights: <strong>Ctrl+H</strong></li>
+                            <li>Toggle diffs: <strong>Ctrl+D</strong></li>
+                            <li>Toggle diff mode: <strong>Ctrl+M</strong></li>
+                            <li>Toggle move detection: <strong>Ctrl+R</strong></li>
+                            <li>Toggle sidebar: <strong>Ctrl+E</strong></li>
+                            <li>Navigate pairs: <strong>↑</strong> &amp; <strong>↓</strong></li>
+                        </ul>
+                    </div>
+                );
+            }
+
+            // Function to find character-level differences within a line
+            const enhancedFindDiffInLines = (oldLine, newLine, keywords) => {
+                if (oldLine === newLine) {
+                    return {
+                        oldFormatted: highlightKeywords(oldLine, keywords, highlightingEnabled),
+                        newFormatted: highlightKeywords(newLine, keywords, highlightingEnabled)
+                    };
+                }
+                
+                // Simple character-level diff implementation
+                let i = 0;
+                let j = oldLine.length - 1;
+                let k = newLine.length - 1;
+                
+                // Find common prefix
+                while (i <= j && i <= k && oldLine.charAt(i) === newLine.charAt(i)) {
+                    i++;
+                }
+                
+                // Find common suffix
+                while (j >= i && k >= i && oldLine.charAt(j) === newLine.charAt(k)) {
+                    j--;
+                    k--;
+                }
+                
+                const oldPrefix = oldLine.substring(0, i);
+                const oldDiff = oldLine.substring(i, j + 1);
+                const oldSuffix = oldLine.substring(j + 1);
+                
+                const newPrefix = newLine.substring(0, i);
+                const newDiff = newLine.substring(i, k + 1);
+                const newSuffix = newLine.substring(k + 1);
+                
+                // Generate formatted output with inline highlighting and keyword highlighting
+                const oldFormatted = (
+                    <React.Fragment>
+                        {highlightKeywords(oldPrefix, keywords, highlightingEnabled)}
+                        <span className="diff-char-removed">{highlightKeywords(oldDiff, keywords, highlightingEnabled)}</span>
+                        {highlightKeywords(oldSuffix, keywords, highlightingEnabled)}
+                    </React.Fragment>
+                );
+                
+                const newFormatted = (
+                    <React.Fragment>
+                        {highlightKeywords(newPrefix, keywords, highlightingEnabled)}
+                        <span className="diff-char-added">{highlightKeywords(newDiff, keywords, highlightingEnabled)}</span>
+                        {highlightKeywords(newSuffix, keywords, highlightingEnabled)}
+                    </React.Fragment>
+                );
+                
+                return { oldFormatted, newFormatted };
+            };
+
+            // Create line-by-line diff
+            const createDiff = (olderText, newerText, diffHighlightingEnabled, moveDetectionEnabled) => {
+                const olderLines = olderText.split('\n');
+                const newerLines = newerText.split('\n');
+                
+                if (!diffHighlightingEnabled && !moveDetectionEnabled) {
+                    // No highlighting: render plain text rows
+                    return (
+                        <table className="diff-table">
+                            <tbody>
+                                {Math.max(olderLines.length, newerLines.length) > 0 &&
+                                    [...Array(Math.max(olderLines.length, newerLines.length))].map((_, i) => (
+                                        <tr key={i}>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{olderLines[i] || ''}</td>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{newerLines[i] || ''}</td>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                    );
+                }
+                
+                return (
+                    <table className="diff-table">
+                        <tbody>
+                            {Math.max(olderLines.length, newerLines.length) > 0 && 
+                                [...Array(Math.max(olderLines.length, newerLines.length))].map((_, i) => {
+                                    const olderLine = olderLines[i] || '';
+                                    const newerLine = newerLines[i] || '';
+
+                                    // Move detection: highlight lines that actually moved positions
+                                    let oldMovedToLine = -1;
+                                    const oldMoved = moveDetectionEnabled && 
+                                        olderLine.trim() && // Not empty
+                                        olderLine !== newerLine && // Current position has different content
+                                        newerLines.some((line, index) => {
+                                            if (index !== i && line === olderLine) { // Different position & exact content match
+                                                oldMovedToLine = index + 1; // Store the target line number (1-based)
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    
+                                    let newMovedFromLine = -1;
+                                    const newMoved = moveDetectionEnabled && 
+                                        newerLine.trim() && // Not empty
+                                        newerLine !== olderLine && // Current position has different content
+                                        olderLines.some((line, index) => {
+                                            if (index !== i && line === newerLine) { // Different position & exact content match
+                                                newMovedFromLine = index + 1; // Store the source line number (1-based)
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    
+                                    let { oldFormatted, newFormatted } = 
+                                        olderLine !== newerLine ? enhancedFindDiffInLines(olderLine, newerLine, keywords) : 
+                                        { 
+                                            oldFormatted: highlightKeywords(olderLine, keywords, highlightingEnabled), 
+                                            newFormatted: highlightKeywords(newerLine, keywords, highlightingEnabled) 
+                                        };
+                                    
+                                    // Choose content based on diffHighlightingEnabled
+                                    const oldContent = diffHighlightingEnabled ? oldFormatted : highlightKeywords(olderLine, keywords, highlightingEnabled);
+                                    const newContent = diffHighlightingEnabled ? newFormatted : highlightKeywords(newerLine, keywords, highlightingEnabled);
+                                    
+                                    return (
+                                        <tr key={i}>
+                                            <td className={`line-number ${oldMoved ? 'moved' : ''}`}>
+                                                {i+1}
+                                                {oldMoved && oldMovedToLine > 0 && <span className="moved-indicator" data-arrow="→">{oldMovedToLine}</span>}
+                                            </td>
+                                            <td className={oldMoved ? 'moved' : ''}>{oldContent}</td>
+                                            <td className={`line-number ${newMoved ? 'moved' : ''}`}>
+                                                {i+1}
+                                                {newMoved && newMovedFromLine > 0 && <span className="moved-indicator" data-arrow="←">{newMovedFromLine}</span>}
+                                            </td>
+                                            <td className={newMoved ? 'moved' : ''}>{newContent}</td>
+                                        </tr>
+                                    );
+                                })
+                            }
+                        </tbody>
+                    </table>
+                );
+            };
+
+            return (
+                <div className="comparison-container">
+                    <h3>Time Comparison</h3>
+                    <div className="filename-display">
+                        <div className="row align-items-center mb-3">
+                            <div className="col-md-6">
+                                <div className="filename-box old-file">
+                                    <h5>Older Run <span className="file-time">({new Date(fileInfo.olderFile.mtime).toLocaleString()})</span> <span className="time-diff">{fileInfo.timeDiff}</span></h5>
+                                    <div className="filename">{fileInfo.olderFile.filename}</div>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="filename-box new-file">
+                                    <h5>Latest Run <span className="file-time">({new Date(fileInfo.newerFile.mtime).toLocaleString()})</span></h5>
+                                    <div className="filename">{fileInfo.newerFile.filename}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="file-details">
+                        <div>
+                            {fileInfo.commandRan}
+                        </div>
+                    </div>
+                    <div className="diff-container">
+                        {diffMode === 'char' ? createDiff(olderContent, newerContent, diffHighlightingEnabled, moveDetectionEnabled) : createWordDiff(olderContent, newerContent, diffHighlightingEnabled, moveDetectionEnabled, keywords, highlightingEnabled)}
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the App component
+        ReactDOM.render(<App />, document.getElementById('app'));
+
+        // Connect the global highlight toggle to the React state
+        (() => {
+            const globalHighlightToggle = document.getElementById('global-highlight-toggle');
+            if (globalHighlightToggle) {
+                // Apply the initial state from the global app state
+                globalHighlightToggle.checked = window.appState.highlightingEnabled;
+                
+                // Update the toggle label based on current state
+                const updateToggleLabel = () => {
+                    const label = document.querySelector('.highlight-toggle-header .toggle-label');
+                    if (label) {
+                        label.textContent = `Highlights ${globalHighlightToggle.checked ? 'ON' : 'OFF'}`;
+                    }
+                };
+                
+                // Initialize state
+                updateToggleLabel();
+                
+                // Add change event listener
+                globalHighlightToggle.addEventListener('change', () => {
+                    // Update global app state
+                    window.appState.highlightingEnabled = globalHighlightToggle.checked;
+                    
+                    // Update localStorage
+                    localStorage.setItem('highlightingEnabled', globalHighlightToggle.checked);
+                    
+                    // Update the label
+                    updateToggleLabel();
+                    
+                    // Trigger a custom event for the React component to listen to
+                    const event = new CustomEvent('highlightToggleChanged', {
+                        detail: { enabled: globalHighlightToggle.checked }
+                    });
+                    document.dispatchEvent(event);
+                });
+            }
+        })();
+
+        // Connect the global diff highlight toggle to the React state
+        (() => {
+            const globalDiffHighlightToggle = document.getElementById('diff-highlight-toggle');
+            if (globalDiffHighlightToggle) {
+                // Apply the initial state from the global app state
+                globalDiffHighlightToggle.checked = window.appState.diffHighlightingEnabled;
+                
+                // Update the toggle label based on current state
+                const updateToggleLabel = () => {
+                    const label = globalDiffHighlightToggle.parentElement.nextElementSibling;
+                    if (label) label.textContent = `Diff ${globalDiffHighlightToggle.checked ? 'ON' : 'OFF'}`;
+                };
+                updateToggleLabel();
+                globalDiffHighlightToggle.addEventListener('change', () => {
+                    updateToggleLabel();
+                    document.dispatchEvent(new CustomEvent('diffHighlightToggleChanged', { detail: { enabled: globalDiffHighlightToggle.checked } }));
+                });
+            }
+        })();
+
+        // Connect the global move detection toggle to the React state
+        (() => {
+            const globalMoveDetectionToggle = document.getElementById('move-detection-toggle');
+            if (globalMoveDetectionToggle) {
+                // Apply the initial state from the global app state
+                globalMoveDetectionToggle.checked = window.appState.moveDetectionEnabled;
+                
+                // Update the toggle label based on current state
+                const updateToggleLabel = () => {
+                    const label = globalMoveDetectionToggle.parentElement.nextElementSibling;
+                    if (label) label.textContent = `Detect Moves ${globalMoveDetectionToggle.checked ? 'ON' : 'OFF'}`;
+                };
+                updateToggleLabel();
+                globalMoveDetectionToggle.addEventListener('change', () => {
+                    updateToggleLabel();
+                    document.dispatchEvent(new CustomEvent('moveDetectionToggleChanged', { detail: { enabled: globalMoveDetectionToggle.checked } }));
+                });
+            }
+        })();
+
+        // Connect the global diff mode toggle to the React state
+        (() => {
+            const globalDiffModeToggle = document.getElementById('diff-mode-toggle');
+            if (globalDiffModeToggle) {
+                const updateLabel = () => {
+                    const label = globalDiffModeToggle.parentElement.nextElementSibling;
+                    if (label) label.textContent = `Diff ${globalDiffModeToggle.checked ? 'Word' : 'Char'}`;
+                };
+                updateLabel();
+                globalDiffModeToggle.addEventListener('change', () => {
+                    updateLabel();
+                    document.dispatchEvent(new CustomEvent('diffModeToggle', { detail: { mode: globalDiffModeToggle.checked ? 'word' : 'char' } }));
+                });
+            }
+        })();
+
+        // Theme switching is now handled by theme-manager.js
+        // No need for manual event listeners here
+        
+        // Settings modal functionality
+        const settingsButton = document.getElementById('settings-button');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeModalButton = document.getElementById('close-modal');
+        const cancelSettingsButton = document.getElementById('cancel-settings');
+        const saveSettingsButton = document.getElementById('save-settings');
+        const oldFolderInput = document.getElementById('old-folder-path');
+        const newFolderInput = document.getElementById('new-folder-path');
+        const keywordFileInput = document.getElementById('keyword-file-path');
+        
+        // Show settings modal
+        settingsButton.addEventListener('click', () => {
+            settingsModal.classList.add('active');
+        });
+        
+        // Hide settings modal
+        function hideModal() {
+            settingsModal.classList.remove('active');
+        }
+        
+        closeModalButton.addEventListener('click', hideModal);
+        cancelSettingsButton.addEventListener('click', hideModal);
+        
+        // Save settings
+        saveSettingsButton.addEventListener('click', async () => {
+            const oldFolderPath = oldFolderInput.value.trim();
+            const newFolderPath = newFolderInput.value.trim();
+            const keywordFilePath = keywordFileInput.value.trim();
+            
+            // Validate paths
+            let isValid = true;
+            
+            if (!oldFolderPath) {
+                document.getElementById('old-folder-error').textContent = 'Old folder path is required';
+                isValid = false;
+            } else {
+                document.getElementById('old-folder-error').textContent = '';
+            }
+            
+            if (!newFolderPath) {
+                document.getElementById('new-folder-error').textContent = 'New folder path is required';
+                isValid = false;
+            } else {
+                document.getElementById('new-folder-error').textContent = '';
+            }
+            
+            // Keyword file path is optional, no validation needed
+            document.getElementById('keyword-file-error').textContent = '';
+            
+            if (isValid) {
+                try {
+                    const response = await fetch('/api/folders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            oldFolder: oldFolderPath,
+                            newFolder: newFolderPath,
+                            keywordFile: keywordFilePath
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        // Show success message
+                        const statusEl = document.getElementById('settings-status');
+                        statusEl.textContent = `Settings saved successfully${data.keywordCount > 0 ? `. Loaded ${data.keywordCount} keywords` : ''}`;
+                        statusEl.classList.add('success');
+                        statusEl.classList.remove('error');
+                        statusEl.style.display = 'block';
+                        
+                        // Hide message after 3 seconds
+                        setTimeout(() => {
+                            statusEl.style.display = 'none';
+                        }, 3000);
+                        
+                        // Hide modal
+                        hideModal();
+                        
+                        // Reload page to refresh data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    } else {
+                        // Show error message
+                        if (data.error && data.error.includes('Old folder')) {
+                            document.getElementById('old-folder-error').textContent = data.error;
+                        } else if (data.error && data.error.includes('New folder')) {
+                            document.getElementById('new-folder-error').textContent = data.error;
+                        } else if (data.error && data.error.includes('Keyword file')) {
+                            document.getElementById('keyword-file-error').textContent = data.error;
+                        } else {
+                            const statusEl = document.getElementById('settings-status');
+                            statusEl.textContent = data.error || 'Failed to save settings';
+                            statusEl.classList.add('error');
+                            statusEl.classList.remove('success');
+                            statusEl.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error saving settings:', error);
+                }
+            }
+        });
+
+        // Close modal when clicking outside
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                hideModal();
+            }
+        });
+
+        // Load saved folder paths on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFolderPaths();
+            
+            // Set up settings modal
+            const settingsButton = document.getElementById('settings-button');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeModal = document.getElementById('close-modal');
+            const cancelSettings = document.getElementById('cancel-settings');
+            const saveSettings = document.getElementById('save-settings');
+            const oldFolderInput = document.getElementById('old-folder-path');
+            const newFolderInput = document.getElementById('new-folder-path');
+            const keywordFileInput = document.getElementById('keyword-file-path');
+            
+            // Show settings modal
+            settingsButton.addEventListener('click', () => {
+                settingsModal.classList.add('active');
+            });
+            
+            // Hide settings modal
+            function hideModal() {
+                settingsModal.classList.remove('active');
+            }
+            
+            closeModal.addEventListener('click', hideModal);
+            cancelSettings.addEventListener('click', hideModal);
+            
+            // Save settings
+            saveSettings.addEventListener('click', async () => {
+                const oldFolderPath = oldFolderInput.value.trim();
+                const newFolderPath = newFolderInput.value.trim();
+                const keywordFilePath = keywordFileInput.value.trim();
+                
+                // Validate paths
+                let isValid = true;
+                
+                if (!oldFolderPath) {
+                    document.getElementById('old-folder-error').textContent = 'Old folder path is required';
+                    isValid = false;
+                } else {
+                    document.getElementById('old-folder-error').textContent = '';
+                }
+                
+                if (!newFolderPath) {
+                    document.getElementById('new-folder-error').textContent = 'New folder path is required';
+                    isValid = false;
+                } else {
+                    document.getElementById('new-folder-error').textContent = '';
+                }
+                
+                // Keyword file path is optional, no validation needed
+                document.getElementById('keyword-file-error').textContent = '';
+                
+                if (isValid) {
+                    try {
+                        const response = await fetch('/api/folders', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                oldFolder: oldFolderPath,
+                                newFolder: newFolderPath,
+                                keywordFile: keywordFilePath
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            // Show success message
+                            const statusEl = document.getElementById('settings-status');
+                            statusEl.textContent = `Settings saved successfully${data.keywordCount > 0 ? `. Loaded ${data.keywordCount} keywords` : ''}`;
+                            statusEl.classList.add('success');
+                            statusEl.classList.remove('error');
+                            statusEl.style.display = 'block';
+                            
+                            // Hide message after 3 seconds
+                            setTimeout(() => {
+                                statusEl.style.display = 'none';
+                            }, 3000);
+                            
+                            // Hide modal
+                            hideModal();
+                            
+                            // Reload page to refresh data
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        } else {
+                            // Show error message
+                            if (data.error && data.error.includes('Old folder')) {
+                                document.getElementById('old-folder-error').textContent = data.error;
+                            } else if (data.error && data.error.includes('New folder')) {
+                                document.getElementById('new-folder-error').textContent = data.error;
+                            } else if (data.error && data.error.includes('Keyword file')) {
+                                document.getElementById('keyword-file-error').textContent = data.error;
+                            } else {
+                                const statusEl = document.getElementById('settings-status');
+                                statusEl.textContent = data.error || 'Failed to save settings';
+                                statusEl.classList.add('error');
+                                statusEl.classList.remove('success');
+                                statusEl.style.display = 'block';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error saving settings:', error);
+                    }
+                }
+            });
+
+            // Close modal when clicking outside the content
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) {
+                    hideModal();
+                }
+            });
+        });
+        
+        // Load folder paths from server
+        async function loadFolderPaths() {
+            try {
+                const response = await fetch('/api/folders');
+                const data = await response.json();
+                
+                if (data.oldFolderPath && data.newFolderPath) {
+                    document.getElementById('old-folder-path').value = data.oldFolderPath;
+                    document.getElementById('new-folder-path').value = data.newFolderPath;
+                }
+                
+                if (data.keywordFilePath) {
+                    document.getElementById('keyword-file-path').value = data.keywordFilePath;
+                }
+            } catch (error) {
+                console.error('Error loading folder paths:', error);
+            }
+        }
+    </script>
+    <script>
+        // Consolidated keyboard shortcuts handler for all application functions
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('keydown', function(e) {
+                // Skip if we're in an input or textarea
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+                
+                // Sidebar toggle: Ctrl+E
+                if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+                    e.preventDefault();
+                    const sidebarToggle = document.querySelector('.toggle-sidebar');
+                    if (sidebarToggle) sidebarToggle.click();
+                }
+                
+                // Highlight toggle: Ctrl+H
+                if (e.ctrlKey && e.key.toLowerCase() === 'h') {
+                    e.preventDefault();
+                    const hlToggle = document.getElementById('global-highlight-toggle');
+                    if (hlToggle) {
+                        hlToggle.checked = !hlToggle.checked;
+                        hlToggle.dispatchEvent(new Event('change'));
+                    }
+                }
+                
+                // Diff toggle: Ctrl+D
+                if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+                    e.preventDefault();
+                    const diffToggle = document.getElementById('diff-highlight-toggle');
+                    if (diffToggle) {
+                        diffToggle.checked = !diffToggle.checked;
+                        diffToggle.dispatchEvent(new Event('change'));
+                    }
+                }
+                
+                // Char diff toggle: Ctrl+M
+                if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+                    e.preventDefault();
+                    const modeToggle = document.getElementById('diff-mode-toggle');
+                    if (modeToggle) {
+                        modeToggle.checked = !modeToggle.checked;
+                        modeToggle.dispatchEvent(new Event('change'));
+                    }
+                }
+                
+                // Move detection toggle: Ctrl+R
+                if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+                    e.preventDefault();
+                    const moveDetectionToggle = document.getElementById('move-detection-toggle');
+                    if (moveDetectionToggle) {
+                        moveDetectionToggle.checked = !moveDetectionToggle.checked;
+                        moveDetectionToggle.dispatchEvent(new Event('change'));
+                    }
+                }
+                
+                // Mode toggles: Ctrl+1 and Ctrl+2 for different view modes
+                if (e.ctrlKey && e.key === '1') {
+                    e.preventDefault();
+                    const inlineButton = document.querySelector('.mode-toggle button:first-child');
+                    if (inlineButton) inlineButton.click();
+                }
+                
+                if (e.ctrlKey && e.key === '2') {
+                    e.preventDefault();
+                    const sideBySideButton = document.querySelector('.mode-toggle button:last-child');
+                    if (sideBySideButton) sideBySideButton.click();
+                }
+
+                // Navigation with arrow keys
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const app = document.getElementById('app');
+                    if (app) {
+                        const fileEntries = app.querySelectorAll('.file-entry');
+                        if (fileEntries.length > 0) {
+                            const currentIndex = Array.prototype.indexOf.call(fileEntries, document.querySelector('.file-entry.selected'));
+                            const newIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
+                            fileEntries[newIndex].click();
+                        }
+                    }
+                }
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const app = document.getElementById('app');
+                    if (app) {
+                        const fileEntries = app.querySelectorAll('.file-entry');
+                        if (fileEntries.length > 0) {
+                            const currentIndex = Array.prototype.indexOf.call(fileEntries, document.querySelector('.file-entry.selected'));
+                            const newIndex = currentIndex === -1 ? 0 : Math.min(fileEntries.length - 1, currentIndex + 1);
+                            fileEntries[newIndex].click();
+                        }
+                    }
+                }
+            });
+            
+            // Add the has-hotkey class to elements with tooltips to make them visible on hover
+            document.querySelectorAll('.hotkey-tooltip').forEach(tooltip => {
+                tooltip.parentElement.classList.add('has-hotkey');
+            });
+        });
+    </script>
+</body>
+</html>

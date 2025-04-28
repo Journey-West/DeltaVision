@@ -1,0 +1,48 @@
+/* Ayu Light Theme - DeltaVision */
+:root {
+  --background-color: #fafafa;
+  --text-color: #575f66;
+  --header-bg: #f3f4f5;
+  --header-text: #5c6773;
+  --container-bg: #f8f9fa;
+  --border-color: #d9dbde;
+  --file-entry-bg: #f5f6f7;
+  --file-entry-hover: #eaebec;
+  --file-selected-bg: #e7e8e9;
+  --file-selected-border: #ff9940;
+  --removed-bg: rgba(255, 83, 112, 0.15);
+  --added-bg: rgba(134, 179, 0, 0.15);
+  --primary-color: #55b4d4;
+  --secondary-color: #86b300;
+  --accent-color: #ff9940;
+  --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+  --line-number-bg: #f5f6f7;
+  --table-row-bg: #f8f9fa;
+  --table-border-color: #e7e8e9;
+  --button-hover-bg: rgba(0, 0, 0, 0.03);
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #e7e8e9;
+  --tooltip-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --error-color: #f07171;
+  --success-color: #86b300;
+  --warning-color: #fa8d3e;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.3);
+  --modal-bg: #ffffff;
+  --input-bg: #f5f6f7;
+  --input-border: #e7e8e9;
+  --input-focus-border: #ff9940;
+  --input-focus-shadow: 0 0 0 0.25rem rgba(255, 153, 64, 0.25);
+  --input-placeholder: #8a9199;
+  --btn-primary-bg: #ff9940;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover-bg: #ffaa5d;
+  --btn-secondary-bg: #e7e8e9;
+  --btn-secondary-text: #5c6773;
+  --btn-secondary-hover-bg: #dfe0e1;
+  --scrollbar-track: #f5f6f7;
+  --scrollbar-thumb: #d1d5da;
+  --scrollbar-thumb-hover: #bcbfc3;
+  --accent-color-transparent: rgba(255, 153, 64, 0.15);
+  --hover-bg: rgba(255, 153, 64, 0.05);
+}

@@ -1,0 +1,48 @@
+/* Solarized Dark Theme - DeltaVision */
+:root {
+  --background-color: #002b36;
+  --text-color: #839496;
+  --header-bg: #073642;
+  --header-text: #93a1a1;
+  --container-bg: #073642;
+  --border-color: #586e75;
+  --file-entry-bg: #073642;
+  --file-entry-hover: #002b36;
+  --file-selected-bg: #094652;
+  --file-selected-border: #2aa198;
+  --removed-bg: rgba(220, 50, 47, 0.15);
+  --added-bg: rgba(133, 153, 0, 0.15);
+  --primary-color: #268bd2;
+  --secondary-color: #859900;
+  --accent-color: #b58900;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  --transition-speed: 0.3s;
+  --line-number-bg: #073642;
+  --table-row-bg: #002b36;
+  --table-border-color: #586e75;
+  --button-hover-bg: rgba(255, 255, 255, 0.05);
+  --tooltip-bg: #073642;
+  --tooltip-border: #586e75;
+  --tooltip-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  --error-color: #dc322f;
+  --success-color: #859900;
+  --warning-color: #b58900;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.6);
+  --modal-bg: #002b36;
+  --input-bg: #073642;
+  --input-border: #586e75;
+  --input-focus-border: #268bd2;
+  --input-focus-shadow: 0 0 0 0.2rem rgba(38, 139, 210, 0.25);
+  --input-placeholder: #586e75;
+  --btn-primary-bg: #268bd2;
+  --btn-primary-text: #fdf6e3;
+  --btn-primary-hover-bg: #1e6ea7;
+  --btn-secondary-bg: #073642;
+  --btn-secondary-text: #839496;
+  --btn-secondary-hover-bg: #094652;
+  --scrollbar-track: #002b36;
+  --scrollbar-thumb: #586e75;
+  --scrollbar-thumb-hover: #839496;
+  --primary-darker: #1e6ea7;
+  --text-secondary: #586e75;
+}

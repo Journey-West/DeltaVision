@@ -1,0 +1,24 @@
+{
+  "name": "deltavision",
+  "version": "1.0.0",
+  "description": "DeltaVision - A tool to visualize differences between files in Old and New folders",
+  "main": "src/server/index.js",
+  "bin": {
+    "deltavision": "bin/deltavision.js"
+  },
+  "scripts": {
+    "start": "node src/server/index.js",
+    "dev": "nodemon src/server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "diff": "^5.1.0",
+    "chokidar": "^3.5.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-diff-viewer-continued": "^3.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

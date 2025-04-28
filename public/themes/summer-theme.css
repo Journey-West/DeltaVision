@@ -1,0 +1,48 @@
+/* Summer Theme - DeltaVision */
+:root {
+  --background-color: #fffde7;
+  --text-color: #2e1800;
+  --header-bg: #ff9800;
+  --header-text: #ffffff;
+  --container-bg: #fff9c4;
+  --border-color: #ffecb3;
+  --file-entry-bg: #fff8e1;
+  --file-entry-hover: #ffe082;
+  --file-selected-bg: #ffd54f;
+  --file-selected-border: #ffb300;
+  --removed-bg: rgba(255, 87, 34, 0.15);
+  --added-bg: rgba(255, 193, 7, 0.15);
+  --primary-color: #f57c00;
+  --secondary-color: #ffb300;
+  --accent-color: #ff5722;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+  --line-number-bg: #fff8e1;
+  --table-row-bg: #fffde7;
+  --table-border-color: #ffecb3;
+  --button-hover-bg: rgba(255, 152, 0, 0.1);
+  --tooltip-bg: #fffde7;
+  --tooltip-border: #ffecb3;
+  --tooltip-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --error-color: #ff5722;
+  --success-color: #ffc107;
+  --warning-color: #ff9800;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.2);
+  --modal-bg: #fffde7;
+  --input-bg: #ffffff;
+  --input-border: #ffecb3;
+  --input-focus-border: #ffc107;
+  --input-focus-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+  --input-placeholder: #ccc2a6;
+  --btn-primary-bg: #ff9800;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover-bg: #f57c00;
+  --btn-secondary-bg: #fff8e1;
+  --btn-secondary-text: #ff8f00;
+  --btn-secondary-hover-bg: #ffe082;
+  --scrollbar-track: #fffde7;
+  --scrollbar-thumb: #ffe082;
+  --scrollbar-thumb-hover: #ffd54f;
+  --accent-color-transparent: rgba(255, 152, 0, 0.15);
+  --hover-bg: rgba(255, 152, 0, 0.05);
+}

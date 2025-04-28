@@ -1,0 +1,48 @@
+/* Colorblind-Friendly Theme - DeltaVision */
+:root {
+  --background-color: #f5f5f5;
+  --text-color: #222222;
+  --header-bg: #005f73;
+  --header-text: #ffffff;
+  --container-bg: #ffffff;
+  --border-color: #cccccc;
+  --file-entry-bg: #f0f0f0;
+  --file-entry-hover: #e5e5e5;
+  --file-selected-bg: #94d2bd;
+  --file-selected-border: #0a9396;
+  --removed-bg: #ee9b00;
+  --added-bg: #94d2bd;
+  --primary-color: #0a9396;
+  --secondary-color: #94d2bd;
+  --accent-color: #ee9b00;
+  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+  --line-number-bg: #f0f0f0;
+  --table-row-bg: #fafafa;
+  --table-border-color: #dddddd;
+  --button-hover-bg: rgba(0, 0, 0, 0.05);
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #cccccc;
+  --tooltip-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --error-color: #9b2226;
+  --success-color: #005f73;
+  --warning-color: #ee9b00;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.3);
+  --modal-bg: #ffffff;
+  --input-bg: #f8f8f8;
+  --input-border: #cccccc;
+  --input-focus-border: #0a9396;
+  --input-focus-shadow: 0 0 0 0.25rem rgba(10, 147, 150, 0.25);
+  --input-placeholder: #777777;
+  --btn-primary-bg: #0a9396;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover-bg: #007f80;
+  --btn-secondary-bg: #e9ecef;
+  --btn-secondary-text: #212529;
+  --btn-secondary-hover-bg: #dde2e6;
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #cccccc;
+  --scrollbar-thumb-hover: #aaaaaa;
+  --accent-color-transparent: rgba(10, 147, 150, 0.1);
+  --hover-bg: rgba(10, 147, 150, 0.05);
+}

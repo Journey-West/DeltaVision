@@ -1,0 +1,5 @@
+2025-04-27 "cmd1 run"
+Line1 common
+Line2 old unique
+Line3 moved line
+Line4 removed line

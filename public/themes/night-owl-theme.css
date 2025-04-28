@@ -1,0 +1,48 @@
+/* Night Owl Theme - DeltaVision */
+:root {
+  --background-color: #011627;
+  --text-color: #d6deeb;
+  --header-bg: #01111d;
+  --header-text: #d6deeb;
+  --container-bg: #0e2a3a;
+  --border-color: #1d3b53;
+  --file-entry-bg: #0e2a3a;
+  --file-entry-hover: #133043;
+  --file-selected-bg: #1d3b53;
+  --file-selected-border: #82aaff;
+  --removed-bg: rgba(239, 83, 80, 0.2);
+  --added-bg: rgba(35, 209, 139, 0.2);
+  --primary-color: #82aaff;
+  --secondary-color: #22da6e;
+  --accent-color: #c792ea;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --transition-speed: 0.3s;
+  --line-number-bg: #011627;
+  --table-row-bg: #0e2a3a;
+  --table-border-color: #1d3b53;
+  --button-hover-bg: rgba(255, 255, 255, 0.1);
+  --tooltip-bg: #01111d;
+  --tooltip-border: #1d3b53;
+  --tooltip-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --error-color: #ef5350;
+  --success-color: #22da6e;
+  --warning-color: #ffab70;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-bg: #0e2a3a;
+  --input-bg: #011627;
+  --input-border: #1d3b53;
+  --input-focus-border: #82aaff;
+  --input-focus-shadow: 0 0 0 0.25rem rgba(130, 170, 255, 0.25);
+  --input-placeholder: #4b6479;
+  --btn-primary-bg: #82aaff;
+  --btn-primary-text: #011627;
+  --btn-primary-hover-bg: #91b3ff;
+  --btn-secondary-bg: #1d3b53;
+  --btn-secondary-text: #d6deeb;
+  --btn-secondary-hover-bg: #254b6a;
+  --scrollbar-track: #011627;
+  --scrollbar-thumb: #1d3b53;
+  --scrollbar-thumb-hover: #2c5a7a;
+  --accent-color-transparent: rgba(130, 170, 255, 0.2);
+  --hover-bg: rgba(130, 170, 255, 0.1);
+}

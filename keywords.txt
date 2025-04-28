@@ -1,0 +1,5 @@
+error:red
+warning:orange
+success:green
+info:blue
+debug:purple
