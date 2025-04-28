@@ -33,7 +33,7 @@
 
 ### Prerequisites
 
-- Node.js 14.x or higher
+- Node.js 14.x or higher (required for standard & offline installations; CLI global install may work on Node.js 10.x but is unsupported)
 - npm 6.x or higher
 
 ### Standard Installation
@@ -43,14 +43,17 @@
 git clone https://github.com/yourusername/deltavision.git
 cd deltavision
 
-# Install dependencies and set up configuration
-./install.sh
+# Install dependencies
+npm install
 
-# Start the application
-npm start
+# Configure & launch via helper script
+chmod +x start-deltavision.sh
+./start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
 ```
 
 ### CLI Installation
+
+**Note:** The CLI global install (`deltavision`) bypasses the offline-installer's Node.js 14+ check and is officially tested on Node.js 14+. Running on earlier versions may lead to unexpected errors.
 
 Install DeltaVision globally via npm:
 
