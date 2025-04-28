@@ -1,5 +1,5 @@
 {
-  "oldFolderPath": "/home/user",
-  "newFolderPath": "/home/user",
-  "keywordFilePath": "/home/user/deltavision/keywords.txt"
+  "oldFolderPath": "/home/user/Projects/DeltaVision/sample-data/old",
+  "newFolderPath": "/home/user/Projects/DeltaVision/sample-data/new",
+  "keywordFilePath": "/home/user/Projects/DeltaVision/keywords.txt"
 }
