@@ -189,3 +189,32 @@ DeltaVision is designed to run locally and does not:
 - **Keyword Highlighting**: Add your most commonly searched terms to the keywords file
 - **Large Files**: Performance mode is automatically enabled for files over 1MB
 - **Multiple Instances**: You can run multiple instances on different ports for comparing different folder sets
+
+## 📄 Supported File Types
+
+DeltaVision is designed to compare a wide variety of text-based files:
+
+### Best for Comparison
+- **Source Code**: All programming languages (`.js`, `.py`, `.java`, `.c`, `.cpp`, `.html`, `.css`, etc.)
+- **Markup & Config**: Markdown, XML, JSON, YAML, INI, TOML, etc.
+- **Plain Text**: `.txt`, `.log`, `.csv`, and other plain text formats
+- **Documentation**: `.md`, `.rst`, `.tex`, etc.
+
+### Viewable but Limited Comparison
+- **Rich Text**: Basic comparison for `.rtf` files (formatting ignored)
+- **Office Documents**: Simple text extraction from `.docx`, `.xlsx` (formatting and complex structures ignored)
+- **PDF**: Text-only extraction (layout not preserved)
+
+### Not Suitable
+- **Binary Files**: Executables, compressed archives, etc.
+- **Images**: PNG, JPG, GIF, etc. (MD5 checksums are shown instead)
+- **Audio/Video**: MP3, MP4, etc.
+- **Very Large Files**: Files >50MB may cause performance issues
+
+### Size Limitations
+- **Optimal**: Files under 1MB provide the best performance
+- **Good**: Files 1-10MB have acceptable performance with automatic performance mode
+- **Limited**: Files 10-50MB may cause slowdowns
+- **Not Recommended**: Files >50MB
+
+DeltaVision automatically detects file types and adapts the comparison view accordingly. Binary files show a checksum comparison instead of content differences.
