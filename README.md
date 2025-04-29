@@ -107,6 +107,49 @@ Change themes easily with the theme button in the top-right corner of the applic
 5. Toggle highlighting on/off using the toggle switch
 6. Configure keywords for custom syntax highlighting
 
+## 📋 File Selection Criteria
+
+DeltaVision uses a specific algorithm to identify and match files for comparison in the side panel:
+
+### File Naming Requirements
+
+For files to be recognized by DeltaVision, they must follow this format:
+- Filename pattern: `command__additional_info.txt`
+- Must include double underscore (`__`) in the filename
+- Must have `.txt` extension
+
+### File Content Requirements
+
+The first line of each file must contain command information in a specific format:
+- Usually follows the pattern: `DATE TIME "actual command that was run"`
+- The text inside quotes is extracted and used for matching
+- Files without a properly formatted first line won't appear in the sidebar
+
+### Matching Algorithm
+
+DeltaVision matches files between the "Old" and "New" folders based on:
+1. The command part (text before `__` in the filename)
+2. The command text (content inside quotes from the first line)
+
+Only files that have matching pairs in both folders will appear in the side panel. Files are sorted by timestamp with newest files first.
+
+### Time-Based Comparisons
+
+The application also offers a time-based comparison mode that displays:
+- Multiple executions of the same command within the "New" folder
+- The time difference between executions
+- Useful for tracking how output changes over time
+
+### Example of Valid Files
+
+**Old folder:**
+- `ls__2023-01-01.txt` (first line: `2023-01-01 12:00:00 "ls -la"`)
+
+**New folder:**
+- `ls__2023-01-02.txt` (first line: `2023-01-02 12:00:00 "ls -la"`)
+
+These would match because both the command part (`ls`) and the quoted text (`ls -la`) match.
+
 ## 📦 Offline Packaging
 
 DeltaVision can be packaged for completely offline use in air-gapped environments.
