@@ -237,29 +237,22 @@ DeltaVision is designed to run locally and does not:
 
 ## 📄 Supported File Types
 
-DeltaVision is designed to compare a wide variety of text-based files:
+DeltaVision is specifically designed to work with plaintext files with a specific structure:
 
-### Best for Comparison
-- **Source Code**: All programming languages (`.js`, `.py`, `.java`, `.c`, `.cpp`, `.html`, `.css`, etc.)
-- **Markup & Config**: Markdown, XML, JSON, YAML, INI, TOML, etc.
-- **Plain Text**: `.txt`, `.log`, `.csv`, and other plain text formats
-- **Documentation**: `.md`, `.rst`, `.tex`, etc.
+### Required File Format
+- **Extension**: Only `.txt` files are supported
+- **Naming Pattern**: Files must follow the format `command__additional_info.txt` (with double underscore)
+- **Content Structure**: First line must contain a command pattern with quotes (e.g., `DATE TIME "command ran"`)
 
-### Viewable but Limited Comparison
-- **Rich Text**: Basic comparison for `.rtf` files (formatting ignored)
-- **Office Documents**: Simple text extraction from `.docx`, `.xlsx` (formatting and complex structures ignored)
-- **PDF**: Text-only extraction (layout not preserved)
+### Comparison Capabilities
+- **Text Content**: Line-by-line differences between matched text files
+- **Command Output**: Especially useful for comparing command outputs over time
+- **Configuration Files**: When saved as .txt files with the correct naming pattern
 
-### Not Suitable
-- **Binary Files**: Executables, compressed archives, etc.
-- **Images**: PNG, JPG, GIF, etc. (MD5 checksums are shown instead)
-- **Audio/Video**: MP3, MP4, etc.
-- **Very Large Files**: Files >50MB may cause performance issues
+### Not Supported
+- **Other Text Formats**: Non-txt files (`.py`, `.js`, `.html`, etc.) are not recognized in the sidebar
+- **Rich Formats**: Word documents, PDFs, spreadsheets, etc.
+- **Binary Files**: Images, executables, archives, etc.
+- **Large Files**: Performance degrades with very large files
 
-### Size Limitations
-- **Optimal**: Files under 1MB provide the best performance
-- **Good**: Files 1-10MB have acceptable performance with automatic performance mode
-- **Limited**: Files 10-50MB may cause slowdowns
-- **Not Recommended**: Files >50MB
-
-DeltaVision automatically detects file types and adapts the comparison view accordingly. Binary files show a checksum comparison instead of content differences.
+The application is optimized for comparing plain text files that contain command outputs, logs, or other structured text data that follow the specific naming and content format requirements.
