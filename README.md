@@ -21,14 +21,13 @@
 ## 🌟 Features
 
 - **Side-by-side comparison** with intelligent difference highlighting
-- **Real-time file watching** to detect new files automatically
-- **Automatic polling** every 10 seconds for constant synchronization
-- **Premium UI** with custom scrollbars, toggle switches, and modern design
-- **Multiple themes** including dark, light, colorful, and seasonal options
-- **Full offline support** with bundled dependencies for air-gapped environments
+- **File watching** for the "New" folder to detect file changes
+- **Multiple themes** including Tokyo Night, Nord, Night Owl, and Ayu Light
 - **Dynamic keyword highlighting** for custom syntax emphasis
-- **Simple configuration** with user-friendly setup wizard
-- **Timestamp display** for quick file modification comparison
+- **Simple configuration** with JSON-based setup
+- **Timestamp display** for file modification comparison
+- **Specialized for .txt files** with specific naming and content structure
+- **Full offline support** with bundled dependencies for air-gapped environments
 - **Performance optimized** for handling large files and directories
 
 ## 🚀 Quick Start
@@ -42,8 +41,8 @@
 
 ```bash
 # Clone the repository (if not already done)
-git clone https://github.com/yourusername/deltavision.git
-cd deltavision
+git clone https://github.com/Journey-West/DeltaVision.git
+cd DeltaVision
 
 # Install dependencies
 npm install
@@ -87,16 +86,13 @@ When you first launch DeltaVision, you'll be guided through a simple setup proce
 
 ## 🎨 Themes & Customization
 
-DeltaVision comes with a variety of premium themes to match your preference:
+DeltaVision comes with multiple themes to match your preference:
 
 - **Nord** (Default) - A subtle arctic-inspired color scheme
 - **Tokyo Night** - Elegant dark blue theme inspired by Tokyo's nightscape
 - **Night Owl** - A deep blue theme optimized for nighttime coding
 - **Ayu Light** - A clean, light theme for daytime use
-- **Quiet Light** - A soft, low-contrast light theme
-- **Monochrome** - A classic black and white theme
-- **Colorblind Friendly** - Designed for better accessibility
-- **Seasonal Themes** - Winter, Summer, and Autumn variants
+- **Winter** - A cool, light theme with blue accents
 
 Change themes easily with the theme button in the top-right corner of the application.
 
@@ -232,7 +228,7 @@ DeltaVision is designed to run locally and does not:
   - `↑` & `↓` arrow keys to navigate file pairs
 - **Theme Switching**: Try different themes for better readability depending on your environment
 - **Keyword Highlighting**: Add your most commonly searched terms to the keywords file
-- **Large Files**: Performance mode is automatically enabled for files over 1MB
+- **File Size Note**: Large files may cause performance issues
 - **Multiple Instances**: You can run multiple instances on different ports for comparing different folder sets
 
 ## 📄 Supported File Types
