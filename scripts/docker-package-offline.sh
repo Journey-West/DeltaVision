@@ -35,17 +35,24 @@ if ! command -v zip &> /dev/null; then
   exit 1
 fi
 
+# Detect if we're using Podman or Docker
+CONTAINER_ENGINE="docker"
+if command -v podman &> /dev/null && podman --version | grep -q "podman"; then
+  CONTAINER_ENGINE="podman"
+  echo "Detected Podman as container engine"
+fi
+
 # Create directory structure
 echo "Creating directory structure..."
 mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}"
 
 # Build Docker image
 echo "Building Docker image..."
-docker build -t deltavision:${VERSION} -f "${SCRIPT_DIR}/../docker/Dockerfile" "${SCRIPT_DIR}/.."
+${CONTAINER_ENGINE} build -t deltavision:${VERSION} -f "${SCRIPT_DIR}/../docker/Dockerfile" "${SCRIPT_DIR}/.."
 
 # Save Docker image
 echo "Saving Docker image (this may take a while)..."
-docker save deltavision:${VERSION} -o "${TEMP_DIR}/${PACKAGE_NAME}/deltavision-image.tar"
+${CONTAINER_ENGINE} save deltavision:${VERSION} -o "${TEMP_DIR}/${PACKAGE_NAME}/deltavision-image.tar"
 
 # Create a directory structure for scripts in the package
 mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}/scripts"
@@ -68,13 +75,16 @@ cp "${SCRIPT_DIR}/../scripts/configure-offline.sh" "${TEMP_DIR}/${PACKAGE_NAME}/
 # Make the configure script executable in the package
 chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/scripts/configure-offline.sh"
 
-# Create a modified docker-compose for offline use
+# Store the container engine type for later use
+echo "${CONTAINER_ENGINE}" > "${TEMP_DIR}/${PACKAGE_NAME}/container-engine.txt"
+
+# Create a modified docker-compose for offline use that works with both Docker and Podman
 cat > "${TEMP_DIR}/${PACKAGE_NAME}/docker-compose.offline.yml" << EOF
 version: '3'
 
 services:
   deltavision:
-    image: deltavision:${VERSION}
+    image: IMAGENAME_PLACEHOLDER
     container_name: deltavision
     ports:
       - "3000:3000"
@@ -100,20 +110,22 @@ This package contains everything needed to run DeltaVision in an air-gapped envi
 
 Before installing DeltaVision, ensure your system has:
 
-1. **Docker Engine** (19.03 or newer)
-2. **Docker Compose** (1.25.0 or newer)
+1. **Docker Engine** (19.03 or newer) or **Podman** (3.0 or newer)
+2. **Docker Compose** (1.25.0 or newer) or **Podman Compose**
 3. **unzip** utility to extract this package
 
-## Docker Permissions
+## Docker/Podman Permissions
 
-Ensure your user is part of the docker group to run Docker commands without sudo:
+Ensure your user has appropriate permissions:
 
 ```bash
-# Add your user to the docker group
+# For Docker - add your user to the docker group
 sudo usermod -aG docker $USER
-
 # Then log out and back in, or run this to apply changes to current session
 newgrp docker
+
+# For Podman - most installations don't require special permissions
+# If using rootless Podman, make sure your user namespace is properly configured
 ```
 
 ## Installation Steps
@@ -129,6 +141,7 @@ newgrp docker
    ./scripts/configure-offline.sh
    ```
    This interactive script will:
+   - Detect Docker or Podman automatically
    - Prompt for your OLD and NEW folder paths
    - Prompt for a custom keywords file (optional)
    - Prompt for a custom port (optional)
@@ -158,7 +171,13 @@ newgrp docker
 
 5. **Start the application**:
    ```bash
+   # For Docker:
    docker-compose -f docker-compose.offline.yml up -d
+   
+   # For Podman:
+   podman-compose -f docker-compose.offline.yml up -d
+   # or
+   podman compose -f docker-compose.offline.yml up -d
    ```
 
 6. **Access DeltaVision**:
@@ -169,15 +188,16 @@ newgrp docker
 
 ## System Requirements
 
-- **Disk space**: ~100MB for the Docker image plus space for your data
+- **Disk space**: ~100MB for the container image plus space for your data
 - **Memory**: 1GB RAM recommended
 - **Ports**: Port 3000 must be available (or change in docker-compose)
 
 ## Troubleshooting
 
 - **Port conflicts**: If port 3000 is already in use, modify the port mapping in `docker-compose.offline.yml` (e.g., change to `8080:3000`).
-- **Docker access**: Make sure your user has rights to run Docker commands or use sudo.
+- **Container engine access**: Make sure your user has rights to run Docker/Podman commands or use sudo.
 - **File permissions**: Ensure your mounted volumes have the correct read/write permissions.
+- **Podman image naming**: If using Podman and you see errors about image not found, check if the image was loaded with a `localhost/` prefix.
 
 For additional information, please refer to the `DOCKER-README.md` file.
 EOF
@@ -186,23 +206,68 @@ EOF
 cat > "${TEMP_DIR}/${PACKAGE_NAME}/start-deltavision-offline.sh" << EOF
 #!/usr/bin/env bash
 
-# Ensure Docker is available
-if ! command -v docker &> /dev/null; then
-  echo "Docker is not installed or not in PATH. Please install Docker first."
+# Detect if we're using Podman or Docker
+CONTAINER_ENGINE="docker"
+COMPOSE_CMD="docker-compose"
+
+if command -v podman &> /dev/null && podman --version | grep -q "podman"; then
+  CONTAINER_ENGINE="podman"
+  if command -v podman-compose &> /dev/null; then
+    COMPOSE_CMD="podman-compose"
+  elif \${CONTAINER_ENGINE} compose --help &> /dev/null; then
+    COMPOSE_CMD="podman compose"
+  else
+    echo "Warning: Podman detected but podman-compose not found."
+    echo "Please install podman-compose or ensure podman compose is available."
+    echo "Attempting to continue with docker-compose (may not work with Podman)..."
+  fi
+fi
+
+echo "Using container engine: \${CONTAINER_ENGINE}"
+echo "Using compose command: \${COMPOSE_CMD}"
+
+# Ensure container engine is available
+if ! command -v \${CONTAINER_ENGINE} &> /dev/null; then
+  echo "Container engine (\${CONTAINER_ENGINE}) is not installed or not in PATH."
+  echo "Please install Docker or Podman first."
   exit 1
 fi
 
 # Load the image if not already loaded
-if ! docker image inspect deltavision:${VERSION} &> /dev/null; then
-  echo "Loading DeltaVision Docker image..."
-  docker load -i deltavision-image.tar
+IMAGE_NAME="deltavision:${VERSION}"
+PODMAN_IMAGE_NAME="localhost/deltavision:${VERSION}"
+
+# Check if image exists, with Podman awareness
+if ! \${CONTAINER_ENGINE} image inspect \${IMAGE_NAME} &> /dev/null; then
+  if [ "\${CONTAINER_ENGINE}" = "podman" ] && \${CONTAINER_ENGINE} image inspect \${PODMAN_IMAGE_NAME} &> /dev/null; then
+    echo "Image already loaded as \${PODMAN_IMAGE_NAME}"
+    # Update the docker-compose file to use the Podman image name
+    sed -i.bak "s|image: .*|image: \${PODMAN_IMAGE_NAME}|g" docker-compose.offline.yml
+  else
+    echo "Loading DeltaVision container image..."
+    \${CONTAINER_ENGINE} load -i deltavision-image.tar
+    
+    # Check if Podman prefixed the image with localhost/
+    if [ "\${CONTAINER_ENGINE}" = "podman" ] && ! \${CONTAINER_ENGINE} image inspect \${IMAGE_NAME} &> /dev/null && \${CONTAINER_ENGINE} image inspect \${PODMAN_IMAGE_NAME} &> /dev/null; then
+      echo "Podman loaded the image as \${PODMAN_IMAGE_NAME}"
+      # Update the docker-compose file to use the Podman image name
+      sed -i.bak "s|image: .*|image: \${PODMAN_IMAGE_NAME}|g" docker-compose.offline.yml
+    fi
+  fi
 fi
 
-# Start the application
+# Start the application using the appropriate compose command
 echo "Starting DeltaVision..."
-docker-compose -f docker-compose.offline.yml up -d
+if [ "\${COMPOSE_CMD}" = "podman compose" ]; then
+  \${CONTAINER_ENGINE} compose -f docker-compose.offline.yml up -d
+else
+  \${COMPOSE_CMD} -f docker-compose.offline.yml up -d
+fi
 
-echo "DeltaVision is now running on http://localhost:3000"
+# Extract port from docker-compose file
+PORT=\$(grep -oP '"\K[0-9]+(?=:3000")' docker-compose.offline.yml || echo "3000")
+
+echo "DeltaVision is now running on http://localhost:\${PORT}"
 EOF
 
 # Make the script executable
@@ -226,6 +291,7 @@ echo "2. Extract: unzip ${PACKAGE_NAME}.zip"
 echo "3. CD into the directory: cd ${PACKAGE_NAME}"
 echo "4. Run the configuration script: ./scripts/configure-offline.sh"
 echo "   This will guide you through setting up both files at once"
-echo "5. Load the Docker image: docker load -i deltavision-image.tar"
-echo "6. Start with: docker-compose -f docker-compose.offline.yml up -d"
+echo "5. Load the container image: ${CONTAINER_ENGINE} load -i deltavision-image.tar"
+echo "6. Start with: ${CONTAINER_ENGINE}-compose -f docker-compose.offline.yml up -d"
+echo "   (or use ./start-deltavision-offline.sh for automatic detection)"
 echo "----------------------------------------"

@@ -9,8 +9,33 @@ set -e  # Exit immediately if a command exits with a non-zero status
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARENT_DIR="$(dirname "$SCRIPT_DIR")"
 
-VERSION=$(grep "image: deltavision:" "$PARENT_DIR/docker-compose.offline.yml" | cut -d':' -f3)
-VERSION=${VERSION:-"1.0.0"}
+# Check for container engine type
+if [ -f "${PARENT_DIR}/container-engine.txt" ]; then
+  PACKAGE_CONTAINER_ENGINE=$(cat "${PARENT_DIR}/container-engine.txt")
+else
+  PACKAGE_CONTAINER_ENGINE="docker"
+fi
+
+# Detect current container engine (may be different from packaging environment)
+CONTAINER_ENGINE="docker"
+COMPOSE_CMD="docker-compose"
+
+if command -v podman &> /dev/null && podman --version | grep -q "podman"; then
+  CONTAINER_ENGINE="podman"
+  if command -v podman-compose &> /dev/null; then
+    COMPOSE_CMD="podman-compose"
+  elif ${CONTAINER_ENGINE} compose --help &> /dev/null; then
+    COMPOSE_CMD="podman compose"
+  else
+    echo "Warning: Podman detected but podman-compose not found."
+    echo "Please install podman-compose or ensure podman compose is available."
+    echo "Attempting to continue with docker-compose (may not work with Podman)..."
+  fi
+  echo "Detected Podman as container engine"
+fi
+
+# Get version from docker-compose file
+VERSION=$(grep "image:" "${PARENT_DIR}/docker-compose.offline.yml" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "1.0.0")
 
 cat << "EOF"
   _____        _  _        __      ___      _             
@@ -148,6 +173,8 @@ echo "OLD folder: $OLD_DIR"
 echo "NEW folder: $NEW_DIR"
 echo "Keywords file: $KW_FILE"
 echo "Port: $CUSTOM_PORT"
+echo "Container Engine: $CONTAINER_ENGINE"
+echo "Compose Command: $COMPOSE_CMD"
 echo "----------------------------------------"
 echo
 
@@ -163,8 +190,20 @@ echo "Creating backup of original configuration files..."
 cp "$PARENT_DIR/docker-compose.offline.yml" "$PARENT_DIR/docker-compose.offline.yml.bak"
 cp "$PARENT_DIR/folder-config.json" "$PARENT_DIR/folder-config.json.bak"
 
+# Set the correct image name based on container engine
+IMAGE_NAME="deltavision:${VERSION}"
+if [ "$CONTAINER_ENGINE" = "podman" ]; then
+  PODMAN_IMAGE_NAME="localhost/deltavision:${VERSION}"
+  # Check if the Podman image exists
+  if ${CONTAINER_ENGINE} image inspect "${PODMAN_IMAGE_NAME}" &> /dev/null; then
+    IMAGE_NAME="${PODMAN_IMAGE_NAME}"
+  fi
+fi
+
 # Update docker-compose.offline.yml
 echo "Updating docker-compose.offline.yml..."
+# Replace IMAGENAME_PLACEHOLDER with the correct image reference
+sed -i.tmp "s|image: IMAGENAME_PLACEHOLDER|image: ${IMAGE_NAME}|g" "$PARENT_DIR/docker-compose.offline.yml"
 sed -i.tmp "s|- /path/to/your/old/folder:/app/data/old|- $OLD_DIR:/app/data/old|g" "$PARENT_DIR/docker-compose.offline.yml"
 sed -i.tmp "s|- /path/to/your/new/folder:/app/data/new|- $NEW_DIR:/app/data/new|g" "$PARENT_DIR/docker-compose.offline.yml"
 
@@ -191,11 +230,25 @@ echo "----------------------------------------"
 echo "Configuration completed successfully!"
 echo
 echo "Next steps:"
-echo "1. Load the Docker image:"
-echo "   docker load -i deltavision-image.tar"
-echo
-echo "2. Start DeltaVision:"
-echo "   docker-compose -f $PARENT_DIR/docker-compose.offline.yml up -d"
+echo "1. Load the container image:"
+if [ "$CONTAINER_ENGINE" = "docker" ]; then
+  echo "   docker load -i deltavision-image.tar"
+  echo
+  echo "2. Start DeltaVision:"
+  echo "   docker-compose -f $PARENT_DIR/docker-compose.offline.yml up -d"
+else
+  echo "   podman load -i deltavision-image.tar"
+  echo
+  echo "2. Start DeltaVision:"
+  if [ "$COMPOSE_CMD" = "podman compose" ]; then
+    echo "   podman compose -f $PARENT_DIR/docker-compose.offline.yml up -d"
+  else
+    echo "   podman-compose -f $PARENT_DIR/docker-compose.offline.yml up -d"
+  fi
+  echo
+  echo "   Alternatively, you can use the provided start script:"
+  echo "   ./start-deltavision-offline.sh"
+fi
 echo
 echo "3. Access DeltaVision in your browser:"
 echo "   http://localhost:$CUSTOM_PORT"
