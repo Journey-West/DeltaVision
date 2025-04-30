@@ -31,7 +31,7 @@ mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}"
 
 # Build Docker image
 echo "Building Docker image..."
-docker build -t deltavision:${VERSION} "${SCRIPT_DIR}"
+docker build -t deltavision:${VERSION} -f "${SCRIPT_DIR}/../docker/Dockerfile" "${SCRIPT_DIR}/.."
 
 # Save Docker image
 echo "Saving Docker image (this may take a while)..."
