@@ -32,12 +32,14 @@
 
 ## 🚀 Quick Start
 
+> **Note:** Docker is now the recommended approach for running DeltaVision. The instructions below for standard installation are provided as an alternative for non-Docker environments.
+
 ### Prerequisites
 
 - Node.js 14.x or higher (required for standard & offline installations; CLI global install may work on Node.js 10.x but is unsupported)
 - npm 6.x or higher
 
-### Standard Installation
+### Standard Installation (Non-Docker Alternative)
 
 ```bash
 # Clone the repository (if not already done)
@@ -148,9 +150,9 @@ The application also offers a time-based comparison mode that displays:
 
 These would match because both the command part (`ls`) and the quoted text (`ls -la`) match.
 
-## 📦 Docker Deployment
+## 📦 Docker Deployment (Recommended)
 
-DeltaVision can be easily deployed using Docker, which replaces the need for the offline packaging.
+DeltaVision can be easily deployed using Docker, which is now the recommended approach for running the application.
 
 ### Using Docker Compose (Recommended)
 
@@ -185,6 +187,29 @@ To stop the container:
 ```bash
 docker-compose down
 ```
+
+### Offline Deployment with Docker
+
+For air-gapped environments without internet access, a special packaging script is provided:
+
+```bash
+# Create an offline package
+./docker-package-offline.sh [version]
+```
+
+This creates a self-contained archive (`deltavision-docker-offline-x.x.x.zip`) with:
+- Pre-built Docker image
+- All necessary configuration files
+- Offline installation instructions
+- Startup script for the offline environment
+
+To deploy in an air-gapped environment:
+
+1. Create the package on a system with internet access
+2. Transfer the package to the target system
+3. Follow the instructions in OFFLINE-INSTALL.md inside the package
+
+For detailed offline deployment instructions, see the documentation included in the package.
 
 ### Using Docker Directly
 

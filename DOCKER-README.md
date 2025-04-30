@@ -1,6 +1,6 @@
 # DeltaVision Docker Setup
 
-This document explains how to run DeltaVision using Docker, which replaces the need for the `package-offline.sh` script.
+This document explains how to run DeltaVision using Docker, which is now the recommended approach for running the application.
 
 ## Requirements
 
