@@ -34,6 +34,8 @@
 
 > **Note:** Docker is now the recommended approach for running DeltaVision. The instructions below for standard installation are provided as an alternative for non-Docker environments.
 
+For detailed installation instructions, see [INSTALLATION.md](docs/INSTALLATION.md).
+
 ### Prerequisites
 
 - Node.js 14.x or higher (required for standard & offline installations; CLI global install may work on Node.js 10.x but is unsupported)
@@ -50,8 +52,8 @@ cd DeltaVision
 npm install
 
 # Configure & launch via helper script
-chmod +x start-deltavision.sh
-./start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
+chmod +x scripts/start-deltavision.sh
+./scripts/start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
 ```
 
 ### CLI Installation
@@ -74,8 +76,8 @@ deltavision --old /path/to/old --new /path/to/new [--keywords /path/to/keywords.
 
 A convenience script `start-deltavision.sh` is included for bash users:
 ```bash
-chmod +x start-deltavision.sh
-./start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
+chmod +x scripts/start-deltavision.sh
+./scripts/start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
 ```
 
 ### First-time Configuration
@@ -156,7 +158,7 @@ DeltaVision can be easily deployed using Docker, which is now the recommended ap
 
 ### Using Docker Compose (Recommended)
 
-1. First, edit the `docker-compose.yml` file to specify your data directories:
+1. First, edit the `docker/docker-compose.yml` file to specify your data directories:
 
 ```yaml
 volumes:
@@ -194,7 +196,7 @@ For air-gapped environments without internet access, a special packaging script 
 
 ```bash
 # Create an offline package
-./docker-package-offline.sh [version]
+./scripts/docker-package-offline.sh [version]
 ```
 
 This creates a self-contained archive (`deltavision-docker-offline-x.x.x.zip`) with:
@@ -226,7 +228,7 @@ docker run -p 3000:3000 \
   deltavision
 ```
 
-For detailed Docker instructions, see the [`DOCKER-README.md`](DOCKER-README.md) file.
+For detailed Docker instructions, see the [`README.md`](docker/README.md) file.
 
 ## ⚙️ Advanced Configuration
 
