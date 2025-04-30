@@ -75,6 +75,26 @@ cat > "${TEMP_DIR}/${PACKAGE_NAME}/OFFLINE-INSTALL.md" << 'EOF'
 
 This package contains everything needed to run DeltaVision in an air-gapped environment without internet access.
 
+## Prerequisites
+
+Before installing DeltaVision, ensure your system has:
+
+1. **Docker Engine** (19.03 or newer)
+2. **Docker Compose** (1.25.0 or newer)
+3. **unzip** utility to extract this package
+
+## Docker Permissions
+
+Ensure your user is part of the docker group to run Docker commands without sudo:
+
+```bash
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+
+# Then log out and back in, or run this to apply changes to current session
+newgrp docker
+```
+
 ## Installation Steps
 
 1. **Extract the package**:
@@ -117,6 +137,12 @@ This package contains everything needed to run DeltaVision in an air-gapped envi
    ```
    http://localhost:3000
    ```
+
+## System Requirements
+
+- **Disk space**: ~100MB for the Docker image plus space for your data
+- **Memory**: 1GB RAM recommended
+- **Ports**: Port 3000 must be available (or change in docker-compose)
 
 ## Troubleshooting
 

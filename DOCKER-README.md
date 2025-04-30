@@ -91,3 +91,11 @@ If you need to update your folder configurations, you can either:
 
 - **Port conflicts**: If port 3000 is already in use on your host machine, change the port mapping in your `docker-compose.yml` or your `docker run` command (e.g., `-p 8080:3000` to use port 8080).
 - **File permissions**: Ensure your mounted volumes have the correct read/write permissions.
+- **Docker permissions**: Ensure your user is part of the docker group to run Docker commands without sudo:
+  ```bash
+  # Add your user to the docker group
+  sudo usermod -aG docker $USER
+  
+  # Then log out and back in, or run this to apply changes to current session
+  newgrp docker
+  ```
