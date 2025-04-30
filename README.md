@@ -148,38 +148,60 @@ The application also offers a time-based comparison mode that displays:
 
 These would match because both the command part (`ls`) and the quoted text (`ls -la`) match.
 
-## 📦 Offline Packaging
+## 📦 Docker Deployment
 
-DeltaVision can be packaged for completely offline use in air-gapped environments.
+DeltaVision can be easily deployed using Docker, which replaces the need for the offline packaging.
 
-### Creating an Offline Package
+### Using Docker Compose (Recommended)
 
-```bash
-# From the DeltaVision directory
-./package-offline.sh
+1. First, edit the `docker-compose.yml` file to specify your data directories:
+
+```yaml
+volumes:
+  - /path/to/your/old/folder:/app/data/old
+  - /path/to/your/new/folder:/app/data/new
+  - ./keywords.txt:/app/keywords.txt
+  - ./folder-config.json:/app/folder-config.json
 ```
 
-This creates a self-contained archive (`deltavision-offline-x.x.x.tar.gz`) with:
-- All application code and assets
-- Complete node_modules directory
-- Local copies of all vendor libraries
-- Default configuration templates
-- Installation script
+2. Update your `folder-config.json` to point to these mounted locations:
 
-### Installing from the Offline Package
-
-```bash
-# On the target system
-tar -xzf deltavision-offline-x.x.x.tar.gz
-cd deltavision-offline
-./install.sh
+```json
+{
+  "oldFolderPath": "/app/data/old",
+  "newFolderPath": "/app/data/new",
+  "keywordFilePath": "/app/keywords.txt"
+}
 ```
 
-The enhanced installer will guide you through the setup process with:
-- System requirements verification
-- Dependency installation
-- Configuration setup
-- Quick start instructions
+3. Build and start the container:
+```bash
+docker-compose up -d
+
+# Access DeltaVision at http://localhost:3000
+```
+
+To stop the container:
+```bash
+docker-compose down
+```
+
+### Using Docker Directly
+
+```bash
+# Build the Docker image
+npm run docker:build
+
+# Run the container with your data directories
+docker run -p 3000:3000 \
+  -v /path/to/your/old/folder:/app/data/old \
+  -v /path/to/your/new/folder:/app/data/new \
+  -v $(pwd)/keywords.txt:/app/keywords.txt \
+  -v $(pwd)/folder-config.json:/app/folder-config.json \
+  deltavision
+```
+
+For detailed Docker instructions, see the [`DOCKER-README.md`](DOCKER-README.md) file.
 
 ## ⚙️ Advanced Configuration
 

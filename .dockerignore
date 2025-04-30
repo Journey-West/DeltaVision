@@ -1,0 +1,31 @@
+# Git files
+.git
+.gitignore
+
+# Node.js files
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Build artifacts and temp files
+*.tar.gz
+*.zip
+
+# Offline package script (no longer needed)
+package-offline.sh
+
+# Keep only the necessary files
+!package.json
+!package-lock.json
+!src
+!public
+!bin
+!folder-config.json
+!keywords.txt
+!sample-data
