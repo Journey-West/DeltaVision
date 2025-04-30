@@ -4,6 +4,17 @@
 # Usage: ./start-deltavision.sh <old_folder> <new_folder> [keywords_file]
 # Simple helper to configure and launch DeltaVision.
 
+cat << "EOF"
+  _____        _  _        __      ___      _             
+ |  __ \      | || |       \ \    / (_)    (_)            
+ | |  | | ___ | || |_ __ _  \ \  / / _ ___ _  ___  _ __   
+ | |  | |/ _ \| || __/ _' |  \ \/ / | / __| |/ _ \| '_ \  
+ | |__| |  __/| || || (_| |   \  /  | \__ \ | (_) | | | | 
+ |_____/ \___||_| \__\__,_|    \/   |_|___/_|\___/|_| |_| 
+
+===== DeltaVision Startup Helper =====
+EOF
+
 # Function to check if node_modules exists and install dependencies if missing
 check_dependencies() {
   if [ ! -d "node_modules" ] || [ ! -d "node_modules/express" ]; then

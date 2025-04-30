@@ -12,7 +12,17 @@ PACKAGE_NAME="deltavision-docker-offline-${VERSION}"
 TEMP_DIR=$(mktemp -d)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "===== DeltaVision Docker Offline Packager ====="
+cat << "EOF"
+  _____        _  _        __      ___      _             
+ |  __ \      | || |       \ \    / (_)    (_)            
+ | |  | | ___ | || |_ __ _  \ \  / / _ ___ _  ___  _ __   
+ | |  | |/ _ \| || __/ _' |  \ \/ / | / __| |/ _ \| '_ \  
+ | |__| |  __/| || || (_| |   \  /  | \__ \ | (_) | | | | 
+ |_____/ \___||_| \__\__,_|    \/   |_|___/_|\___/|_| |_| 
+
+===== DeltaVision Docker Offline Packager =====
+EOF
+
 echo "Packaging version: ${VERSION}"
 echo "Working directory: ${TEMP_DIR}"
 echo "----------------------------------------"
@@ -47,8 +57,10 @@ cp -r \
   "${SCRIPT_DIR}/../folder-config.json" \
   "${SCRIPT_DIR}/../keywords.txt" \
   "${SCRIPT_DIR}/../README.md" \
-  "${SCRIPT_DIR}/../docker/README.md" \
   "${TEMP_DIR}/${PACKAGE_NAME}/"
+
+# Copy Docker README with a different name to avoid conflict
+cp "${SCRIPT_DIR}/../docker/README.md" "${TEMP_DIR}/${PACKAGE_NAME}/DOCKER-README.md"
 
 # Copy scripts to the scripts directory in the package
 cp "${SCRIPT_DIR}/../scripts/configure-offline.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/"

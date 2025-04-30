@@ -12,7 +12,17 @@ PARENT_DIR="$(dirname "$SCRIPT_DIR")"
 VERSION=$(grep "image: deltavision:" "$PARENT_DIR/docker-compose.offline.yml" | cut -d':' -f3)
 VERSION=${VERSION:-"1.0.0"}
 
-echo "===== DeltaVision Offline Configuration Helper ====="
+cat << "EOF"
+  _____        _  _        __      ___      _             
+ |  __ \      | || |       \ \    / (_)    (_)            
+ | |  | | ___ | || |_ __ _  \ \  / / _ ___ _  ___  _ __   
+ | |  | |/ _ \| || __/ _' |  \ \/ / | / __| |/ _ \| '_ \  
+ | |__| |  __/| || || (_| |   \  /  | \__ \ | (_) | | | | 
+ |_____/ \___||_| \__\__,_|    \/   |_|___/_|\___/|_| |_| 
+
+===== DeltaVision Offline Configuration Helper =====
+EOF
+
 echo "This script will help you configure DeltaVision for your environment."
 echo "You'll need to provide paths to your data directories."
 echo "----------------------------------------"
