@@ -37,6 +37,9 @@ docker build -t deltavision:${VERSION} "${SCRIPT_DIR}"
 echo "Saving Docker image (this may take a while)..."
 docker save deltavision:${VERSION} -o "${TEMP_DIR}/${PACKAGE_NAME}/deltavision-image.tar"
 
+# Create a directory structure for scripts in the package
+mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}/scripts"
+
 # Copy necessary files
 echo "Copying configuration files..."
 cp -r \
@@ -45,11 +48,13 @@ cp -r \
   "${SCRIPT_DIR}/../keywords.txt" \
   "${SCRIPT_DIR}/../README.md" \
   "${SCRIPT_DIR}/../docker/README.md" \
-  "${SCRIPT_DIR}/../scripts/configure-offline.sh" \
   "${TEMP_DIR}/${PACKAGE_NAME}/"
 
+# Copy scripts to the scripts directory in the package
+cp "${SCRIPT_DIR}/../scripts/configure-offline.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/"
+
 # Make the configure script executable in the package
-chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/configure-offline.sh"
+chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/scripts/configure-offline.sh"
 
 # Create a modified docker-compose for offline use
 cat > "${TEMP_DIR}/${PACKAGE_NAME}/docker-compose.offline.yml" << EOF
@@ -109,7 +114,7 @@ newgrp docker
 
 2. **Run the configuration script** (recommended):
    ```bash
-   ./configure-offline.sh
+   ./scripts/configure-offline.sh
    ```
    This interactive script will:
    - Prompt for your OLD and NEW folder paths
@@ -207,7 +212,7 @@ echo "To install on an air-gapped system:"
 echo "1. Transfer the ${PACKAGE_NAME}.zip file to the target system"
 echo "2. Extract: unzip ${PACKAGE_NAME}.zip"
 echo "3. CD into the directory: cd ${PACKAGE_NAME}"
-echo "4. Run the configuration script: ./configure-offline.sh"
+echo "4. Run the configuration script: ./scripts/configure-offline.sh"
 echo "   This will guide you through setting up both files at once"
 echo "5. Load the Docker image: docker load -i deltavision-image.tar"
 echo "6. Start with: docker-compose -f docker-compose.offline.yml up -d"

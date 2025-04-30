@@ -9,9 +9,10 @@
   "scripts": {
     "start": "node src/server/index.js",
     "dev": "nodemon src/server/index.js",
-    "docker:build": "docker build -t deltavision .",
+    "docker:build": "docker build -t deltavision -f docker/Dockerfile .",
     "docker:run": "docker run -p 3000:3000 -v /path/to/your/old/folder:/app/data/old -v /path/to/your/new/folder:/app/data/new -v $(pwd)/folder-config.json:/app/folder-config.json -v $(pwd)/keywords.txt:/app/keywords.txt deltavision",
-    "docker:compose": "docker-compose up -d"
+    "docker:compose": "cd docker && docker-compose up -d",
+    "package:offline": "scripts/docker-package-offline.sh"
   },
   "dependencies": {
     "express": "^4.18.2",

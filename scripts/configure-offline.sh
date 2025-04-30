@@ -6,7 +6,10 @@
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-VERSION=$(grep "image: deltavision:" docker-compose.offline.yml | cut -d':' -f3)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+
+VERSION=$(grep "image: deltavision:" "$PARENT_DIR/docker-compose.offline.yml" | cut -d':' -f3)
 VERSION=${VERSION:-"1.0.0"}
 
 echo "===== DeltaVision Offline Configuration Helper ====="
@@ -147,22 +150,22 @@ fi
 
 # Create a backup of original files
 echo "Creating backup of original configuration files..."
-cp docker-compose.offline.yml docker-compose.offline.yml.bak
-cp folder-config.json folder-config.json.bak
+cp "$PARENT_DIR/docker-compose.offline.yml" "$PARENT_DIR/docker-compose.offline.yml.bak"
+cp "$PARENT_DIR/folder-config.json" "$PARENT_DIR/folder-config.json.bak"
 
 # Update docker-compose.offline.yml
 echo "Updating docker-compose.offline.yml..."
-sed -i.tmp "s|- /path/to/your/old/folder:/app/data/old|- $OLD_DIR:/app/data/old|g" docker-compose.offline.yml
-sed -i.tmp "s|- /path/to/your/new/folder:/app/data/new|- $NEW_DIR:/app/data/new|g" docker-compose.offline.yml
+sed -i.tmp "s|- /path/to/your/old/folder:/app/data/old|- $OLD_DIR:/app/data/old|g" "$PARENT_DIR/docker-compose.offline.yml"
+sed -i.tmp "s|- /path/to/your/new/folder:/app/data/new|- $NEW_DIR:/app/data/new|g" "$PARENT_DIR/docker-compose.offline.yml"
 
 # Update port if custom
 if [ "$CUSTOM_PORT" != "3000" ]; then
-  sed -i.tmp "s|\"3000:3000\"|\"$CUSTOM_PORT:3000\"|g" docker-compose.offline.yml
+  sed -i.tmp "s|\"3000:3000\"|\"$CUSTOM_PORT:3000\"|g" "$PARENT_DIR/docker-compose.offline.yml"
 fi
 
 # Update folder-config.json
 echo "Updating folder-config.json..."
-cat > folder-config.json << EOF
+cat > "$PARENT_DIR/folder-config.json" << EOF
 {
   "oldFolderPath": "/app/data/old",
   "newFolderPath": "/app/data/new",
@@ -171,7 +174,7 @@ cat > folder-config.json << EOF
 EOF
 
 # Clean up temporary files
-rm -f docker-compose.offline.yml.tmp
+rm -f "$PARENT_DIR/docker-compose.offline.yml.tmp"
 
 echo
 echo "----------------------------------------"
@@ -182,7 +185,7 @@ echo "1. Load the Docker image:"
 echo "   docker load -i deltavision-image.tar"
 echo
 echo "2. Start DeltaVision:"
-echo "   docker-compose -f docker-compose.offline.yml up -d"
+echo "   docker-compose -f $PARENT_DIR/docker-compose.offline.yml up -d"
 echo
 echo "3. Access DeltaVision in your browser:"
 echo "   http://localhost:$CUSTOM_PORT"

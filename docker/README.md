@@ -11,7 +11,7 @@ This document explains how to run DeltaVision using Docker, which is now the rec
 
 ### Using Docker Compose (Recommended)
 
-1. First, edit the `docker-compose.yml` file to specify your data directories:
+1. First, edit the `docker-compose.yml` file in this directory to specify your data directories:
 
    ```yaml
    volumes:
@@ -64,7 +64,7 @@ This document explains how to run DeltaVision using Docker, which is now the rec
 
 ## Using Your Own Data
 
-You must specify your own data directories by editing the volume mappings in docker-compose.yml or using the correct paths in your docker run command.
+You must specify your own data directories by editing the volume mappings in the docker-compose.yml file in this directory or using the correct paths in your docker run command.
 
 The key mappings are:
 - Your "old" folder → `/app/data/old` inside the container
@@ -89,7 +89,7 @@ If you need to update your folder configurations, you can either:
 
 ## Troubleshooting
 
-- **Port conflicts**: If port 3000 is already in use on your host machine, change the port mapping in your `docker-compose.yml` or your `docker run` command (e.g., `-p 8080:3000` to use port 8080).
+- **Port conflicts**: If port 3000 is already in use on your host machine, change the port mapping in the `docker-compose.yml` file or your `docker run` command (e.g., `-p 8080:3000` to use port 8080).
 - **File permissions**: Ensure your mounted volumes have the correct read/write permissions.
 - **Docker permissions**: Ensure your user is part of the docker group to run Docker commands without sudo:
   ```bash
