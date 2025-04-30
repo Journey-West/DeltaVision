@@ -6,6 +6,7 @@ This document provides detailed installation instructions for DeltaVision.
 - [Docker Installation (Recommended)](#docker-installation-recommended)
 - [Standard Installation (Alternative)](#standard-installation-alternative)
 - [Offline Installation](#offline-installation)
+- [Script Reference](#script-reference)
 - [System Requirements](#system-requirements)
 
 ## Docker Installation (Recommended)
@@ -138,6 +139,77 @@ On the air-gapped system:
 
 5. **Access DeltaVision**:
    Open your browser and navigate to http://localhost:3000 (or the custom port you specified)
+
+## Script Reference
+
+DeltaVision includes several utility scripts to simplify different deployment scenarios. This section explains when and how to use each script.
+
+### scripts/start-deltavision.sh
+
+**Purpose**: Runs DeltaVision without Docker directly on your system
+
+**When to use**: 
+- When you prefer not to use Docker
+- For development or testing on systems with Node.js installed
+- When you want a simple setup without containerization
+
+**Prerequisites**:
+- Node.js 14.x or higher
+- npm 6.x or higher
+- No internet required after initial npm install
+
+**Usage**:
+```bash
+./scripts/start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
+```
+
+### scripts/docker-package-offline.sh
+
+**Purpose**: Creates a self-contained offline package for air-gapped environments
+
+**When to use**:
+- When preparing to deploy DeltaVision on systems without internet access
+- For creating portable versions of the application
+- For environments with strict security requirements
+
+**Prerequisites**:
+- Docker installed and running
+- Internet connection (required for building Docker image)
+- zip command installed
+- Write access to create the package file
+
+**Usage**:
+```bash
+./scripts/docker-package-offline.sh [version]
+```
+
+**Notes**:
+- This script must be run on a system with internet access
+- It builds a Docker image, which requires downloading dependencies
+- The resulting ZIP file contains everything needed for offline use
+
+### scripts/configure-offline.sh
+
+**Purpose**: Interactive configuration wizard for the offline package
+
+**When to use**:
+- After extracting the offline package on an air-gapped system
+- When you need to configure volume mappings for your specific environment
+
+**Prerequisites**:
+- Docker installed (no internet required)
+- Extracted offline package
+
+**Usage**:
+```bash
+# From within the extracted offline package directory:
+./scripts/configure-offline.sh
+```
+
+**Notes**:
+- This script is included in the offline package
+- It updates both docker-compose.offline.yml and folder-config.json files
+- No internet connection is required to run this script
 
 ## System Requirements
 

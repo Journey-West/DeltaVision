@@ -156,6 +156,46 @@ These would match because both the command part (`ls`) and the quoted text (`ls 
 
 DeltaVision can be easily deployed using Docker, which is now the recommended approach for running the application.
 
+## 🛠️ Scripts Reference
+
+DeltaVision includes several utility scripts to help with different deployment scenarios:
+
+| Script | Purpose | When to Use | Prerequisites |
+|--------|---------|-------------|---------------|
+| `scripts/start-deltavision.sh` | Runs DeltaVision directly without Docker | For non-Docker deployments | Node.js 14+, npm 6+ |
+| `scripts/docker-package-offline.sh` | Creates an offline deployment package | When preparing for air-gapped environments | Docker, internet access, zip command |
+| `scripts/configure-offline.sh` | Configures the offline package on target system | After extracting the offline package | Docker (no internet required) |
+
+### Deployment Workflow Guide:
+
+1. **Standard Docker Deployment** (recommended for most users):
+   ```bash
+   # No scripts needed - use Docker directly
+   cd docker
+   docker-compose up -d
+   ```
+
+2. **Offline/Air-Gapped Deployment**:
+   - Step 1 (On internet-connected system):
+     ```bash
+     ./scripts/docker-package-offline.sh
+     # Transfer the ZIP file to air-gapped system
+     ```
+   - Step 2 (On air-gapped system):
+     ```bash
+     unzip deltavision-docker-offline-*.zip
+     cd deltavision-docker-offline-*
+     ./scripts/configure-offline.sh
+     # Follow the prompts
+     ```
+
+3. **Non-Docker Deployment**:
+   ```bash
+   ./scripts/start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
+   ```
+
+For detailed installation instructions, see [INSTALLATION.md](docs/INSTALLATION.md).
+
 ### Using Docker Compose (Recommended)
 
 1. First, edit the `docker/docker-compose.yml` file to specify your data directories:
