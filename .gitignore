@@ -45,12 +45,14 @@ container-engine.txt
 compose-available.txt
 compose-cmd.txt
 
-# Package files - exclude from repo EXCEPT those in precompiled directory
+# Package files - all package ZIP files should be excluded
 deltavision-*.zip
 scripts/deltavision-*.zip
-# Explicitly allow packages in precompiled directory
+precompiled/packages/*.zip
+
+# Package directory structure - keep the directory structure but exclude large files
 !precompiled/packages/
-!precompiled/packages/**/*
+!precompiled/packages/README.md
 
 # Temporary files
 .tmp/
