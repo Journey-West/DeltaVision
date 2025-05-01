@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  deltavision:
+    image: localhost/deltavision:1.0.0
+    container_name: deltavision
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount configuration file
+      - ./folder-config.json:/app/folder-config.json
+      # Mount custom keywords file
+      - ./keywords.txt:/app/keywords.txt
+      # Mount your data directories - edit these paths for your environment
+      - /path/to/your/old/folder:/app/data/old
+      - /path/to/your/new/folder:/app/data/new
+    environment:
+      - NODE_ENV=production

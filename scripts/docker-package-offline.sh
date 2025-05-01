@@ -6,79 +6,233 @@
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
+# Color definitions for better error messages
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Error and info message functions
+error() {
+  echo -e "${RED}ERROR: $1${NC}" >&2
+}
+
+warning() {
+  echo -e "${YELLOW}WARNING: $1${NC}" >&2
+}
+
+info() {
+  echo -e "${BLUE}INFO: $1${NC}"
+}
+
+success() {
+  echo -e "${GREEN}SUCCESS: $1${NC}"
+}
+
+# Function to check if a command exists
+check_command() {
+  if ! command -v "$1" &> /dev/null; then
+    error "Required command not found: $1"
+    echo "  - This command is necessary for packaging DeltaVision."
+    return 1
+  fi
+  return 0
+}
+
 # Default version if not specified
 VERSION=${1:-"1.0.0"}
 PACKAGE_NAME="deltavision-docker-offline-${VERSION}"
 TEMP_DIR=$(mktemp -d)
+if [ ! -d "$TEMP_DIR" ]; then
+  error "Failed to create temporary directory"
+  echo "  - Check if /tmp is writable"
+  echo "  - Check available disk space: df -h /tmp"
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-cat << "EOF"
-  _____        _  _        __      ___      _             
- |  __ \      | || |       \ \    / (_)    (_)            
- | |  | | ___ | || |_ __ _  \ \  / / _ ___ _  ___  _ __   
- | |  | |/ _ \| || __/ _' |  \ \/ / | / __| |/ _ \| '_ \  
- | |__| |  __/| || || (_| |   \  /  | \__ \ | (_) | | | | 
- |_____/ \___||_| \__\__,_|    \/   |_|___/_|\___/|_| |_| 
-
-===== DeltaVision Docker Offline Packager =====
-EOF
-
-echo "Packaging version: ${VERSION}"
-echo "Working directory: ${TEMP_DIR}"
-echo "----------------------------------------"
+info "Setting up environment..."
+info "  - Package version: ${VERSION}"
+info "  - Working directory: ${TEMP_DIR}"
+info "  - Script directory: ${SCRIPT_DIR}"
 
 # Check if zip is installed
-if ! command -v zip &> /dev/null; then
-  echo "Error: 'zip' command is not installed. Please install it first."
-  echo "On Ubuntu/Debian: sudo apt-get install zip"
-  echo "On CentOS/RHEL: sudo yum install zip"
+if ! check_command zip; then
+  error "The 'zip' command is not installed. Please install it first."
+  echo "  - On Ubuntu/Debian: sudo apt-get install zip"
+  echo "  - On CentOS/RHEL: sudo dnf install zip"
   exit 1
 fi
 
 # Detect if we're using Podman or Docker
+info "Detecting container engine..."
 CONTAINER_ENGINE="docker"
-if command -v podman &> /dev/null && podman --version | grep -q "podman"; then
+COMPOSE_AVAILABLE=true
+COMPOSE_CMD="docker-compose"
+
+# Detect container engine and compose capabilities
+if check_command podman && podman --version | grep -q "podman"; then
   CONTAINER_ENGINE="podman"
-  echo "Detected Podman as container engine"
+  success "Detected Podman as container engine"
+  
+  # Check if podman-compose is available
+  if check_command podman-compose; then
+    COMPOSE_CMD="podman-compose"
+    success "Detected podman-compose"
+  # Check if podman compose subcommand is available by actually trying to run it
+  elif podman compose version &> /dev/null; then
+    COMPOSE_CMD="podman compose"
+    success "Detected podman compose subcommand"
+  else
+    COMPOSE_AVAILABLE=false
+    warning "No Podman Compose functionality detected"
+    echo "  - Will include instructions for using direct Podman commands"
+    echo "  - The offline package will still work without compose"
+  fi
+elif ! check_command docker; then
+  error "Neither Docker nor Podman found. Please install one of them."
+  echo "  - For Ubuntu/Debian: sudo apt install docker.io"
+  echo "  - For RHEL/CentOS: sudo dnf install podman"
+  exit 1
+else
+  success "Detected Docker as container engine"
+  # Check for docker-compose
+  if ! check_command docker-compose; then
+    warning "docker-compose not found, but packaging will continue"
+    echo "  - The offline package has fallback measures for environments without compose"
+    echo "  - For better experience, install docker-compose:"
+    echo "  - For Ubuntu/Debian: sudo apt install docker-compose"
+  else
+    success "Detected docker-compose"
+  fi
 fi
 
 # Create directory structure
-echo "Creating directory structure..."
+info "Creating directory structure..."
 mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}"
+if [ $? -ne 0 ]; then
+  error "Failed to create package directory structure"
+  echo "  - Check disk space and permissions"
+  exit 1
+fi
 
 # Build Docker image
-echo "Building Docker image..."
-${CONTAINER_ENGINE} build -t deltavision:${VERSION} -f "${SCRIPT_DIR}/../docker/Dockerfile" "${SCRIPT_DIR}/.."
+info "Building Docker image (this may take a while)..."
+if ! ${CONTAINER_ENGINE} build -t deltavision:${VERSION} -f "${SCRIPT_DIR}/../docker/Dockerfile" "${SCRIPT_DIR}/.."; then
+  error "Failed to build Docker image"
+  echo "  - Check if Dockerfile exists at ${SCRIPT_DIR}/../docker/Dockerfile"
+  echo "  - Ensure Docker or Podman daemon is running"
+  echo "  - Check for errors in the build output above"
+  exit 1
+fi
+success "Docker image built successfully!"
 
 # Save Docker image
-echo "Saving Docker image (this may take a while)..."
-${CONTAINER_ENGINE} save deltavision:${VERSION} -o "${TEMP_DIR}/${PACKAGE_NAME}/deltavision-image.tar"
+info "Saving Docker image (this may take a while)..."
+if ! ${CONTAINER_ENGINE} save deltavision:${VERSION} -o "${TEMP_DIR}/${PACKAGE_NAME}/deltavision-image.tar"; then
+  error "Failed to save Docker image to tar file"
+  echo "  - Check disk space: df -h"
+  echo "  - Ensure you have write permissions to ${TEMP_DIR}"
+  exit 1
+fi
+success "Docker image saved successfully!"
+info "  - Image size: $(du -h "${TEMP_DIR}/${PACKAGE_NAME}/deltavision-image.tar" | cut -f1)"
 
 # Create a directory structure for scripts in the package
 mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}/scripts"
+mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}/docs"
 
 # Copy necessary files
-echo "Copying configuration files..."
-cp -r \
-  "${SCRIPT_DIR}/../docker/docker-compose.yml" \
-  "${SCRIPT_DIR}/../folder-config.json" \
-  "${SCRIPT_DIR}/../keywords.txt" \
-  "${SCRIPT_DIR}/../README.md" \
-  "${TEMP_DIR}/${PACKAGE_NAME}/"
+info "Copying configuration files..."
+cp_files=(
+  "${SCRIPT_DIR}/../docker/docker-compose.yml"
+  "${SCRIPT_DIR}/../docker/docker-compose.offline.yml"
+  "${SCRIPT_DIR}/../folder-config.json"
+  "${SCRIPT_DIR}/../keywords.txt"
+  "${SCRIPT_DIR}/../README.md"
+  "${SCRIPT_DIR}/../docs/OFFLINE-README.md"
+)
+
+for file in "${cp_files[@]}"; do
+  if [ ! -f "$file" ]; then
+    warning "Required file not found: $file"
+    echo "  - This file is expected to exist in the repository"
+    echo "  - Package may not function correctly without it"
+    # Create a placeholder file with a warning
+    filename=$(basename "$file")
+    echo "WARNING: This file was missing during package creation. Please see documentation for proper structure." > "${TEMP_DIR}/${PACKAGE_NAME}/${filename}"
+  else
+    cp "$file" "${TEMP_DIR}/${PACKAGE_NAME}/"
+    success "Copied: $(basename "$file")"
+  fi
+done
 
 # Copy Docker README with a different name to avoid conflict
-cp "${SCRIPT_DIR}/../docker/README.md" "${TEMP_DIR}/${PACKAGE_NAME}/DOCKER-README.md"
+if [ -f "${SCRIPT_DIR}/../docker/README.md" ]; then
+  cp "${SCRIPT_DIR}/../docker/README.md" "${TEMP_DIR}/${PACKAGE_NAME}/DOCKER-README.md"
+  success "Copied: DOCKER-README.md"
+else
+  warning "Docker README.md not found"
+  echo "  - File was expected at: ${SCRIPT_DIR}/../docker/README.md"
+  echo "  - Creating a placeholder file"
+  echo "WARNING: This file was missing during package creation. Please see main README.md for Docker instructions." > "${TEMP_DIR}/${PACKAGE_NAME}/DOCKER-README.md"
+fi
+
+# Copy documentation files to docs directory
+doc_files=(
+  "${SCRIPT_DIR}/../docs/INSTALLATION.md"
+  "${SCRIPT_DIR}/../docs/OFFLINE-CHECKLIST.md"
+)
+
+for file in "${doc_files[@]}"; do
+  if [ ! -f "$file" ]; then
+    warning "Documentation file not found: $file"
+    echo "  - Creating a placeholder file"
+    mkdir -p "$(dirname "${TEMP_DIR}/${PACKAGE_NAME}/${file#${SCRIPT_DIR}/../}")"
+    echo "WARNING: This documentation file was missing during package creation." > "${TEMP_DIR}/${PACKAGE_NAME}/${file#${SCRIPT_DIR}/../}"
+  else
+    mkdir -p "$(dirname "${TEMP_DIR}/${PACKAGE_NAME}/${file#${SCRIPT_DIR}/../}")"
+    cp "$file" "${TEMP_DIR}/${PACKAGE_NAME}/${file#${SCRIPT_DIR}/../}"
+    success "Copied documentation: $(basename "$file")"
+  fi
+done
 
 # Copy scripts to the scripts directory in the package
-cp "${SCRIPT_DIR}/../scripts/configure-offline.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/"
+if [ ! -f "${SCRIPT_DIR}/configure-offline.sh" ]; then
+  error "Required script not found: configure-offline.sh"
+  echo "  - This script is essential for offline configuration"
+  echo "  - Cannot proceed without this file"
+  exit 1
+fi
+
+cp "${SCRIPT_DIR}/configure-offline.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/"
+success "Copied configuration script"
+
+# Copy the verification script if available
+if [ -f "${SCRIPT_DIR}/verify-offline-package.sh" ]; then
+  cp "${SCRIPT_DIR}/verify-offline-package.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/"
+  success "Copied verification script"
+else
+  warning "Verification script not found"
+  echo "  - File was expected at: ${SCRIPT_DIR}/verify-offline-package.sh"
+  echo "  - This will limit troubleshooting capabilities in offline environments"
+fi
 
 # Make the configure script executable in the package
 chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/scripts/configure-offline.sh"
+if [ -f "${TEMP_DIR}/${PACKAGE_NAME}/scripts/verify-offline-package.sh" ]; then
+  chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/scripts/verify-offline-package.sh"
+fi
 
-# Store the container engine type for later use
+# Store the container engine type and compose availability for later use
 echo "${CONTAINER_ENGINE}" > "${TEMP_DIR}/${PACKAGE_NAME}/container-engine.txt"
+echo "${COMPOSE_AVAILABLE}" > "${TEMP_DIR}/${PACKAGE_NAME}/compose-available.txt"
+echo "${COMPOSE_CMD}" > "${TEMP_DIR}/${PACKAGE_NAME}/compose-cmd.txt"
 
 # Create a modified docker-compose for offline use that works with both Docker and Podman
+info "Creating docker-compose.offline.yml with placeholder values..."
 cat > "${TEMP_DIR}/${PACKAGE_NAME}/docker-compose.offline.yml" << EOF
 version: '3'
 
@@ -111,7 +265,7 @@ This package contains everything needed to run DeltaVision in an air-gapped envi
 Before installing DeltaVision, ensure your system has:
 
 1. **Docker Engine** (19.03 or newer) or **Podman** (3.0 or newer)
-2. **Docker Compose** (1.25.0 or newer) or **Podman Compose**
+2. **Docker Compose** or **Podman Compose** (optional, package will work without it)
 3. **unzip** utility to extract this package
 
 ## Docker/Podman Permissions
@@ -142,10 +296,11 @@ newgrp docker
    ```
    This interactive script will:
    - Detect Docker or Podman automatically
+   - Detect Compose functionality availability
    - Prompt for your OLD and NEW folder paths
    - Prompt for a custom keywords file (optional)
    - Prompt for a custom port (optional)
-   - Automatically update both docker-compose.offline.yml and folder-config.json
+   - Automatically update configuration files
    - Guide you through the next steps
 
    **OR** manually configure (alternative):
@@ -171,13 +326,20 @@ newgrp docker
 
 5. **Start the application**:
    ```bash
-   # For Docker:
+   # The recommended approach (works with all configurations):
+   ./start-deltavision-offline.sh
+   
+   # Alternatively, for Docker with Docker Compose:
    docker-compose -f docker-compose.offline.yml up -d
    
-   # For Podman:
+   # For Podman with podman-compose:
    podman-compose -f docker-compose.offline.yml up -d
-   # or
+   
+   # For Podman with compose subcommand:
    podman compose -f docker-compose.offline.yml up -d
+   
+   # For Podman without compose functionality:
+   # The start script will handle this automatically using direct podman commands
    ```
 
 6. **Access DeltaVision**:
@@ -194,97 +356,451 @@ newgrp docker
 
 ## Troubleshooting
 
-- **Port conflicts**: If port 3000 is already in use, modify the port mapping in `docker-compose.offline.yml` (e.g., change to `8080:3000`).
+- **Port conflicts**: If port 3000 is already in use, modify the port mapping in configuration.
 - **Container engine access**: Make sure your user has rights to run Docker/Podman commands or use sudo.
 - **File permissions**: Ensure your mounted volumes have the correct read/write permissions.
 - **Podman image naming**: If using Podman and you see errors about image not found, check if the image was loaded with a `localhost/` prefix.
+- **Podman compose errors**: If you see errors with podman compose commands, try using the start-deltavision-offline.sh script which has robust fallback options.
+- **Permission denied errors**: You may need to run the commands with sudo if your user doesn't have sufficient privileges.
 
 For additional information, please refer to the `DOCKER-README.md` file.
 EOF
 
-# Create startup script
-cat > "${TEMP_DIR}/${PACKAGE_NAME}/start-deltavision-offline.sh" << EOF
+# Create start script with rigorous fallback handling
+cat > "${TEMP_DIR}/${PACKAGE_NAME}/start-deltavision-offline.sh" << 'EOF'
 #!/usr/bin/env bash
+
+# Set strict error handling
+set -e
+
+# Enable debug output if DEBUG environment variable is set
+if [ "${DEBUG}" = "true" ]; then
+  set -x
+fi
+
+# Current directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
 
 # Detect if we're using Podman or Docker
 CONTAINER_ENGINE="docker"
-COMPOSE_CMD="docker-compose"
+COMPOSE_AVAILABLE=false
+COMPOSE_CMD=""
 
-if command -v podman &> /dev/null && podman --version | grep -q "podman"; then
+if command -v podman &> /dev/null; then
   CONTAINER_ENGINE="podman"
+  echo "Detected Podman as container engine"
+  
+  # Test podman-compose
   if command -v podman-compose &> /dev/null; then
-    COMPOSE_CMD="podman-compose"
-  elif \${CONTAINER_ENGINE} compose --help &> /dev/null; then
-    COMPOSE_CMD="podman compose"
-  else
-    echo "Warning: Podman detected but podman-compose not found."
-    echo "Please install podman-compose or ensure podman compose is available."
-    echo "Attempting to continue with docker-compose (may not work with Podman)..."
+    # Verify it actually works
+    if podman-compose --version &> /dev/null; then
+      COMPOSE_CMD="podman-compose"
+      COMPOSE_AVAILABLE=true
+      echo "Using podman-compose"
+    fi
   fi
-fi
-
-echo "Using container engine: \${CONTAINER_ENGINE}"
-echo "Using compose command: \${COMPOSE_CMD}"
-
-# Ensure container engine is available
-if ! command -v \${CONTAINER_ENGINE} &> /dev/null; then
-  echo "Container engine (\${CONTAINER_ENGINE}) is not installed or not in PATH."
-  echo "Please install Docker or Podman first."
-  exit 1
+  
+  # Test podman compose subcommand
+  if ! ${COMPOSE_AVAILABLE} && podman compose version &> /dev/null; then
+    # Test if -f flag is supported
+    if podman compose -f /dev/null --help &> /dev/null; then
+      COMPOSE_CMD="podman compose"
+      COMPOSE_AVAILABLE=true
+      echo "Using podman compose with -f flag"
+    else
+      # Test if compose works without -f flag
+      cd "${SCRIPT_DIR}"
+      if podman compose --help &> /dev/null; then
+        COMPOSE_CMD="podman compose"
+        COMPOSE_AVAILABLE=true
+        echo "Using podman compose (directory based)"
+      fi
+    fi
+  fi
+  
+  if ! ${COMPOSE_AVAILABLE}; then
+    echo "No Podman Compose functionality available, will use direct podman commands"
+  fi
+elif command -v docker &> /dev/null; then
+  # Test docker-compose
+  if command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+    COMPOSE_AVAILABLE=true
+    echo "Using docker-compose"
+  fi
 fi
 
 # Load the image if not already loaded
-IMAGE_NAME="deltavision:${VERSION}"
-PODMAN_IMAGE_NAME="localhost/deltavision:${VERSION}"
+IMAGE_NAME="deltavision:1.0.0"
+LOCALHOST_PREFIX="localhost/"
+PODMAN_IMAGE_NAME="${LOCALHOST_PREFIX}${IMAGE_NAME}"
 
-# Check if image exists, with Podman awareness
-if ! \${CONTAINER_ENGINE} image inspect \${IMAGE_NAME} &> /dev/null; then
-  if [ "\${CONTAINER_ENGINE}" = "podman" ] && \${CONTAINER_ENGINE} image inspect \${PODMAN_IMAGE_NAME} &> /dev/null; then
-    echo "Image already loaded as \${PODMAN_IMAGE_NAME}"
-    # Update the docker-compose file to use the Podman image name
-    sed -i.bak "s|image: .*|image: \${PODMAN_IMAGE_NAME}|g" docker-compose.offline.yml
+# Check if image exists
+if [ "${CONTAINER_ENGINE}" = "podman" ]; then
+  if podman image inspect "${PODMAN_IMAGE_NAME}" &> /dev/null; then
+    echo "Image already available as ${PODMAN_IMAGE_NAME}"
+    IMAGE_NAME="${PODMAN_IMAGE_NAME}"
+  elif podman image inspect "${IMAGE_NAME}" &> /dev/null; then
+    echo "Image already available as ${IMAGE_NAME}"
   else
     echo "Loading DeltaVision container image..."
-    \${CONTAINER_ENGINE} load -i deltavision-image.tar
+    podman load -i "${SCRIPT_DIR}/deltavision-image.tar"
     
-    # Check if Podman prefixed the image with localhost/
-    if [ "\${CONTAINER_ENGINE}" = "podman" ] && ! \${CONTAINER_ENGINE} image inspect \${IMAGE_NAME} &> /dev/null && \${CONTAINER_ENGINE} image inspect \${PODMAN_IMAGE_NAME} &> /dev/null; then
-      echo "Podman loaded the image as \${PODMAN_IMAGE_NAME}"
-      # Update the docker-compose file to use the Podman image name
-      sed -i.bak "s|image: .*|image: \${PODMAN_IMAGE_NAME}|g" docker-compose.offline.yml
+    # Determine which name the image was loaded as
+    if podman image inspect "${PODMAN_IMAGE_NAME}" &> /dev/null; then
+      echo "Image loaded as ${PODMAN_IMAGE_NAME}"
+      IMAGE_NAME="${PODMAN_IMAGE_NAME}"
+    elif podman image inspect "${IMAGE_NAME}" &> /dev/null; then
+      echo "Image loaded as ${IMAGE_NAME}"
+    else
+      echo "ERROR: Failed to load the image. Cannot continue."
+      exit 1
     fi
+  fi
+else
+  # Docker version
+  if ! docker image inspect "${IMAGE_NAME}" &> /dev/null; then
+    echo "Loading DeltaVision container image..."
+    docker load -i "${SCRIPT_DIR}/deltavision-image.tar"
+    
+    if ! docker image inspect "${IMAGE_NAME}" &> /dev/null; then
+      echo "ERROR: Failed to load the image. Cannot continue."
+      exit 1
+    fi
+  else
+    echo "Image already available as ${IMAGE_NAME}"
   fi
 fi
 
-# Start the application using the appropriate compose command
-echo "Starting DeltaVision..."
-if [ "\${COMPOSE_CMD}" = "podman compose" ]; then
-  \${CONTAINER_ENGINE} compose -f docker-compose.offline.yml up -d
-else
-  \${COMPOSE_CMD} -f docker-compose.offline.yml up -d
+# Update docker-compose file with correct image name
+sed -i.bak "s|image: .*|image: ${IMAGE_NAME}|g" "${SCRIPT_DIR}/docker-compose.offline.yml"
+
+# Extract information from docker-compose.offline.yml
+PORT=$(grep -oP '"\K[0-9]+(?=:3000")' "${SCRIPT_DIR}/docker-compose.offline.yml" || echo "3000")
+OLD_MOUNT=$(grep -A1 "# Mount your data directories" "${SCRIPT_DIR}/docker-compose.offline.yml" | grep "old" | awk '{print $2}' || echo "/tmp:/app/data/old")
+NEW_MOUNT=$(grep -A2 "# Mount your data directories" "${SCRIPT_DIR}/docker-compose.offline.yml" | grep "new" | awk '{print $2}' || echo "/tmp:/app/data/new")
+
+# Extract just the paths without the container paths
+OLD_FOLDER=$(echo "${OLD_MOUNT}" | cut -d':' -f1)
+NEW_FOLDER=$(echo "${NEW_MOUNT}" | cut -d':' -f1)
+
+# Make sure volumes exist
+if [ -n "${OLD_FOLDER}" ]; then
+  mkdir -p "${OLD_FOLDER}"
+fi
+if [ -n "${NEW_FOLDER}" ]; then
+  mkdir -p "${NEW_FOLDER}"
 fi
 
-# Extract port from docker-compose file
-PORT=\$(grep -oP '"\K[0-9]+(?=:3000")' docker-compose.offline.yml || echo "3000")
+# Start the application
+echo "Starting DeltaVision..."
 
-echo "DeltaVision is now running on http://localhost:\${PORT}"
+# Check if container is already running
+if ${CONTAINER_ENGINE} ps | grep -q "deltavision"; then
+  echo "DeltaVision container is already running. Stopping it first..."
+  ${CONTAINER_ENGINE} stop deltavision || true
+  ${CONTAINER_ENGINE} rm deltavision || true
+fi
+
+# Function to start with direct container command
+start_with_direct_command() {
+  echo "Starting with direct ${CONTAINER_ENGINE} command..."
+  
+  # Absolute path to required files
+  FOLDER_CONFIG="${SCRIPT_DIR}/folder-config.json"
+  KEYWORDS_FILE="${SCRIPT_DIR}/keywords.txt"
+  
+  # Verify files exist
+  if [ ! -f "${FOLDER_CONFIG}" ]; then
+    echo "ERROR: Could not find folder-config.json"
+    return 1
+  fi
+  
+  if [ ! -f "${KEYWORDS_FILE}" ]; then
+    echo "ERROR: Could not find keywords.txt"
+    return 1
+  fi
+  
+  # Construct and run the command
+  CMD="${CONTAINER_ENGINE} run -d --name deltavision -p ${PORT}:3000 \
+    -v ${FOLDER_CONFIG}:/app/folder-config.json \
+    -v ${KEYWORDS_FILE}:/app/keywords.txt \
+    -v ${OLD_MOUNT} \
+    -v ${NEW_MOUNT} \
+    -e NODE_ENV=production \
+    ${IMAGE_NAME}"
+  
+  echo "Running command: ${CMD}"
+  
+  # Execute the command and capture the exit code
+  eval "${CMD}"
+  RESULT=$?
+  
+  if [ ${RESULT} -eq 0 ]; then
+    echo "Container started successfully with direct command!"
+    return 0
+  else
+    echo "Failed to start container with direct command (exit code: ${RESULT})"
+    return 1
+  fi
+}
+
+# Function to start with compose
+start_with_compose() {
+  if [ "${COMPOSE_AVAILABLE}" != "true" ]; then
+    echo "Compose functionality not available."
+    return 1
+  fi
+  
+  echo "Attempting to start with compose command: ${COMPOSE_CMD}"
+  
+  # Get the absolute path to the compose file
+  COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.offline.yml"
+  
+  # Test if the compose command supports -f flag
+  if [ "${COMPOSE_CMD}" = "podman compose" ]; then
+    if podman compose -f "${COMPOSE_FILE}" --help &> /dev/null; then
+      echo "Using podman compose with -f flag"
+      podman compose -f "${COMPOSE_FILE}" up -d
+      return $?
+    else
+      echo "Podman compose doesn't support -f flag, using directory-based approach"
+      # Copy the compose file to docker-compose.yml for directory-based approach
+      cp "${COMPOSE_FILE}" "${SCRIPT_DIR}/docker-compose.yml"
+      cd "${SCRIPT_DIR}"
+      podman compose up -d
+      return $?
+    fi
+  elif [ "${COMPOSE_CMD}" = "podman-compose" ]; then
+    podman-compose -f "${COMPOSE_FILE}" up -d
+    return $?
+  elif [ "${COMPOSE_CMD}" = "docker-compose" ]; then
+    docker-compose -f "${COMPOSE_FILE}" up -d
+    return $?
+  else
+    echo "Unknown compose command: ${COMPOSE_CMD}"
+    return 1
+  fi
+}
+
+# Try starting with appropriate method based on environment
+if [ "${COMPOSE_AVAILABLE}" = "true" ]; then
+  echo "Compose is available, trying compose method first..."
+  if start_with_compose; then
+    echo "Successfully started DeltaVision using compose."
+  else
+    echo "Compose command failed, falling back to direct container command..."
+    if start_with_direct_command; then
+      echo "Successfully started DeltaVision using direct container command."
+    else
+      echo "ERROR: All attempts to start DeltaVision failed."
+      exit 1
+    fi
+  fi
+else
+  echo "No compose functionality available, using direct container command..."
+  if start_with_direct_command; then
+    echo "Successfully started DeltaVision using direct container command."
+  else
+    echo "ERROR: Failed to start DeltaVision container."
+    echo "You may need to run this script with sudo if you have permission issues."
+    exit 1
+  fi
+fi
+
+echo "DeltaVision is now running on http://localhost:${PORT}"
 EOF
 
 # Make the script executable
 chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/start-deltavision-offline.sh"
+success "Made start script executable"
+
+# Create offline npm package cache
+info "Creating offline npm package cache..."
+mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages"
+
+# Move to project root to run npm commands
+cd "${SCRIPT_DIR}/.."
+
+# Create a clean package-lock.json with exact versions
+if [ -f "package-lock.json" ]; then
+  success "Found existing package-lock.json"
+else
+  warning "No package-lock.json found, generating one..."
+  npm install --package-lock-only
+  if [ $? -ne 0 ]; then
+    error "Failed to generate package-lock.json"
+    echo "  - This may cause issues with offline dependency installation"
+    echo "  - Consider running 'npm install' in the project root before packaging"
+  else
+    success "Generated package-lock.json"
+  fi
+fi
+
+# Download all packages for offline installation
+info "Downloading npm packages for offline use (this may take a while)..."
+if ! npm ci --ignore-scripts --package-lock-only; then
+  warning "Failed to validate dependencies with npm ci"
+  echo "  - This may cause issues with offline dependency installation"
+  echo "  - Will attempt to continue with npm pack"
+fi
+
+# Pack all direct and transitive dependencies into tarballs
+if ! npm pack $(npm list --parseable --depth=0 | grep -v "$(pwd)"); then
+  warning "Failed to pack some npm dependencies"
+  echo "  - May not have all required packages for offline installation"
+  echo "  - Will attempt to continue with available packages"
+fi
+
+# Move the tarballs to the package directory
+mv *.tgz "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages/" 2>/dev/null || true
+
+# Create a script to install from the offline cache
+cat > "${TEMP_DIR}/${PACKAGE_NAME}/scripts/install-offline-deps.sh" << 'EOF'
+#!/usr/bin/env bash
+
+# Color definitions
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Message functions
+error() {
+  echo -e "${RED}ERROR: $1${NC}" >&2
+}
+
+warning() {
+  echo -e "${YELLOW}WARNING: $1${NC}" >&2
+}
+
+info() {
+  echo -e "${BLUE}INFO: $1${NC}"
+}
+
+success() {
+  echo -e "${GREEN}SUCCESS: $1${NC}"
+}
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_DIR="$(dirname "$SCRIPT_DIR")"
+NPM_CACHE_DIR="${PACKAGE_DIR}/npm-packages"
+
+# Check if the npm cache directory exists
+if [ ! -d "$NPM_CACHE_DIR" ]; then
+  error "npm package cache directory not found: $NPM_CACHE_DIR"
+  echo "  - The offline package may be incomplete"
+  echo "  - Try recreating the offline package"
+  exit 1
+fi
+
+info "Installing dependencies from offline cache..."
+if [ ! -f "${PACKAGE_DIR}/package.json" ]; then
+  error "package.json not found in ${PACKAGE_DIR}"
+  echo "  - Cannot install dependencies without package.json"
+  echo "  - Make sure you're in the correct directory"
+  exit 1
+fi
+
+# Create a local .npm directory to use as a cache
+mkdir -p "${PACKAGE_DIR}/.npm"
+
+# Add each package to the local npm cache
+for package in "${NPM_CACHE_DIR}"/*.tgz; do
+  if [ -f "$package" ]; then
+    package_name=$(basename "$package")
+    info "Adding to local cache: ${package_name}"
+    npm cache add "$package" --cache="${PACKAGE_DIR}/.npm" || warning "Failed to add ${package_name} to cache"
+  fi
+done
+
+# Install dependencies using the local cache
+info "Installing packages from local cache (this may take a while)..."
+npm ci --no-audit --offline --cache="${PACKAGE_DIR}/.npm" || npm install --no-audit --offline --cache="${PACKAGE_DIR}/.npm"
+
+if [ $? -eq 0 ]; then
+  success "Successfully installed dependencies from offline cache"
+else
+  error "Failed to install all dependencies from offline cache"
+  echo "  - Some packages may be missing or corrupted"
+  echo "  - Try running with: npm install --no-audit --offline --cache=${PACKAGE_DIR}/.npm"
+  exit 1
+fi
+EOF
+
+# Make the install script executable
+chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/scripts/install-offline-deps.sh"
+success "Created offline dependency installation script"
+
+# Return to the temp directory
+cd "${TEMP_DIR}"
 
 # Create the ZIP archive
-echo "Creating ZIP archive file..."
+info "Creating ZIP archive file..."
+
+# Verify the package contains all required files before creating the ZIP
+info "Verifying package integrity..."
+REQUIRED_FILES=(
+  "start-deltavision-offline.sh"
+  "docker-compose.offline.yml"
+  "folder-config.json"
+  "keywords.txt"
+  "deltavision-image.tar"
+  "scripts/configure-offline.sh"
+  "scripts/install-offline-deps.sh"
+  "npm-packages"
+)
+
+PACKAGE_ISSUES=false
+for file in "${REQUIRED_FILES[@]}"; do
+  if [ ! -f "${TEMP_DIR}/${PACKAGE_NAME}/${file}" ]; then
+    error "Missing required file in package: ${file}"
+    echo "  - This file is essential for DeltaVision to operate"
+    echo "  - Check why it wasn't included in the package"
+    PACKAGE_ISSUES=true
+  else
+    success "Verified: ${file}"
+  fi
+done
+
+if [ "$PACKAGE_ISSUES" = true ]; then
+  error "Package verification failed. Some required files are missing."
+  echo "  - The package may not function correctly in offline environments"
+  echo "  - Check the errors above and ensure all required files exist"
+  
+  read -p "Continue creating the package despite issues? (y/n): " CONTINUE
+  if [[ ! "$CONTINUE" =~ ^[Yy]$ ]]; then
+    error "Package creation aborted."
+    echo "  - Fix the issues and try again"
+    exit 1
+  fi
+  
+  warning "Continuing with package creation despite issues..."
+else
+  success "Package verification successful!"
+fi
+
+# Create the zip file
+info "Compressing package (this may take a while)..."
 cd "${TEMP_DIR}"
-zip -r "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"
+if ! zip -r "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"; then
+  error "Failed to create ZIP archive"
+  echo "  - Check disk space and permissions"
+  echo "  - Ensure zip command is installed"
+  echo "  - Package contents are still available at: ${TEMP_DIR}/${PACKAGE_NAME}"
+  exit 1
+fi
 
 # Cleanup
-echo "Cleaning up temporary files..."
+info "Cleaning up temporary files..."
 rm -rf "${TEMP_DIR}"
 
-echo "----------------------------------------"
-echo "Package successfully created: ${SCRIPT_DIR}/${PACKAGE_NAME}.zip"
-echo "Package size: $(du -h "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" | cut -f1)"
+success "----------------------------------------"
+success "Package successfully created: ${SCRIPT_DIR}/${PACKAGE_NAME}.zip"
+info "Package size: $(du -h "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" | cut -f1)"
+echo
 echo "To install on an air-gapped system:"
 echo "1. Transfer the ${PACKAGE_NAME}.zip file to the target system"
 echo "2. Extract: unzip ${PACKAGE_NAME}.zip"
@@ -292,6 +808,11 @@ echo "3. CD into the directory: cd ${PACKAGE_NAME}"
 echo "4. Run the configuration script: ./scripts/configure-offline.sh"
 echo "   This will guide you through setting up both files at once"
 echo "5. Load the container image: ${CONTAINER_ENGINE} load -i deltavision-image.tar"
-echo "6. Start with: ${CONTAINER_ENGINE}-compose -f docker-compose.offline.yml up -d"
-echo "   (or use ./start-deltavision-offline.sh for automatic detection)"
+echo "6. Start with the start-deltavision-offline.sh script:"
+echo "   ./start-deltavision-offline.sh"
+echo
+info "For verbose error messages and diagnostics:"
+echo "1. Run with debug mode: DEBUG=true ./start-deltavision-offline.sh"
+echo "2. Run the verification script: ./scripts/verify-offline-package.sh"
+echo "3. See OFFLINE-README.md for detailed troubleshooting steps"
 echo "----------------------------------------"

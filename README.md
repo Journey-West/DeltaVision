@@ -196,7 +196,86 @@ DeltaVision includes several utility scripts to help with different deployment s
 
 For detailed installation instructions, see [INSTALLATION.md](docs/INSTALLATION.md).
 
-### Using Docker Compose (Recommended)
+### Offline Deployment
+
+For air-gapped/offline environments, check the following resources:
+
+- [Offline Deployment Guide](docs/OFFLINE-README.md) - Comprehensive guide for air-gapped deployment
+- [Offline Deployment Checklist](docs/OFFLINE-CHECKLIST.md) - Pre-flight checklist for offline deployments
+- [Installation Guide](docs/INSTALLATION.md) - General installation instructions including offline mode
+
+To start DeltaVision in an offline environment:
+
+```bash
+# Configure the offline environment
+./scripts/configure-offline.sh
+
+# Verify the offline environment
+./scripts/verify-offline-dependencies.sh
+
+# Start DeltaVision
+./scripts/start-deltavision-offline.sh
+```
+
+## Available Scripts
+
+DeltaVision includes several scripts to help with installation, configuration, and operation. Below is a description of each script and when to use it.
+
+### Standard Deployment Scripts
+
+| Script | Purpose | When to Use |
+|--------|---------|-------------|
+| `scripts/start-deltavision.sh` | Starts DeltaVision in standard (non-Docker) mode | When running on a system with Node.js installed and you prefer not to use containers |
+
+### Offline/Air-Gapped Deployment Scripts
+
+| Script | Purpose | When to Use |
+|--------|---------|-------------|
+| `scripts/docker-package-offline.sh` | Creates a self-contained package for offline deployment | Before transferring to an air-gapped environment, run on a connected system to create the package |
+| `scripts/configure-offline.sh` | Configures the offline deployment with correct paths | After extracting the offline package, run this first to set up paths and configuration |
+| `scripts/start-deltavision-offline.sh` | Starts DeltaVision in offline mode using Docker/Podman | After configuration, use this to start the application in an air-gapped environment |
+| `scripts/verify-offline-dependencies.sh` | Verifies all dependencies are available for offline mode | After extracting the package to ensure all requirements are met before attempting to start |
+| `scripts/preflight-check.sh` | Performs pre-flight checks before starting in offline mode | Before starting, to verify the environment is properly configured |
+| `scripts/diagnostic-logger.sh` | Provides diagnostic logging capabilities | Not used directly; sourced by other scripts to enable logging |
+| `scripts/install-offline-deps.sh` | Installs npm dependencies from offline cache | When standard npm package installation fails due to lack of internet connectivity |
+| `scripts/test-offline-setup.sh` | Verifies correct file organization and structure | After reorganizing files or extracting the package to a new location |
+
+### Container and Container Orchestration
+
+| Script | Purpose | When to Use |
+|--------|---------|-------------|
+| `docker/docker-compose.yml` | Standard Docker Compose configuration | For online environments when using Docker |
+| `docker/docker-compose.offline.yml` | Docker Compose configuration for offline mode | When deploying in air-gapped environments with Docker/Podman Compose |
+
+## Script Workflow in Offline Environments
+
+1. **Package Creation (on internet-connected system)**:
+   ```bash
+   ./scripts/docker-package-offline.sh
+   ```
+   This creates a ZIP archive containing everything needed for offline deployment.
+
+2. **After transferring to air-gapped system and extracting**:
+   ```bash
+   # Verify the package integrity
+   ./scripts/test-offline-setup.sh
+   
+   # Check if all dependencies are present
+   ./scripts/verify-offline-dependencies.sh
+   
+   # Configure paths for your environment
+   ./scripts/configure-offline.sh
+   
+   # Run preflight checks before starting
+   ./scripts/preflight-check.sh
+   
+   # Start DeltaVision
+   ./scripts/start-deltavision-offline.sh
+   ```
+
+For detailed troubleshooting and setup instructions, refer to the [Offline Deployment Guide](docs/OFFLINE-README.md).
+
+## Using Docker Compose (Recommended)
 
 1. First, edit the `docker/docker-compose.yml` file to specify your data directories:
 
