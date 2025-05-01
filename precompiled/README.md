@@ -1,6 +1,6 @@
 # DeltaVision Precompiled Binaries and Packages
 
-This directory contains precompiled binaries and ready-to-use packages for DeltaVision, enabling deployment in highly-restricted and air-gapped environments.
+This directory contains precompiled binaries and information about ready-to-use packages for DeltaVision, enabling deployment in highly-restricted and air-gapped environments.
 
 ## Structure
 
@@ -12,11 +12,18 @@ precompiled/
 │   ├── darwin-x64/      # macOS Intel 64-bit
 │   ├── darwin-arm64/    # macOS Apple Silicon (M1/M2/M3)
 │   └── win-x64/         # Windows 64-bit
-├── packages/            # Ready-to-use DeltaVision packages
-│   ├── deltavision-docker-offline-1.0.0.zip    # Docker/Podman offline package
-│   └── deltavision-standalone-1.0.0.zip        # Zero-installation standalone package
+├── packages/            # Information about ready-to-use DeltaVision packages
+│   └── README.md        # Instructions for building and distributing packages
 └── README.md            # This file
 ```
+
+## GitHub File Size Limitations
+
+GitHub has file size limits that affect the DeltaVision packages:
+- 100MB hard limit for individual files
+- 50MB soft limit (warning) for large files
+
+The Node.js binaries are included directly in the repository as they're under the 100MB limit, but the deployment packages exceed this limit and must be built locally. See `packages/README.md` for details.
 
 ## Precompiled Node.js Binaries
 
@@ -45,21 +52,17 @@ If you need to add a binary for a platform not included by default:
 
 ## Pre-built Packages
 
-The `packages/` directory contains ready-to-use DeltaVision packages for immediate deployment. These packages are included in the Git repository for convenience, allowing users to:
+The `packages/` directory contains information about the available DeltaVision package types and instructions for building them. Due to GitHub's file size limitations, the packages themselves must be built locally using the included scripts.
 
-1. Clone the repository
-2. Extract the appropriate package
-3. Deploy immediately without building or downloading anything
-
-See `packages/README.md` for detailed usage instructions.
+See `packages/README.md` for detailed build and usage instructions.
 
 ## Benefits
 
-Including precompiled binaries and packages offers several advantages:
+Including precompiled binaries and package instructions offers several advantages:
 
-1. **Faster Deployment**: No need to download or build anything
+1. **Faster Deployment**: No need to download Node.js binaries
 2. **Cross-Platform Support**: Works across different architectures
-3. **Internet Independence**: Complete offline usage
+3. **Internet Independence**: Minimizes external dependencies
 4. **Version Control**: Consistent versioning across all components
 5. **Zero Installation**: Deploy in highly-restricted environments
 

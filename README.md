@@ -46,10 +46,15 @@ DeltaVision offers multiple deployment options for different environments:
 
 For immediate deployment with zero setup:
 
+> **Note**: Due to GitHub file size limitations, the pre-built packages mentioned below need to be built locally using the scripts provided. See [precompiled/packages/README.md](precompiled/packages/README.md) for details.
+
 1. **Docker/Podman in an Air-Gapped Environment**:
    ```bash
-   # Extract the pre-built Docker/Podman package
-   unzip precompiled/packages/deltavision-docker-offline-1.0.0.zip
+   # Build the package on a connected system
+   ./scripts/docker-package-offline.sh
+   
+   # Transfer and extract the Docker/Podman package
+   unzip deltavision-docker-offline-1.0.0.zip
    cd deltavision-docker-offline-1.0.0
    ./configure-offline.sh
    ./start-deltavision-offline.sh
@@ -57,8 +62,11 @@ For immediate deployment with zero setup:
 
 2. **Standalone (No Installation Required)**:
    ```bash
-   # Extract the pre-built standalone package
-   unzip precompiled/packages/deltavision-standalone-1.0.0.zip
+   # Build the package on a connected system
+   ./scripts/package-standalone.sh
+   
+   # Transfer and extract the standalone package
+   unzip deltavision-standalone-1.0.0.zip
    cd deltavision-standalone-1.0.0
    ./start-deltavision.sh /path/to/old/folder /path/to/new/folder
    ```
