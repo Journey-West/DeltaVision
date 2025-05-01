@@ -11,6 +11,7 @@ This is the standalone edition of DeltaVision, designed for deployment in highly
 - **Offline Operation**: No internet connectivity required at any point
 - **Small Footprint**: Minimal system resource requirements
 - **Simple Usage**: Extract and run with a single command
+- **Cross-Platform Support**: Available for Linux, macOS, and Windows on multiple architectures
 
 ## Getting Started
 
@@ -46,6 +47,14 @@ This is the standalone edition of DeltaVision, designed for deployment in highly
 - Modern web browser (Chrome, Firefox, Edge, Safari)
 - No root or administrator privileges required
 - No internet connection required
+
+### Supported Platforms
+
+- Linux x64 (Most desktop/server distributions)
+- Linux ARM64 (Raspberry Pi, AWS Graviton)
+- macOS Intel x64
+- macOS Apple Silicon (M1/M2/M3)
+- Windows x64
 
 ## Files and Directories
 
@@ -130,3 +139,32 @@ DeltaVision is designed to be secure in restricted environments:
 ## Support
 
 If you encounter issues with this standalone package, please contact your administrator or reference the full documentation included in the `docs/` directory.
+
+## For Developers
+
+### Creating Packages for Different Platforms
+
+DeltaVision uses precompiled Node.js binaries to support multiple platforms. If you're creating a standalone package:
+
+1. **Prepare binaries for all platforms** (only needed once):
+   ```bash
+   ./scripts/prepare-precompiled-binaries.sh
+   ```
+
+2. **Create the standalone package**:
+   ```bash
+   ./scripts/package-standalone.sh
+   ```
+
+3. The package will automatically use the appropriate precompiled binary.
+
+### Adding Support for New Platforms
+
+To add support for a new platform:
+
+1. Create a directory for your platform in `precompiled/node/`
+2. Download the appropriate Node.js binary from https://nodejs.org/dist/
+3. Extract and place the binary in your platform directory
+4. Ensure the binary is executable (if applicable)
+
+Then use `package-standalone.sh` to create your package as usual.

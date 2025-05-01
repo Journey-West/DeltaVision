@@ -153,6 +153,7 @@ DeltaVision includes a comprehensive set of scripts for different environments a
 | Script | Purpose | When to Use |
 |--------|---------|-------------|
 | `scripts/package-standalone.sh` | Create standalone package | For deployment in highly-restricted environments |
+| `scripts/prepare-precompiled-binaries.sh` | Download Node.js binaries | Before creating standalone packages for multiple platforms |
 
 ## Documentation
 
@@ -169,6 +170,8 @@ deltavision/
 ├── docs/               # Documentation files
 ├── logs/               # Log files (created at runtime)
 ├── npm-packages/       # Offline npm packages (created by packaging scripts)
+├── precompiled/        # Precompiled binaries for multiple platforms
+│   └── node/           # Node.js binaries for various architectures
 ├── scripts/            # Operational scripts
 ├── public/             # Frontend assets
 │   ├── images/         # Image assets

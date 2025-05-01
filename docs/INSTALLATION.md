@@ -191,16 +191,23 @@ For highly-restricted environments where nothing can be installed. This option r
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Journey-West/DeltaVision.git
-   cd DeltaVision
+   git clone https://github.com/yourusername/deltavision.git
+   cd deltavision
    ```
 
-2. **Create the standalone package**:
+2. **Prepare precompiled Node.js binaries** (optional, but recommended for multi-platform support):
+   ```bash
+   ./scripts/prepare-precompiled-binaries.sh
+   ```
+   This downloads Node.js binaries for all supported platforms (Linux, macOS, Windows) and architectures.
+
+3. **Create the standalone package**:
    ```bash
    ./scripts/package-standalone.sh
    ```
+   This creates a self-contained package that automatically uses the appropriate precompiled binary.
 
-3. **Transfer the package**:
+4. **Transfer the package**:
    
    Transfer the generated `deltavision-standalone-1.0.0.zip` file to the target system.
 
@@ -289,10 +296,16 @@ For highly-restricted environments where nothing can be installed. This option r
 - No internet connection required
 
 ### Standalone Deployment
-- Basic Linux/Windows system
+- Basic Linux, macOS, or Windows system
 - 2GB RAM
 - 500MB disk space
 - No installation rights or internet required
+- Supports multiple architectures:
+  - Linux x64
+  - Linux ARM64 (Raspberry Pi, AWS Graviton)
+  - macOS Intel x64
+  - macOS Apple Silicon
+  - Windows x64
 
 ## Next Steps
 

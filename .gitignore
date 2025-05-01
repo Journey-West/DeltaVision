@@ -44,3 +44,7 @@ compose-cmd.txt
 # Temporary files
 .tmp/
 temp/
+
+# Exception: Include precompiled binaries
+!precompiled/node/
+!precompiled/node/**/*
