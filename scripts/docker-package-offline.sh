@@ -40,6 +40,20 @@ check_command() {
   return 0
 }
 
+# Function to verify a file exists in the package
+verify_file() {
+  if [ -f "${TEMP_DIR}/${PACKAGE_NAME}/$1" ]; then
+    success "Verified: $1"
+    return 0
+  else
+    error "Missing required file in package: $1"
+    echo "  - This file is essential for DeltaVision to operate"
+    echo "  - Check why it wasn't included in the package"
+    FAILED=$((FAILED+1))
+    return 1
+  fi
+}
+
 # Default version if not specified
 VERSION=${1:-"1.0.0"}
 PACKAGE_NAME="deltavision-docker-offline-${VERSION}"
@@ -77,15 +91,37 @@ if check_command podman && podman --version | grep -q "podman"; then
   CONTAINER_ENGINE="podman"
   success "Detected Podman as container engine"
   
-  # Check if podman-compose is available
-  if check_command podman-compose; then
-    COMPOSE_CMD="podman-compose"
-    success "Detected podman-compose"
-  # Check if podman compose subcommand is available by actually trying to run it
-  elif podman compose version &> /dev/null; then
-    COMPOSE_CMD="podman compose"
-    success "Detected podman compose subcommand"
-  else
+  # Fix the Podman compose detection logic
+  test_podman_compose() {
+    # Check for podman-compose (separate binary)
+    if command -v podman-compose &> /dev/null; then
+      COMPOSE_CMD="podman-compose"
+      COMPOSE_AVAILABLE=true
+      echo "Using podman-compose"
+      return 0
+    fi
+
+    # Check for podman compose (subcommand)
+    if podman compose version &> /dev/null; then
+      if podman compose -f "${SCRIPT_DIR}/../docker/docker-compose.yml" config &> /dev/null; then
+        COMPOSE_CMD="podman compose"
+        COMPOSE_AVAILABLE=true
+        echo "Using podman compose with -f flag"
+      else
+        # Test if compose works without -f flag
+        cd "${SCRIPT_DIR}"
+        if podman compose --help &> /dev/null; then
+          COMPOSE_CMD="podman compose"
+          COMPOSE_AVAILABLE=true
+          echo "Using podman compose (directory based)"
+        fi
+      fi
+    fi
+    
+    return 1
+  }
+
+  if ! test_podman_compose; then
     COMPOSE_AVAILABLE=false
     warning "No Podman Compose functionality detected"
     echo "  - Will include instructions for using direct Podman commands"
@@ -409,13 +445,12 @@ if command -v podman &> /dev/null; then
       COMPOSE_AVAILABLE=true
       echo "Using podman compose with -f flag"
     else
-      # Test if compose works without -f flag
+      echo "Podman compose doesn't support -f flag, using directory-based approach"
+      # Copy the compose file to docker-compose.yml for directory-based approach
+      cp "${SCRIPT_DIR}/docker-compose.offline.yml" "${SCRIPT_DIR}/docker-compose.yml"
       cd "${SCRIPT_DIR}"
-      if podman compose --help &> /dev/null; then
-        COMPOSE_CMD="podman compose"
-        COMPOSE_AVAILABLE=true
-        echo "Using podman compose (directory based)"
-      fi
+      podman compose up -d
+      return $?
     fi
   fi
   
@@ -638,23 +673,79 @@ else
   fi
 fi
 
-# Download all packages for offline installation
+# Use a more robust approach to download packages
 info "Downloading npm packages for offline use (this may take a while)..."
-if ! npm ci --ignore-scripts --package-lock-only; then
-  warning "Failed to validate dependencies with npm ci"
-  echo "  - This may cause issues with offline dependency installation"
-  echo "  - Will attempt to continue with npm pack"
+
+# First try to do a proper npm install to ensure all dependencies are in node_modules
+if [ ! -d "node_modules" ] || [ ! -d "node_modules/express" ]; then
+  warning "Dependencies not found in node_modules. Installing them first..."
+  npm install
+  
+  if [ $? -ne 0 ]; then
+    warning "Failed to install dependencies. Will try to create package anyway."
+    echo "  - This may lead to an incomplete offline package"
+  else
+    success "Dependencies installed successfully"
+  fi
 fi
 
-# Pack all direct and transitive dependencies into tarballs
-if ! npm pack $(npm list --parseable --depth=0 | grep -v "$(pwd)"); then
-  warning "Failed to pack some npm dependencies"
-  echo "  - May not have all required packages for offline installation"
-  echo "  - Will attempt to continue with available packages"
+# Use npm pack with a different approach
+info "Packing npm dependencies..."
+
+# Get direct dependencies from package.json
+DEPS=$(node -e "console.log(Object.keys(require('./package.json').dependencies || {}).join(' '))")
+
+if [ -z "$DEPS" ]; then
+  warning "No dependencies found in package.json"
+  echo "  - This will result in an incomplete offline package"
+else
+  success "Found dependencies: $DEPS"
+  
+  # Create an empty directory for npm cache to prevent using existing cache
+  mkdir -p "${TEMP_DIR}/npm-cache"
+  
+  # Process each dependency individually
+  for dep in $DEPS; do
+    info "Packing dependency: $dep"
+    
+    # Try to get specific version from package.json
+    DEP_VERSION=$(node -e "const pkg = require('./package.json'); const version = (pkg.dependencies || {})['$dep']; console.log(version);")
+    
+    # Pack the dependency with version if available
+    if [[ "$DEP_VERSION" == ^* ]]; then
+      # If version starts with ^, remove it for exact version
+      DEP_VERSION="${DEP_VERSION:1}"
+    fi
+    
+    if [ -n "$DEP_VERSION" ]; then
+      npm pack "$dep@$DEP_VERSION" --cache="${TEMP_DIR}/npm-cache" || npm pack "$dep" --cache="${TEMP_DIR}/npm-cache"
+    else
+      npm pack "$dep" --cache="${TEMP_DIR}/npm-cache"
+    fi
+  done
+  
+  # Move packages to npm-packages directory
+  mv *.tgz "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages/" 2>/dev/null || true
+  
+  # Count how many packages were downloaded
+  PACKAGE_COUNT=$(find "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" -name "*.tgz" | wc -l)
+  
+  if [ "$PACKAGE_COUNT" -eq 0 ]; then
+    warning "No packages were downloaded. Creating placeholder packages directory."
+    echo "# This directory should contain npm packages for offline installation" > "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages/README.txt"
+    echo "# Please run 'npm install' on a connected system and copy the node_modules directory if needed" >> "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages/README.txt"
+  else
+    success "Downloaded $PACKAGE_COUNT npm packages for offline use"
+  fi
 fi
 
-# Move the tarballs to the package directory
-mv *.tgz "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages/" 2>/dev/null || true
+# As a backup, also include a copy of node_modules if it exists
+if [ -d "node_modules" ]; then
+  info "Copying node_modules directory as backup (this may take a while)..."
+  mkdir -p "${TEMP_DIR}/${PACKAGE_NAME}/node_modules_backup"
+  cp -r node_modules/* "${TEMP_DIR}/${PACKAGE_NAME}/node_modules_backup/" 2>/dev/null || true
+  success "Node modules backup created"
+fi
 
 # Create a script to install from the offline cache
 cat > "${TEMP_DIR}/${PACKAGE_NAME}/scripts/install-offline-deps.sh" << 'EOF'
@@ -687,6 +778,7 @@ success() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_DIR="$(dirname "$SCRIPT_DIR")"
 NPM_CACHE_DIR="${PACKAGE_DIR}/npm-packages"
+NODE_MODULES_BACKUP="${PACKAGE_DIR}/node_modules_backup"
 
 # Check if the npm cache directory exists
 if [ ! -d "$NPM_CACHE_DIR" ]; then
@@ -707,26 +799,65 @@ fi
 # Create a local .npm directory to use as a cache
 mkdir -p "${PACKAGE_DIR}/.npm"
 
-# Add each package to the local npm cache
-for package in "${NPM_CACHE_DIR}"/*.tgz; do
-  if [ -f "$package" ]; then
-    package_name=$(basename "$package")
-    info "Adding to local cache: ${package_name}"
-    npm cache add "$package" --cache="${PACKAGE_DIR}/.npm" || warning "Failed to add ${package_name} to cache"
+# Count packages in npm cache
+PACKAGE_COUNT=$(find "${NPM_CACHE_DIR}" -name "*.tgz" | wc -l)
+
+if [ $PACKAGE_COUNT -eq 0 ]; then
+  warning "No npm packages found in cache. Looking for backup..."
+  if [ -d "$NODE_MODULES_BACKUP" ] && [ "$(ls -A "$NODE_MODULES_BACKUP")" ]; then
+    info "Found node_modules backup. Using it instead..."
+    mkdir -p "${PACKAGE_DIR}/node_modules"
+    cp -r "${NODE_MODULES_BACKUP}/"* "${PACKAGE_DIR}/node_modules/" 
+    if [ $? -eq 0 ]; then
+      success "Successfully copied node_modules from backup"
+    else
+      error "Failed to copy node_modules from backup"
+      echo "  - Try installing dependencies manually"
+      exit 1
+    fi
+  else
+    error "No npm packages found in cache and no backup available"
+    echo "  - You will need to install dependencies manually or copy node_modules from another system"
+    exit 1
   fi
-done
-
-# Install dependencies using the local cache
-info "Installing packages from local cache (this may take a while)..."
-npm ci --no-audit --offline --cache="${PACKAGE_DIR}/.npm" || npm install --no-audit --offline --cache="${PACKAGE_DIR}/.npm"
-
-if [ $? -eq 0 ]; then
-  success "Successfully installed dependencies from offline cache"
 else
-  error "Failed to install all dependencies from offline cache"
-  echo "  - Some packages may be missing or corrupted"
-  echo "  - Try running with: npm install --no-audit --offline --cache=${PACKAGE_DIR}/.npm"
-  exit 1
+  # Add each package to the local npm cache
+  for package in "${NPM_CACHE_DIR}"/*.tgz; do
+    if [ -f "$package" ]; then
+      package_name=$(basename "$package")
+      info "Adding to local cache: ${package_name}"
+      npm cache add "$package" --cache="${PACKAGE_DIR}/.npm" || warning "Failed to add ${package_name} to cache"
+    fi
+  done
+
+  # Install dependencies using the local cache
+  info "Installing packages from local cache (this may take a while)..."
+  npm ci --no-audit --offline --cache="${PACKAGE_DIR}/.npm" || npm install --no-audit --offline --cache="${PACKAGE_DIR}/.npm"
+
+  if [ $? -eq 0 ]; then
+    success "Successfully installed dependencies from offline cache"
+  else
+    warning "Failed to install all dependencies from offline cache"
+    echo "  - Checking for node_modules backup..."
+    
+    if [ -d "$NODE_MODULES_BACKUP" ] && [ "$(ls -A "$NODE_MODULES_BACKUP")" ]; then
+      info "Found node_modules backup. Using it instead..."
+      mkdir -p "${PACKAGE_DIR}/node_modules"
+      cp -r "${NODE_MODULES_BACKUP}/"* "${PACKAGE_DIR}/node_modules/" 
+      if [ $? -eq 0 ]; then
+        success "Successfully copied node_modules from backup"
+      else
+        error "Failed to copy node_modules from backup"
+        echo "  - Try installing dependencies manually"
+        exit 1
+      fi
+    else
+      error "Failed to install dependencies from cache and no backup available"
+      echo "  - Try running with: npm install --no-audit --offline --cache=${PACKAGE_DIR}/.npm"
+      echo "  - Or install dependencies manually"
+      exit 1
+    fi
+  fi
 fi
 EOF
 
@@ -737,36 +868,34 @@ success "Created offline dependency installation script"
 # Return to the temp directory
 cd "${TEMP_DIR}"
 
-# Create the ZIP archive
-info "Creating ZIP archive file..."
-
 # Verify the package contains all required files before creating the ZIP
 info "Verifying package integrity..."
-REQUIRED_FILES=(
-  "start-deltavision-offline.sh"
-  "docker-compose.offline.yml"
-  "folder-config.json"
-  "keywords.txt"
-  "deltavision-image.tar"
-  "scripts/configure-offline.sh"
-  "scripts/install-offline-deps.sh"
-  "npm-packages"
-)
+verify_file "start-deltavision-offline.sh"
+verify_file "docker-compose.offline.yml"
+verify_file "folder-config.json"
+verify_file "keywords.txt"
+verify_file "deltavision-image.tar"
+verify_file "scripts/configure-offline.sh"
+verify_file "scripts/install-offline-deps.sh"
 
-PACKAGE_ISSUES=false
-for file in "${REQUIRED_FILES[@]}"; do
-  if [ ! -f "${TEMP_DIR}/${PACKAGE_NAME}/${file}" ]; then
-    error "Missing required file in package: ${file}"
-    echo "  - This file is essential for DeltaVision to operate"
-    echo "  - Check why it wasn't included in the package"
-    PACKAGE_ISSUES=true
-  else
-    success "Verified: ${file}"
-  fi
-done
+# Check for either npm-packages directory (with actual packages) or node_modules_backup
+if [ -d "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" ] && [ "$(find "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" -name "*.tgz" | wc -l)" -gt 0 ]; then
+  success "Verified: npm-packages (contains $(find "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" -name "*.tgz" | wc -l) packages)"
+elif [ -d "${TEMP_DIR}/${PACKAGE_NAME}/node_modules_backup" ] && [ "$(ls -A "${TEMP_DIR}/${PACKAGE_NAME}/node_modules_backup" 2>/dev/null)" ]; then
+  success "Verified: node_modules_backup"
+else
+  error "Missing required dependency files in package"
+  echo "  - Neither npm-packages with .tgz files nor a node_modules_backup directory was found"
+  echo "  - This will prevent offline installation of dependencies"
+  FAILED=$((FAILED+1))
+fi
 
-if [ "$PACKAGE_ISSUES" = true ]; then
-  error "Package verification failed. Some required files are missing."
+# Create the ZIP archive
+info "Creating ZIP archive file..."
+FAILED=0
+
+if [ $FAILED -gt 0 ]; then
+  error "Package verification failed with $FAILED errors."
   echo "  - The package may not function correctly in offline environments"
   echo "  - Check the errors above and ensure all required files exist"
   
@@ -783,13 +912,21 @@ else
 fi
 
 # Create the zip file
-info "Compressing package (this may take a while)..."
-cd "${TEMP_DIR}"
-if ! zip -r "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"; then
+zip -r "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"
+
+if [ $? -eq 0 ]; then
+  success "Created offline package: ${SCRIPT_DIR}/${PACKAGE_NAME}.zip"
+  echo "  - Size: $(du -h "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" | cut -f1)"
+  echo ""
+  success "DeltaVision offline package created successfully!"
+  echo "  - Package is ready for deployment in air-gapped environments"
+  echo "  - Transfer the package to the target system and extract it"
+  echo "  - Run ./scripts/configure-offline.sh to set up the environment"
+  echo "  - Run ./scripts/verify-offline-dependencies.sh to verify all dependencies"
+  echo "  - Run ./start-deltavision-offline.sh to start DeltaVision"
+else
   error "Failed to create ZIP archive"
   echo "  - Check disk space and permissions"
-  echo "  - Ensure zip command is installed"
-  echo "  - Package contents are still available at: ${TEMP_DIR}/${PACKAGE_NAME}"
   exit 1
 fi
 
