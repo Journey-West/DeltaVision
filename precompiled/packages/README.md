@@ -1,8 +1,35 @@
 # DeltaVision Pre-built Packages
 
-This directory contains ready-to-use DeltaVision packages for immediate deployment in various environments, including air-gapped systems. These packages are included in the Git repository for your convenience.
+This directory should contain ready-to-use DeltaVision packages for immediate deployment in various environments, including air-gapped systems.
 
-## Available Packages
+## Important Note About GitHub Size Limitations
+
+GitHub has a file size limit of 100MB for standard repositories. The DeltaVision packages exceed this limit:
+- `deltavision-docker-offline-1.0.0.zip` (~674MB)
+- `deltavision-standalone-1.0.0.zip` (~182MB)
+
+### How to Obtain the Packages
+
+These packages can be built using the scripts in the repository:
+
+```bash
+# Create Docker/Podman offline package
+./scripts/docker-package-offline.sh
+
+# Create standalone package
+./scripts/package-standalone.sh
+```
+
+### Alternative Distribution Methods
+
+For teams that need to distribute these packages:
+
+1. **Internal Artifact Repository**: Store the packages in an internal artifact repository like Nexus, Artifactory, or Azure DevOps Artifacts
+2. **Self-hosted Git LFS**: Use Git Large File Storage on a self-hosted Git server
+3. **Shared Network Drive**: Maintain the packages on a shared network location
+4. **Release Assets**: Add these as release assets to GitHub Releases (with GitHub Enterprise)
+
+## Package Descriptions
 
 | Package | Description | Use Case |
 |---------|-------------|----------|
@@ -13,18 +40,20 @@ This directory contains ready-to-use DeltaVision packages for immediate deployme
 
 ### Docker/Podman Offline Package
 
-1. **Transfer the package** to your air-gapped environment
-2. **Extract the package**: `unzip deltavision-docker-offline-1.0.0.zip`
-3. **Configure**: `cd deltavision-docker-offline-1.0.0 && ./configure-offline.sh`
-4. **Start DeltaVision**: `./start-deltavision-offline.sh`
+1. **Build or obtain the package**: `./scripts/docker-package-offline.sh`
+2. **Transfer the package** to your air-gapped environment
+3. **Extract the package**: `unzip deltavision-docker-offline-1.0.0.zip`
+4. **Configure**: `cd deltavision-docker-offline-1.0.0 && ./configure-offline.sh`
+5. **Start DeltaVision**: `./start-deltavision-offline.sh`
 
 For detailed instructions, see `OFFLINE-README.md` inside the package.
 
 ### Standalone Package
 
-1. **Transfer the package** to your target system
-2. **Extract the package**: `unzip deltavision-standalone-1.0.0.zip`
-3. **Start DeltaVision**: `cd deltavision-standalone-1.0.0 && ./start-deltavision.sh /path/to/old/folder /path/to/new/folder`
+1. **Build or obtain the package**: `./scripts/package-standalone.sh`
+2. **Transfer the package** to your target system
+3. **Extract the package**: `unzip deltavision-standalone-1.0.0.zip`
+4. **Start DeltaVision**: `cd deltavision-standalone-1.0.0 && ./start-deltavision.sh /path/to/old/folder /path/to/new/folder`
 
 For detailed instructions, see `STANDALONE-README.md` inside the package.
 

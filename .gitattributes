@@ -1,0 +1,18 @@
+# Handle large binary package files
+precompiled/packages/*.zip filter=lfs diff=lfs merge=lfs -text
+
+# Standard file handling
+*.md text
+*.sh text eol=lf
+*.json text
+*.js text
+*.html text
+*.css text
+*.yml text
+*.yaml text
+
+# Binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.tar binary
