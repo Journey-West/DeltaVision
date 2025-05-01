@@ -45,9 +45,12 @@ container-engine.txt
 compose-available.txt
 compose-cmd.txt
 
-# Package files - exclude from repo, but keep local builds
+# Package files - exclude from repo EXCEPT those in precompiled directory
 deltavision-*.zip
 scripts/deltavision-*.zip
+# Explicitly allow packages in precompiled directory
+!precompiled/packages/
+!precompiled/packages/**/*
 
 # Temporary files
 .tmp/

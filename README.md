@@ -40,6 +40,31 @@ DeltaVision offers multiple deployment options designed to work in virtually any
 
 ## Quick Start
 
+DeltaVision offers multiple deployment options for different environments:
+
+### Option 1: Using Pre-built Packages (Fastest)
+
+For immediate deployment with zero setup:
+
+1. **Docker/Podman in an Air-Gapped Environment**:
+   ```bash
+   # Extract the pre-built Docker/Podman package
+   unzip precompiled/packages/deltavision-docker-offline-1.0.0.zip
+   cd deltavision-docker-offline-1.0.0
+   ./configure-offline.sh
+   ./start-deltavision-offline.sh
+   ```
+
+2. **Standalone (No Installation Required)**:
+   ```bash
+   # Extract the pre-built standalone package
+   unzip precompiled/packages/deltavision-standalone-1.0.0.zip
+   cd deltavision-standalone-1.0.0
+   ./start-deltavision.sh /path/to/old/folder /path/to/new/folder
+   ```
+
+### Option 2: Docker/Podman (Recommended for Most Users)
+
 ### 1. Docker/Podman (Recommended)
 
 ```bash
