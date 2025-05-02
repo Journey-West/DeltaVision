@@ -2338,10 +2338,34 @@
                     <div className="comparison-section">
                         {currentComparisonType === 'oldNew' ? (
                             newOnlyEnabled ? (
-                                <div className="new-only-view">
-                                    <h3>New File: { files[selectedFileIndex].newFile.filename }</h3>
+                                <div className="comparison-container">
+                                    <h3>File Comparison - New File Only</h3>
+                                    <div className="filename-display">
+                                        <div className="row align-items-center mb-3">
+                                            <div className="col-md-12">
+                                                <div className="filename-box new-file">
+                                                    <h5>New File <span className="file-time">({new Date(files[selectedFileIndex].newFile.mtime).toLocaleString()})</span></h5>
+                                                    <div className="filename">{files[selectedFileIndex].newFile.filename}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="file-details">
+                                        <div>
+                                            {files[selectedFileIndex].commandRan}
+                                        </div>
+                                    </div>
                                     <div className="diff-container">
-                                        <pre>{newContent}</pre>
+                                        <table className="diff-table">
+                                            <tbody>
+                                                {newContent.split('\n').map((line, i) => (
+                                                    <tr key={i}>
+                                                        <td className="line-number">{i+1}</td>
+                                                        <td>{highlightKeywords(line, keywords, highlightingEnabled)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             ) : (
@@ -3476,7 +3500,7 @@
             color: white;
             padding: 10px 15px;
             border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             z-index: 9999;
             font-weight: 500;
         }
