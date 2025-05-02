@@ -169,7 +169,7 @@ else
 fi
 
 # Get version from docker-compose file
-VERSION=$(grep "image:" "${PARENT_DIR}/docker/docker-compose.offline.yml" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "1.0.0")
+VERSION=$(grep "image:" "${PARENT_DIR}/docker-compose.offline.yml" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "1.0.0")
 
 cat << "EOF"
   _____        _  _        __      ___      _             
@@ -402,8 +402,8 @@ fi
 
 # Create a backup of original files
 info "Creating backup of original configuration files..."
-if [ -f "${PARENT_DIR}/docker/docker-compose.offline.yml" ]; then
-  if ! cp "${PARENT_DIR}/docker/docker-compose.offline.yml" "${PARENT_DIR}/docker/docker-compose.offline.yml.bak"; then
+if [ -f "${PARENT_DIR}/docker-compose.offline.yml" ]; then
+  if ! cp "${PARENT_DIR}/docker-compose.offline.yml" "${PARENT_DIR}/docker-compose.offline.yml.bak"; then
     error "Failed to backup docker-compose.offline.yml"
     echo "  - Check if the directory is writable"
     echo "  - Check disk space"
@@ -441,7 +441,7 @@ fi
 # Create a modified docker-compose.yml for offline use
 info "Creating docker-compose.offline.yml with your paths..."
 
-cat > "${SCRIPT_DIR}/../docker/docker-compose.offline.yml" << EOF
+cat > "${SCRIPT_DIR}/../docker-compose.offline.yml" << EOF
 version: '3'
 
 services:
@@ -463,7 +463,7 @@ services:
 EOF
 
 # Create a symlink in the root directory for backward compatibility
-ln -sf "${SCRIPT_DIR}/../docker/docker-compose.offline.yml" "${SCRIPT_DIR}/../docker-compose.offline.yml"
+ln -sf "${SCRIPT_DIR}/../docker-compose.offline.yml" "${SCRIPT_DIR}/../docker-compose.offline.yml"
 
 success "Created docker-compose.offline.yml with your configuration"
 
@@ -478,7 +478,7 @@ cat > "${PARENT_DIR}/folder-config.json" << EOF
 EOF
 
 # Clean up temporary files
-rm -f "${PARENT_DIR}/docker/docker-compose.offline.yml.tmp"
+rm -f "${PARENT_DIR}/docker-compose.offline.yml.tmp"
 
 # Validate configuration before proceeding
 info "Validating configuration..."

@@ -56,7 +56,7 @@ For immediate deployment with zero setup:
    # Transfer and extract the Docker/Podman package
    unzip deltavision-docker-offline-1.0.0.zip
    cd deltavision-docker-offline-1.0.0
-   ./configure-offline.sh
+   ./scripts/configure-offline.sh
    ./start-deltavision-offline.sh
    ```
 

@@ -207,7 +207,7 @@ fi
 # Check if docker-compose.offline.yml exists
 if [ "$COMPOSE_AVAILABLE" = true ]; then
     info "Checking compose configuration..."
-    COMPOSE_FILE="${SCRIPT_DIR}/../docker/docker-compose.offline.yml"
+    COMPOSE_FILE="${SCRIPT_DIR}/../docker-compose.offline.yml"
     if ! check_file "${COMPOSE_FILE}" "Run the configure-offline.sh script first to set up your environment"; then
         warning "Will try to use direct container commands instead"
         COMPOSE_AVAILABLE=false
@@ -293,7 +293,7 @@ fi
 # Start the container using compose if available
 if [ "$COMPOSE_AVAILABLE" = true ]; then
     info "Starting DeltaVision using $COMPOSE_CMD..."
-    if ! $COMPOSE_CMD -f "${SCRIPT_DIR}/../docker/docker-compose.offline.yml" up -d; then
+    if ! $COMPOSE_CMD -f "${SCRIPT_DIR}/../docker-compose.offline.yml" up -d; then
         error "Failed to start container with $COMPOSE_CMD"
         echo "  - Check the error message above"
         echo "  - Will try direct container commands instead"
@@ -378,7 +378,7 @@ echo "Access DeltaVision in your web browser at: http://localhost:3000"
 echo
 echo "To stop DeltaVision:"
 if [ "$COMPOSE_AVAILABLE" = true ]; then
-    echo "  $COMPOSE_CMD -f ${SCRIPT_DIR}/../docker/docker-compose.offline.yml down"
+    echo "  $COMPOSE_CMD -f ${SCRIPT_DIR}/../docker-compose.offline.yml down"
 else
     echo "  $CONTAINER_ENGINE stop deltavision"
     echo "  $CONTAINER_ENGINE rm deltavision"

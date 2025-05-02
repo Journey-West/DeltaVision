@@ -93,31 +93,18 @@ if check_command podman && podman --version | grep -q "podman"; then
   
   # Fix the Podman compose detection logic
   test_podman_compose() {
-    # Check for podman-compose (separate binary)
     if command -v podman-compose &> /dev/null; then
       COMPOSE_CMD="podman-compose"
       COMPOSE_AVAILABLE=true
       echo "Using podman-compose"
       return 0
     fi
-
-    # Check for podman compose (subcommand)
     if podman compose version &> /dev/null; then
-      if podman compose -f "${SCRIPT_DIR}/../docker/docker-compose.yml" config &> /dev/null; then
-        COMPOSE_CMD="podman compose"
-        COMPOSE_AVAILABLE=true
-        echo "Using podman compose with -f flag"
-      else
-        # Test if compose works without -f flag
-        cd "${SCRIPT_DIR}"
-        if podman compose --help &> /dev/null; then
-          COMPOSE_CMD="podman compose"
-          COMPOSE_AVAILABLE=true
-          echo "Using podman compose (directory based)"
-        fi
-      fi
+      COMPOSE_CMD="podman compose"
+      COMPOSE_AVAILABLE=true
+      echo "Using podman compose"
+      return 0
     fi
-    
     return 1
   }
 
@@ -143,6 +130,13 @@ else
   else
     success "Detected docker-compose"
   fi
+fi
+
+# Verify daemon accessibility
+info "Checking ${CONTAINER_ENGINE} daemon connectivity..."
+if ! ${CONTAINER_ENGINE} info &> /dev/null; then
+  error "Cannot connect to ${CONTAINER_ENGINE} daemon. Please start the daemon and try again."
+  exit 1
 fi
 
 # Create directory structure
@@ -246,15 +240,11 @@ fi
 cp "${SCRIPT_DIR}/configure-offline.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/"
 success "Copied configuration script"
 
-# Copy the verification script if available
-if [ -f "${SCRIPT_DIR}/verify-offline-package.sh" ]; then
-  cp "${SCRIPT_DIR}/verify-offline-package.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/"
-  success "Copied verification script"
-else
-  warning "Verification script not found"
-  echo "  - File was expected at: ${SCRIPT_DIR}/verify-offline-package.sh"
-  echo "  - This will limit troubleshooting capabilities in offline environments"
-fi
+# Copy additional helper scripts
+cp "${SCRIPT_DIR}/preflight-check.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/" && success "Copied: preflight-check.sh"
+cp "${SCRIPT_DIR}/diagnostic-logger.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/" && success "Copied: diagnostic-logger.sh"
+cp "${SCRIPT_DIR}/verify-offline-package.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/" && success "Copied: verification script"
+cp "${SCRIPT_DIR}/verify-offline-dependencies.sh" "${TEMP_DIR}/${PACKAGE_NAME}/scripts/" && success "Copied: verify-offline-dependencies.sh"
 
 # Make the configure script executable in the package
 chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/scripts/configure-offline.sh"
@@ -341,7 +331,12 @@ newgrp docker
 
    **OR** manually configure (alternative):
 
-3. **Configure your data directories**:
+3. **Install dependencies offline**:
+   ```bash
+   ./scripts/install-offline-deps.sh
+   ```
+
+4. **Configure your data directories**:
    Edit the `docker-compose.offline.yml` file to point to your actual data directories:
    ```yaml
    volumes:
@@ -350,7 +345,7 @@ newgrp docker
      - /path/to/your/new/folder:/app/data/new
    ```
 
-4. **Update the folder configuration**:
+5. **Update the folder configuration**:
    Edit `folder-config.json` to match your mounted directories:
    ```json
    {
@@ -360,7 +355,7 @@ newgrp docker
    }
    ```
 
-5. **Start the application**:
+6. **Start the application**:
    ```bash
    # The recommended approach (works with all configurations):
    ./start-deltavision-offline.sh
@@ -378,7 +373,7 @@ newgrp docker
    # The start script will handle this automatically using direct podman commands
    ```
 
-6. **Access DeltaVision**:
+7. **Access DeltaVision**:
    Open your browser and navigate to:
    ```
    http://localhost:3000
@@ -512,9 +507,17 @@ fi
 sed -i.bak "s|image: .*|image: ${IMAGE_NAME}|g" "${SCRIPT_DIR}/docker-compose.offline.yml"
 
 # Extract information from docker-compose.offline.yml
-PORT=$(grep -oP '"\K[0-9]+(?=:3000")' "${SCRIPT_DIR}/docker-compose.offline.yml" || echo "3000")
-OLD_MOUNT=$(grep -A1 "# Mount your data directories" "${SCRIPT_DIR}/docker-compose.offline.yml" | grep "old" | awk '{print $2}' || echo "/tmp:/app/data/old")
-NEW_MOUNT=$(grep -A2 "# Mount your data directories" "${SCRIPT_DIR}/docker-compose.offline.yml" | grep "new" | awk '{print $2}' || echo "/tmp:/app/data/new")
+info "Parsing compose file for runtime configuration..."
+if command -v yq &> /dev/null; then
+  PORT=$(yq e '.services.deltavision.ports[0]' "${SCRIPT_DIR}/docker-compose.offline.yml" | sed -E 's/([0-9]+):3000/\1/')
+  OLD_MOUNT=$(yq e '.services.deltavision.volumes[]' "${SCRIPT_DIR}/docker-compose.offline.yml" | grep '/app/data/old' | cut -d':' -f1)
+  NEW_MOUNT=$(yq e '.services.deltavision.volumes[]' "${SCRIPT_DIR}/docker-compose.offline.yml" | grep '/app/data/new' | cut -d':' -f1)
+else
+  warning "'yq' not found; falling back to basic parsing"
+  PORT=$(grep -m1 '^[[:space:]]*- *"[0-9]\+:3000"' "${SCRIPT_DIR}/docker-compose.offline.yml" | sed -E 's/.*"([0-9]+):3000".*/\1/' || echo "3000")
+  OLD_MOUNT=$(grep -A2 'volumes:' "${SCRIPT_DIR}/docker-compose.offline.yml" | grep '/app/data/old' | sed -E 's/.*-[[:space:]]*([^:]+):.*/\1/' || echo "/tmp:/app/data/old")
+  NEW_MOUNT=$(grep -A2 'volumes:' "${SCRIPT_DIR}/docker-compose.offline.yml" | grep '/app/data/new' | sed -E 's/.*-[[:space:]]*([^:]+):.*/\1/' || echo "/tmp:/app/data/new")
+fi
 
 # Extract just the paths without the container paths
 OLD_FOLDER=$(echo "${OLD_MOUNT}" | cut -d':' -f1)
@@ -747,6 +750,18 @@ if [ -d "node_modules" ]; then
   success "Node modules backup created"
 fi
 
+# Verify offline dependency packages exist
+if [ -d "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" ] && [ "$(find "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" -name "*.tgz" | wc -l)" -gt 0 ]; then
+  success "Offline npm cache verified"
+elif [ -d "${TEMP_DIR}/${PACKAGE_NAME}/node_modules_backup" ] && [ "$(ls -A "${TEMP_DIR}/${PACKAGE_NAME}/node_modules_backup" 2>/dev/null)" ]; then
+  success "Node modules backup verified"
+else
+  error "Missing offline dependency packages"
+  echo "  - Neither npm-packages (.tgz) nor node_modules_backup directory found"
+  echo "  - Please run 'npm install' on a connected system and re-run this packaging script"
+  exit 1
+fi
+
 # Create a script to install from the offline cache
 cat > "${TEMP_DIR}/${PACKAGE_NAME}/scripts/install-offline-deps.sh" << 'EOF'
 #!/usr/bin/env bash
@@ -865,9 +880,6 @@ EOF
 chmod +x "${TEMP_DIR}/${PACKAGE_NAME}/scripts/install-offline-deps.sh"
 success "Created offline dependency installation script"
 
-# Return to the temp directory
-cd "${TEMP_DIR}"
-
 # Verify the package contains all required files before creating the ZIP
 info "Verifying package integrity..."
 verify_file "start-deltavision-offline.sh"
@@ -877,58 +889,29 @@ verify_file "keywords.txt"
 verify_file "deltavision-image.tar"
 verify_file "scripts/configure-offline.sh"
 verify_file "scripts/install-offline-deps.sh"
-
-# Check for either npm-packages directory (with actual packages) or node_modules_backup
-if [ -d "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" ] && [ "$(find "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" -name "*.tgz" | wc -l)" -gt 0 ]; then
-  success "Verified: npm-packages (contains $(find "${TEMP_DIR}/${PACKAGE_NAME}/npm-packages" -name "*.tgz" | wc -l) packages)"
-elif [ -d "${TEMP_DIR}/${PACKAGE_NAME}/node_modules_backup" ] && [ "$(ls -A "${TEMP_DIR}/${PACKAGE_NAME}/node_modules_backup" 2>/dev/null)" ]; then
-  success "Verified: node_modules_backup"
-else
-  error "Missing required dependency files in package"
-  echo "  - Neither npm-packages with .tgz files nor a node_modules_backup directory was found"
-  echo "  - This will prevent offline installation of dependencies"
-  FAILED=$((FAILED+1))
-fi
+verify_file "scripts/preflight-check.sh"
+verify_file "scripts/diagnostic-logger.sh"
+verify_file "scripts/verify-offline-dependencies.sh"
 
 # Create the ZIP archive
 info "Creating ZIP archive file..."
-FAILED=0
-
-if [ $FAILED -gt 0 ]; then
-  error "Package verification failed with $FAILED errors."
-  echo "  - The package may not function correctly in offline environments"
-  echo "  - Check the errors above and ensure all required files exist"
-  
-  read -p "Continue creating the package despite issues? (y/n): " CONTINUE
-  if [[ ! "$CONTINUE" =~ ^[Yy]$ ]]; then
-    error "Package creation aborted."
-    echo "  - Fix the issues and try again"
-    exit 1
-  fi
-  
-  warning "Continuing with package creation despite issues..."
-else
-  success "Package verification successful!"
-fi
-
-# Create the zip file
 zip -r "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"
-
-if [ $? -eq 0 ]; then
-  success "Created offline package: ${SCRIPT_DIR}/${PACKAGE_NAME}.zip"
-  echo "  - Size: $(du -h "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" | cut -f1)"
-  echo ""
-  success "DeltaVision offline package created successfully!"
-  echo "  - Package is ready for deployment in air-gapped environments"
-  echo "  - Transfer the package to the target system and extract it"
-  echo "  - Run ./scripts/configure-offline.sh to set up the environment"
-  echo "  - Run ./scripts/verify-offline-dependencies.sh to verify all dependencies"
-  echo "  - Run ./start-deltavision-offline.sh to start DeltaVision"
-else
+if [ $? -ne 0 ]; then
   error "Failed to create ZIP archive"
   echo "  - Check disk space and permissions"
   exit 1
 fi
+
+success "Created offline package: ${SCRIPT_DIR}/${PACKAGE_NAME}.zip"
+echo "  - Size: $(du -h "${SCRIPT_DIR}/${PACKAGE_NAME}.zip" | cut -f1)"
+echo ""
+success "DeltaVision offline package created successfully!"
+echo "  - Package is ready for deployment in air-gapped environments"
+echo "  - Transfer the package to the target system and extract it"
+echo "  - Run ./scripts/configure-offline.sh to set up the environment"
+echo "  - Run ./scripts/verify-offline-dependencies.sh to verify all dependencies"
+echo "  - Run ./start-deltavision-offline.sh to start DeltaVision"
+echo ""
 
 # Cleanup
 info "Cleaning up temporary files..."
