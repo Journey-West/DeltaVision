@@ -1,5 +1,5 @@
 {
-  "oldFolderPath": "/tmp/old-folder",
-  "newFolderPath": "/tmp/new-folder",
+  "oldFolderPath": "/home/user/Projects/DeltaVision/test/old",
+  "newFolderPath": "/home/user/Projects/DeltaVision/test/new",
   "keywordFilePath": "/home/user/Projects/DeltaVision/keywords.txt"
 }

@@ -1,83 +1,47 @@
-# DeltaVision Pre-built Packages
+# DeltaVision Precompiled Packages
 
-This directory should contain ready-to-use DeltaVision packages for immediate deployment in various environments, including air-gapped systems.
+This directory contains or is used to store precompiled packages for easier deployment in various environments.
 
-## Important Note About GitHub Size Limitations
+## Available Packages
 
-GitHub has a file size limit of 100MB for standard repositories. The DeltaVision packages exceed this limit:
-- `deltavision-docker-offline-1.0.0.zip` (~674MB)
-- `deltavision-standalone-1.0.0.zip` (~182MB)
+- `deltavision-standalone-1.0.0.zip` (~550MB)
 
-### How to Obtain the Packages
+## Creating Packages
 
-These packages can be built using the scripts in the repository:
+These packages can be created using the packaging scripts in the `scripts/` directory:
 
 ```bash
-# Create Docker/Podman offline package
-./scripts/docker-package-offline.sh
-
 # Create standalone package
 ./scripts/package-standalone.sh
 ```
 
-### Alternative Distribution Methods
+## Package Storage
 
-For teams that need to distribute these packages:
+Due to GitHub's file size limitations, precompiled packages may not be included directly in the repository. Instead, they are created on-demand using the scripts provided.
 
-1. **Internal Artifact Repository**: Store the packages in an internal artifact repository like Nexus, Artifactory, or Azure DevOps Artifacts
-2. **Self-hosted Git LFS**: Use Git Large File Storage on a self-hosted Git server
-3. **Shared Network Drive**: Maintain the packages on a shared network location
-4. **Release Assets**: Add these as release assets to GitHub Releases (with GitHub Enterprise)
+## Package Summary
 
-## Package Descriptions
+| Package | Description | Target Environment |
+|---------|-------------|-------------------|
+| `deltavision-standalone-1.0.0.zip` | Complete standalone package including Node.js binary | Restricted environments without Node.js |
 
-| Package | Description | Use Case |
-|---------|-------------|----------|
-| `deltavision-docker-offline-1.0.0.zip` | Complete Docker/Podman offline package | Air-gapped environments with Docker/Podman |
-| `deltavision-standalone-1.0.0.zip` | Zero-installation standalone package | Highly-restricted environments with no installation rights |
-
-## Usage Instructions
-
-### Docker/Podman Offline Package
-
-1. **Build or obtain the package**: `./scripts/docker-package-offline.sh`
-2. **Transfer the package** to your air-gapped environment
-3. **Extract the package**: `unzip deltavision-docker-offline-1.0.0.zip`
-4. **Configure**: `cd deltavision-docker-offline-1.0.0 && ./configure-offline.sh`
-5. **Start DeltaVision**: `./start-deltavision-offline.sh`
-
-For detailed instructions, see `OFFLINE-README.md` inside the package.
+## Deployment Instructions
 
 ### Standalone Package
 
 1. **Build or obtain the package**: `./scripts/package-standalone.sh`
-2. **Transfer the package** to your target system
+2. **Transfer** the zip file to the target system
 3. **Extract the package**: `unzip deltavision-standalone-1.0.0.zip`
-4. **Start DeltaVision**: `cd deltavision-standalone-1.0.0 && ./start-deltavision.sh /path/to/old/folder /path/to/new/folder`
+4. **Run DeltaVision**: `cd deltavision-standalone-1.0.0 && ./start-deltavision.sh /path/to/old/folder /path/to/new/folder`
 
-For detailed instructions, see `STANDALONE-README.md` inside the package.
+## Adding New Packages to This Directory
 
-## Updating Packages
-
-When new versions of DeltaVision are released, these packages should be updated:
+After creating a package, you can store it in this directory for easier distribution:
 
 ```bash
-# Create Docker/Podman offline package
-./scripts/docker-package-offline.sh
-
 # Create standalone package
 ./scripts/package-standalone.sh
 
-# Copy to precompiled/packages directory
-cp scripts/deltavision-docker-offline-*.zip precompiled/packages/
+# Copy to packages directory
+mkdir -p precompiled/packages/
 cp scripts/deltavision-standalone-*.zip precompiled/packages/
-```
-
-## Benefits
-
-Including these packages in the repository provides several advantages:
-
-1. **Immediate Deployment**: Users can deploy without building packages
-2. **Guaranteed Compatibility**: Pre-tested and verified packages
-3. **Complete Air-Gap Support**: No internet needed at any stage
-4. **Version Control**: Packages are versioned with the codebase

@@ -194,15 +194,6 @@ log_environment() {
   log_system "Kernel: $(uname -r)"
   log_system "Architecture: $(uname -m)"
   
-  # Log container engine information
-  if command -v docker &> /dev/null; then
-    log_system "Docker version: $(docker --version)"
-  elif command -v podman &> /dev/null; then
-    log_system "Podman version: $(podman --version)"
-  else
-    log_warning "SYSTEM" "No container engine (Docker/Podman) found"
-  fi
-  
   # Log Node.js version if available
   if command -v node &> /dev/null; then
     log_system "Node.js version: $(node --version)"

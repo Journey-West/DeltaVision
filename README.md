@@ -1,231 +1,122 @@
 # DeltaVision
 
-A visual file comparison tool for examining differences between directories and files. DeltaVision highlights changes and provides intuitive navigation through file differences.
-
-<img src="public/images/DeltaVision.png" alt="DeltaVision Logo" width="200"/>
+DeltaVision is a tool for visualizing differences between files in two separate directories. It provides a clean, intuitive web interface for comparing file contents and tracking changes over time.
 
 ## Features
 
-- Compare entire directories of files to identify changes between versions
-- Side-by-side visual comparison of file content with highlighting of differences
-- Keyboard navigation through changes (Up/Down arrows, J/K)
-- User-defined keyword highlighting
-- Responsive design for desktop and mobile use
-- Line number display for easy reference
-- Optional dark/light themes
-- Search functionality within files
-- Offline-capable operation
-- Multiple deployment options for any environment
-
-## Deployment Options
-
-DeltaVision offers multiple deployment options designed to work in virtually any environment:
-
-| Deployment Option | Best For | Requirements | Setup Complexity |
-|-------------------|----------|--------------|------------------|
-| **Docker/Podman** | Production environments, IT teams | Docker or Podman | Easy |
-| **Non-containerized** | Development, testing | Node.js and npm | Medium |
-| **Offline Containerized** | Air-gapped environments | Docker or Podman (no internet) | Medium |
-| **Standalone** | Highly-restricted environments | Basic Linux/Windows | Simple |
-
-### Which Option Should I Choose?
-
-- **Docker/Podman** (Recommended): Choose this if you have Docker or Podman available. It provides the most isolated and reproducible environment.
-  
-- **Non-containerized**: Choose this if you can't use containers but can install Node.js on your system.
-
-- **Offline Containerized**: Choose this for air-gapped environments where you have Docker/Podman but no internet.
-
-- **Standalone**: Choose this when you can't install anything (Docker, Podman, or Node.js) on the target system. This option requires zero installation and works "out of the box" with a self-contained Node.js binary.
+- Simple, browser-based interface for comparing files
+- Side-by-side diff visualization with syntax highlighting
+- Support for various file types
+- Keyboard navigation for efficient review
+- Customizable keyword highlighting
 
 ## Quick Start
 
-DeltaVision offers multiple deployment options for different environments:
-
-### Option 1: Using Pre-built Packages (Fastest)
-
-For immediate deployment with zero setup:
-
-> **Note**: Due to GitHub file size limitations, the pre-built packages mentioned below need to be built locally using the scripts provided. See [precompiled/packages/README.md](precompiled/packages/README.md) for details.
-
-1. **Docker/Podman in an Air-Gapped Environment**:
-   ```bash
-   # Build the package on a connected system
-   ./scripts/docker-package-offline.sh
-   
-   # Transfer and extract the Docker/Podman package
-   unzip deltavision-docker-offline-1.0.0.zip
-   cd deltavision-docker-offline-1.0.0
-   ./scripts/configure-offline.sh
-   ./start-deltavision-offline.sh
-   ```
-
-2. **Standalone (No Installation Required)**:
-   ```bash
-   # Build the package on a connected system
-   ./scripts/package-standalone.sh
-   
-   # Transfer and extract the standalone package
-   unzip deltavision-standalone-1.0.0.zip
-   cd deltavision-standalone-1.0.0
-   ./start-deltavision.sh /path/to/old/folder /path/to/new/folder
-   ```
-
-### Option 2: Docker/Podman (Recommended for Most Users)
-
-### 1. Docker/Podman (Recommended)
-
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/deltavision.git
-cd deltavision
-
-# Start with Docker Compose
-cd docker
-docker-compose up -d
-
-# Or with Podman
-cd docker
-podman-compose up -d
-```
-
-### 2. Non-containerized
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/deltavision.git
-cd deltavision
+git clone https://github.com/yourusername/DeltaVision.git
+cd DeltaVision
 
 # Install dependencies
 npm install
 
 # Start the application
-./scripts/start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
+./scripts/start-deltavision.sh /path/to/old/folder /path/to/new/folder
 ```
 
-### 3. Offline Containerized
+## Deployment Options
 
+| Option | Best For | Requirements | Setup Difficulty |
+|--------|----------|--------------|------------------|
+| **Standalone** | Developers, quick usage | Node.js | Simple |
+
+Choose the standalone option when you need a quick and simple way to compare files without complex setup.
+
+## Installation
+
+### Option 1: Standalone
+
+#### Prerequisites
+- Node.js 14.x or newer
+
+#### Installation Steps
 ```bash
-# On a connected system, create the offline package
-./scripts/docker-package-offline.sh
+# Clone the repository
+git clone https://github.com/yourusername/DeltaVision.git
+cd DeltaVision
 
-# Transfer the package to the air-gapped system and extract
-unzip deltavision-docker-offline-1.0.0.zip
-cd deltavision-docker-offline-1.0.0
-
-# Configure and start
-./scripts/configure-offline.sh
-./scripts/verify-offline-dependencies.sh
-./start-deltavision-offline.sh
+# Install dependencies
+npm install
 ```
-
-### 4. Standalone (No Installation Required)
-
-```bash
-# On a connected system, create the standalone package
-./scripts/package-standalone.sh
-
-# Transfer the package to the target system and extract
-unzip deltavision-standalone-1.0.0.zip
-cd deltavision-standalone-1.0.0
-
-# Start DeltaVision
-./start-deltavision.sh /path/to/old /path/to/new [keywords.txt]
-```
-
-For detailed installation instructions, see [INSTALLATION.md](docs/INSTALLATION.md).
 
 ## Usage
 
-Once DeltaVision is running, access it in your web browser:
+### Standalone
+
+```bash
+# Start with two directories to compare
+./scripts/start-deltavision.sh /path/to/old/folder /path/to/new/folder [/path/to/keywords.txt]
+
+# Access the web interface
+# Open http://localhost:3000 in your browser
+```
+
+## Creating a Keywords File
+
+Keywords allow you to highlight important terms in file diffs. Create a file with one keyword per line:
 
 ```
-http://localhost:3000
+important
+critical
+todo
+bug
 ```
 
-### Key Features:
+Specify the path to this file as the third parameter when launching DeltaVision.
 
-- **File Browser**: Navigate directories to compare files
-- **Diff View**: Side-by-side comparison with highlighted changes
-- **Search**: Find files or content across directories
-- **Keyword Highlighting**: Highlight important terms (like TODO, FIXME)
-- **Navigation**: Use arrow keys or J/K to move between differences
+## Configuration
 
-## Scripts Reference
+DeltaVision stores its configuration in a `folder-config.json` file, which is created automatically when you start the application:
 
-DeltaVision includes a comprehensive set of scripts for different environments and use cases:
+```json
+{
+  "oldFolderPath": "/path/to/old/folder",
+  "newFolderPath": "/path/to/new/folder",
+  "keywordFilePath": "/path/to/keywords.txt"
+}
+```
 
-### Core Scripts
+## Important Files and Directories
 
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `scripts/start-deltavision.sh` | Start non-containerized | When Docker/Podman is unavailable |
-| `scripts/help.sh` | Show help for all scripts | When you need guidance |
+| File/Directory | Purpose | When to Use |
+|----------------|---------|-------------|
+| `scripts/start-deltavision.sh` | Start DeltaVision | Main entry point |
+| `bin/deltavision.js` | CLI interface | For programmatic control |
+| `package.json` | Project configuration | Managing dependencies |
+| `public/` | Web application files | For UI customization |
+| `src/` | Source code | For code extensions |
 
-### Docker/Podman Deployment
-
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `docker/docker-compose.yml` | Define container services | For Docker/Podman Compose deployment |
-| `docker/Dockerfile` | Build DeltaVision image | For custom container builds |
-
-### Offline/Air-gapped Deployment
-
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `scripts/docker-package-offline.sh` | Create offline package | Before transferring to air-gapped system |
-| `scripts/start-deltavision-offline.sh` | Start offline containerized | In air-gapped environments |
-| `scripts/configure-offline.sh` | Configure offline deployment | After extracting the offline package |
-| `scripts/verify-offline-dependencies.sh` | Verify dependencies | Before starting in offline mode |
-| `scripts/preflight-check.sh` | Run system checks | Before starting in offline mode |
-| `scripts/diagnostic-logger.sh` | Logging utilities | Used by other scripts |
-| `scripts/test-offline-setup.sh` | Validate file structure | After extracting or reorganizing |
-
-### Standalone Deployment
-
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `scripts/package-standalone.sh` | Create standalone package | For deployment in highly-restricted environments |
-| `scripts/prepare-precompiled-binaries.sh` | Download Node.js binaries | Before creating standalone packages for multiple platforms |
-
-## Documentation
-
-- [Installation Guide](docs/INSTALLATION.md): Detailed installation instructions
-- [Offline Deployment Guide](docs/OFFLINE-README.md): Air-gapped deployment instructions
-- [Docker Guide](docker/README.md): Docker-specific setup information
-- [Offline Checklist](docs/OFFLINE-CHECKLIST.md): Pre-flight checklist for offline deployments
-
-## File Organization
+## Project Structure
 
 ```
 deltavision/
-├── docker/             # Container configuration files
-├── docs/               # Documentation files
-├── logs/               # Log files (created at runtime)
-├── npm-packages/       # Offline npm packages (created by packaging scripts)
-├── precompiled/        # Precompiled binaries for multiple platforms
-│   └── node/           # Node.js binaries for various architectures
-├── scripts/            # Operational scripts
-├── public/             # Frontend assets
-│   ├── images/         # Image assets
-│   ├── js/             # JavaScript files
-│   ├── themes/         # CSS theme files
-│   └── vendor/         # Third-party libraries
-└── src/                # Source code
-    └── server/         # Backend server code
+├── bin/               # CLI executable
+├── public/            # Static web files
+│   ├── css/           # Stylesheets
+│   ├── js/            # Client-side JavaScript
+│   └── index.html     # Main HTML page
+├── scripts/           # Helper scripts
+│   └── start-deltavision.sh # Main startup script
+├── src/               # Source code
+│   └── server/        # Node.js server code
+├── package.json       # Dependencies and scripts
+└── README.md          # This file
 ```
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. Check the logs in the `logs/` directory
-2. Run verification scripts: 
-   - `scripts/verify-offline-dependencies.sh` (for offline deployments)
-   - `scripts/verify-standalone.sh` (for standalone deployments)
-3. Run the preflight check: `scripts/preflight-check.sh`
-4. Use the help system: `scripts/help.sh`
 
 ## License
 
-[Specify your license here]
+[MIT License](LICENSE)
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.

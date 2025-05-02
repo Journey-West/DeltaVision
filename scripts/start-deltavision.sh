@@ -181,14 +181,24 @@ echo "  - Keywords: $KW_FILE"
 # Check and install dependencies if needed
 check_dependencies
 
+# Verify the configuration was actually created and is in the expected location
+if [ ! -f "$CONFIG_FILE" ]; then
+  error "Configuration file not found at $CONFIG_FILE"
+  echo "  - This is required for DeltaVision to recognize your folder paths"
+  exit 1
+fi
+
+# Set NODE_ENV to ensure the application prioritizes the local folder-config.json
+export NODE_ENV=production
+
 # Start the application
 info "Starting DeltaVision..."
 echo "  - Access via browser at: http://localhost:3000"
 echo "  - Press Ctrl+C to stop the server"
 echo "----------------------------------------"
-npm start
+# Use the CLI version that properly processes arguments
+node "$(pwd)/bin/deltavision.js" --old="$OLD_DIR" --new="$NEW_DIR" --keywords="$KW_FILE"
 
-# Note: npm start will block until the user presses Ctrl+C
-# When npm exits, the script will continue here
+# Note: the deltavision CLI will block until the user presses Ctrl+C
 echo
 success "DeltaVision has been stopped"
