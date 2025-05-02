@@ -2062,9 +2062,9 @@
                                     [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => (
                                         <tr key={i}>
                                             <td className="line-number">{i+1}</td>
-                                            <td>{oldLines[i] || ''}</td>
+                                            <td>{highlightKeywords(oldLines[i] || '', keywords, highlightingEnabled)}</td>
                                             <td className="line-number">{i+1}</td>
-                                            <td>{newLines[i] || ''}</td>
+                                            <td>{highlightKeywords(newLines[i] || '', keywords, highlightingEnabled)}</td>
                                         </tr>
                                     ))
                                 }
@@ -2221,9 +2221,9 @@
                                     [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => (
                                         <tr key={i}>
                                             <td className="line-number">{i+1}</td>
-                                            <td>{oldLines[i] || ''}</td>
+                                            <td>{highlightKeywords(oldLines[i] || '', keywords, highlightingEnabled)}</td>
                                             <td className="line-number">{i+1}</td>
-                                            <td>{newLines[i] || ''}</td>
+                                            <td>{highlightKeywords(newLines[i] || '', keywords, highlightingEnabled)}</td>
                                         </tr>
                                     ))
                                 }
@@ -2474,9 +2474,9 @@
                                 [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => (
                                     <tr key={i}>
                                         <td className="line-number">{i+1}</td>
-                                        <td>{oldLines[i] || ''}</td>
+                                        <td>{highlightKeywords(oldLines[i] || '', keywords, highlightingEnabled)}</td>
                                         <td className="line-number">{i+1}</td>
-                                        <td>{newLines[i] || ''}</td>
+                                        <td>{highlightKeywords(newLines[i] || '', keywords, highlightingEnabled)}</td>
                                     </tr>
                                 ))
                             }
@@ -2656,9 +2656,9 @@
                                     [...Array(Math.max(oldLines.length, newLines.length))].map((_, i) => (
                                         <tr key={i}>
                                             <td className="line-number">{i+1}</td>
-                                            <td>{oldLines[i] || ''}</td>
+                                            <td>{highlightKeywords(oldLines[i] || '', keywords, highlightingEnabled)}</td>
                                             <td className="line-number">{i+1}</td>
-                                            <td>{newLines[i] || ''}</td>
+                                            <td>{highlightKeywords(newLines[i] || '', keywords, highlightingEnabled)}</td>
                                         </tr>
                                     ))
                                 }
@@ -2853,9 +2853,9 @@
                                     [...Array(Math.max(olderLines.length, newerLines.length))].map((_, i) => (
                                         <tr key={i}>
                                             <td className="line-number">{i+1}</td>
-                                            <td>{olderLines[i] || ''}</td>
+                                            <td>{highlightKeywords(olderLines[i] || '', keywords, highlightingEnabled)}</td>
                                             <td className="line-number">{i+1}</td>
-                                            <td>{newerLines[i] || ''}</td>
+                                            <td>{highlightKeywords(newerLines[i] || '', keywords, highlightingEnabled)}</td>
                                         </tr>
                                     ))
                                 }
