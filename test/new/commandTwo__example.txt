@@ -1,0 +1,8 @@
+2025-05-02 19:15:00 "commandTwo ran"
+This is a second test file for comparison - UPDATED
+Line 1 - this line has been changed
+Line 2 - this line has significant modifications
+Line 3 - will be identical
+Line 4 - will be identical
+Line 5 - this is a new line
+Line 6 - another new addition

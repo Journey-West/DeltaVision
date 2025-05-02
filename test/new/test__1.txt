@@ -1,1 +1,7 @@
-Test file 1 modified
+2025-05-02 19:00:00 "test command ran"
+Test file 1 content - MODIFIED VERSION
+Additional content that has changed
+This line appears in both files
+Another line that's identical
+New line only in the new file
+Another new line for testing
