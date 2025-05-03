@@ -1394,6 +1394,21 @@
             padding: 0.1em 0.3em;
         }
     </style>
+    <style>
+        .no-diff-indicator {
+            color: var(--no-diff-color);
+            font-size: 0.9em;
+            margin-left: 4px;
+        }
+    </style>
+    <style>
+        body[data-theme="light"] {
+            --no-diff-color: #28a745;
+        }
+        body[data-theme="dark"] {
+            --no-diff-color: #81c784;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -1637,6 +1652,18 @@
                                     f.olderFile.path === file.olderFile.path
                                 );
                             
+                            const origIdx = isOldNew
+                                ? files.findIndex(f => 
+                                    f.oldFile.path === file.oldFile.path && 
+                                    f.newFile.path === file.newFile.path
+                                )
+                                : timeFiles.findIndex(f => 
+                                    f.newerFile.path === file.newerFile.path && 
+                                    f.olderFile.path === file.olderFile.path
+                                );
+                            const contentPair = fileContents[file.type + '-' + origIdx] || { old: '', new: '' };
+                            const hasDiff = contentPair.old !== contentPair.new;
+
                             return (
                                 <div 
                                     key={`${file.type}-${index}`} 
@@ -1664,6 +1691,7 @@
                                                 <span className="time-diff">{file.timeDiff}</span>
                                             </div>
                                         )}
+                                        {!hasDiff && <span className="no-diff-indicator" title="No changes">✓</span>}
                                     </div>
                                 </div>
                             );
@@ -1822,12 +1850,12 @@
                 fetchTimeComparisons();
                 fetchKeywords();
                 
-                // Set up polling to check for new files (every 10 seconds)
+                // Set up polling to check for new files (every 5 seconds)
                 const interval = setInterval(() => {
                     fetchFiles();
                     fetchTimeComparisons();
                     fetchKeywords();
-                }, 10000);
+                }, 5000);
                 
                 // Clear interval on component unmount
                 return () => clearInterval(interval);
