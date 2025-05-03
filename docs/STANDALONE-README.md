@@ -13,6 +13,17 @@ This is the standalone edition of DeltaVision, designed for deployment in highly
 - **Simple Usage**: Extract and run with a single command
 - **Cross-Platform Support**: Available for Linux, macOS, and Windows on multiple architectures
 
+## Key Features
+
+- **Simple, Browser-Based Interface**: Clean visualization of file differences
+- **Side-by-Side Diff View**: Easy visual comparison
+- **Syntax Highlighting**: For better readability
+- **Keyboard Navigation**: Efficient review with keyboard shortcuts
+- **Customizable Highlighting**: Focus on important terms with keyword highlighting
+- **"New Only" Mode**: View just the new file content with Ctrl+N
+- **Visual Indicators**: Quickly identify files with no differences 
+- **Independent Highlight/Diff Toggles**: Greater control over visualization
+
 ## Getting Started
 
 ### Quick Start

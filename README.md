@@ -9,6 +9,10 @@ DeltaVision is a tool for visualizing differences between files in two separate 
 - Support for various file types
 - Keyboard navigation for efficient review
 - Customizable keyword highlighting
+- "New Only" toggle for viewing just new file content
+- Visual indicators for files with no differences
+- Independent highlight and diff toggles
+- Enhanced keyboard shortcuts
 
 ## Quick Start
 
@@ -60,6 +64,20 @@ npm install
 # Access the web interface
 # Open http://localhost:3000 in your browser
 ```
+
+### Keyboard Shortcuts
+
+DeltaVision provides several keyboard shortcuts for efficient navigation:
+
+| Shortcut | Action |
+|----------|--------|
+| Ctrl+H   | Toggle keyword highlighting |
+| Ctrl+D   | Toggle diff highlighting |
+| Ctrl+M   | Toggle character/word diff mode |
+| Ctrl+R   | Toggle move detection |
+| Ctrl+N   | Toggle "New Only" view |
+| Ctrl+E   | Toggle sidebar |
+| Up/Down  | Navigate file pairs |
 
 ## Creating a Keywords File
 
