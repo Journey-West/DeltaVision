@@ -14,6 +14,7 @@ class ThemeManager {
       'synthwave': { name: 'Synthwave', file: '/themes/synthwave-theme.css' },
       'material': { name: 'Material', file: '/themes/material-theme.css' },
       // New themes
+      'hackerman': { name: 'Hackerman', file: '/themes/hackerman-theme.css' },
       'dracula': { name: 'Dracula', file: '/themes/dracula-theme.css' },
       'one-dark-pro': { name: 'One Dark Pro', file: '/themes/one-dark-pro-theme.css' },
       'tokyo-night': { name: 'Tokyo Night', file: '/themes/tokyo-night-theme.css' },
@@ -120,7 +121,7 @@ class ThemeManager {
     
     // Group the themes by categories
     const themeCategories = {
-      'Dark Themes': ['dark', 'vscode-dark', 'github-dark', 'solarized-dark', 'dracula', 'one-dark-pro', 'tokyo-night', 'night-owl', 'nord', 'witch-hazel'],
+      'Dark Themes': ['dark', 'vscode-dark', 'github-dark', 'solarized-dark', 'dracula', 'one-dark-pro', 'tokyo-night', 'night-owl', 'nord', 'witch-hazel', 'hackerman'],
       'Light Themes': ['light', 'github-light', 'solarized-light', 'ayu-light', 'quiet-light'],
       'Special Themes': ['high-contrast', 'monochrome', 'colorblind-friendly', 'synthwave', 'material'],
       'Seasonal': ['winter', 'summer', 'autumn']
