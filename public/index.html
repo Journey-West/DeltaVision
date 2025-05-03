@@ -1371,6 +1371,70 @@
         .theme-toggle, .settings-button, .toggle-sidebar, .highlight-toggle, .mode-toggle button {
             position: relative;
         }
+        
+        /* Custom checkbox styling */
+        .custom-checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            cursor: pointer;
+        }
+        
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 18px;
+            margin-right: 10px;
+        }
+        
+        .custom-checkbox input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            transition: .3s;
+            border-radius: 34px;
+        }
+        
+        .checkmark:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 1px;
+            background-color: var(--text-muted);
+            transition: .3s;
+            border-radius: 50%;
+        }
+        
+        .custom-checkbox input:checked + .checkmark {
+            background-color: var(--accent-color);
+        }
+        
+        .custom-checkbox input:checked + .checkmark:before {
+            transform: translateX(17px);
+            background-color: white;
+        }
+        
+        .settings-section-header {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 15px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+        }
     </style>
     <style>
         /* Override: hide all diff highlights when diff toggle is off */
@@ -1525,6 +1589,19 @@
                         File format: one entry per line in the format "keyword:color" (e.g., "error:red")
                     </div>
                 </div>
+                <div class="settings-section-header">UI Preferences</div>
+                <div class="form-group">
+                    <label class="custom-checkbox-container">
+                        <span class="custom-checkbox">
+                            <input type="checkbox" id="scroll-top-toggle" />
+                            <span class="checkmark"></span>
+                        </span>
+                        <span>Scroll to top when selecting files</span>
+                    </label>
+                    <div class="form-hint">
+                        When enabled, the view will automatically scroll to the top when you select a file.
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button id="cancel-settings" class="btn btn-secondary">Cancel</button>
@@ -1558,6 +1635,12 @@
         // Initialize Theme Manager
         document.addEventListener('DOMContentLoaded', function() {
             window.themeManager = new ThemeManager();
+            
+            // Initial load of folder paths to ensure they're available 
+            // when document is ready, separate from settings modal opening
+            setTimeout(() => {
+                loadFolderPaths();
+            }, 500);
         });
     </script>
 
@@ -1575,7 +1658,10 @@
                 : localStorage.getItem('moveDetectionEnabled') === 'true',
             newOnlyEnabled: localStorage.getItem('newOnlyEnabled') === null
                 ? false
-                : localStorage.getItem('newOnlyEnabled') === 'true'
+                : localStorage.getItem('newOnlyEnabled') === 'true',
+            scrollToTopEnabled: localStorage.getItem('scrollToTopEnabled') === null 
+                ? true 
+                : localStorage.getItem('scrollToTopEnabled') === 'true'
         };
 
         // Combined FileList component to display all comparison types
@@ -1673,17 +1759,31 @@
                                     key={`${file.type}-${index}`} 
                                     className={`file-entry ${isSelected ? 'selected' : ''}`}
                                     onClick={() => {
-                                        if (isOldNew) {
-                                            onSelectFile(files.findIndex(f => 
-                                                f.oldFile.path === file.oldFile.path && 
-                                                f.newFile.path === file.newFile.path
-                                            ));
-                                        } else {
-                                            onSelectTimeFile(timeFiles.findIndex(f => 
-                                                f.newerFile.path === file.newerFile.path && 
-                                                f.olderFile.path === file.olderFile.path
-                                            ));
+                                        if (window.appState.scrollToTopEnabled) {
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
                                         }
+                                        // Clear any selected time comparison
+                                        setSelectedTimeFileIndex(null);
+                                        setSelectedFileIndex(index);
+                                        setCurrentComparisonType('oldNew');
+                                        
+                                        const selectedFile = files[index];
+                                        
+                                        // Fetch file contents for comparison
+                                        fetch(`/api/compare?oldPath=${encodeURIComponent(selectedFile.oldFile.path)}&newPath=${encodeURIComponent(selectedFile.newFile.path)}`)
+                                            .then(response => {
+                                                if (!response.ok) {
+                                                    throw new Error('Failed to fetch file contents');
+                                                }
+                                                return response.json();
+                                            })
+                                            .then(data => {
+                                                setOldContent(data.oldContent);
+                                                setNewContent(data.newContent);
+                                            })
+                                            .catch(err => {
+                                                setError(err.message);
+                                            });
                                     }}
                                 >
                                     <div className={`type-indicator ${isOldNew ? 'type-old-new' : 'type-time'}`}></div>
@@ -1956,7 +2056,9 @@
 
             // Handle file selection for Old vs New comparison
             const handleFileSelect = (index) => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (window.appState.scrollToTopEnabled) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
                 // Clear any selected time comparison
                 setSelectedTimeFileIndex(null);
                 setSelectedFileIndex(index);
@@ -1983,7 +2085,9 @@
 
             // Handle file selection for Time Comparison
             const handleTimeFileSelect = (index) => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (window.appState.scrollToTopEnabled) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
                 // Clear any selected old/new comparison
                 setSelectedFileIndex(null);
                 setSelectedTimeFileIndex(index);
@@ -3052,7 +3156,7 @@
                 updateToggleLabel();
                 
                 // Add change event listener
-                globalHighlightToggle.addEventListener('change', () => {
+                globalHighlightToggle.addEventListener('change', (event) => {
                     // Update global app state
                     window.appState.highlightingEnabled = globalHighlightToggle.checked;
                     
@@ -3063,10 +3167,10 @@
                     updateToggleLabel();
                     
                     // Trigger a custom event for the React component to listen to
-                    const event = new CustomEvent('highlightToggleChanged', {
+                    const customEvent = new CustomEvent('highlightToggleChanged', {
                         detail: { enabled: globalHighlightToggle.checked }
                     });
-                    document.dispatchEvent(event);
+                    document.dispatchEvent(customEvent);
                 });
             }
         })();
@@ -3084,7 +3188,7 @@
                     if (label) label.textContent = `Diff ${globalDiffHighlightToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                globalDiffHighlightToggle.addEventListener('change', () => {
+                globalDiffHighlightToggle.addEventListener('change', (event) => {
                     updateToggleLabel();
                     document.dispatchEvent(new CustomEvent('diffHighlightToggleChanged', { detail: { enabled: globalDiffHighlightToggle.checked } }));
                 });
@@ -3104,7 +3208,7 @@
                     if (label) label.textContent = `Detect Moves ${globalMoveDetectionToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                globalMoveDetectionToggle.addEventListener('change', () => {
+                globalMoveDetectionToggle.addEventListener('change', (event) => {
                     updateToggleLabel();
                     document.dispatchEvent(new CustomEvent('moveDetectionToggleChanged', { detail: { enabled: globalMoveDetectionToggle.checked } }));
                 });
@@ -3124,7 +3228,7 @@
                     if (label) label.textContent = `New Only ${globalNewOnlyToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                globalNewOnlyToggle.addEventListener('change', () => {
+                globalNewOnlyToggle.addEventListener('change', (event) => {
                     updateToggleLabel();
                     document.dispatchEvent(new CustomEvent('newOnlyToggleChanged', { detail: { enabled: globalNewOnlyToggle.checked } }));
                 });
@@ -3140,7 +3244,7 @@
                     if (label) label.textContent = `Diff ${globalDiffModeToggle.checked ? 'Word' : 'Char'}`;
                 };
                 updateLabel();
-                globalDiffModeToggle.addEventListener('change', () => {
+                globalDiffModeToggle.addEventListener('change', (event) => {
                     updateLabel();
                     document.dispatchEvent(new CustomEvent('diffModeToggle', { detail: { mode: globalDiffModeToggle.checked ? 'word' : 'char' } }));
                 });
@@ -3159,9 +3263,29 @@
         const oldFolderInput = document.getElementById('old-folder-path');
         const newFolderInput = document.getElementById('new-folder-path');
         const keywordFileInput = document.getElementById('keyword-file-path');
+        const scrollToggleCheckbox = document.getElementById('scroll-top-toggle');
+        
+        // Initialize scroll-to-top toggle from localStorage
+        scrollToggleCheckbox.checked = localStorage.getItem('scrollToTopEnabled') !== 'false';
+        
+        // Add event listener to save scroll toggle state when changed
+        scrollToggleCheckbox.addEventListener('change', function(event) {
+            const isEnabled = this.checked;
+            console.log(`Saving scroll-to-top preference: ${isEnabled}`);
+            localStorage.setItem('scrollToTopEnabled', isEnabled);
+            window.appState.scrollToTopEnabled = isEnabled;
+            
+            // We need to explicitly prevent the default action and propagation
+            // to ensure the settings form doesn't attempt to submit
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
         
         // Show settings modal
         settingsButton.addEventListener('click', () => {
+            loadFolderPaths(); // Load folder paths from server before showing the modal
             settingsModal.classList.add('active');
         });
         
@@ -3174,7 +3298,7 @@
         cancelSettingsButton.addEventListener('click', hideModal);
         
         // Save settings
-        saveSettingsButton.addEventListener('click', async () => {
+        saveSettingsButton.addEventListener('click', async (event) => {
             const oldFolderPath = oldFolderInput.value.trim();
             const newFolderPath = newFolderInput.value.trim();
             const keywordFilePath = keywordFileInput.value.trim();
@@ -3258,144 +3382,41 @@
         });
 
         // Close modal when clicking outside
-        settingsModal.addEventListener('click', (e) => {
-            if (e.target === settingsModal) {
+        settingsModal.addEventListener('click', (event) => {
+            if (event.target === settingsModal) {
                 hideModal();
             }
         });
 
-        // Load saved folder paths on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFolderPaths();
-            
-            // Set up settings modal
-            const settingsButton = document.getElementById('settings-button');
-            const settingsModal = document.getElementById('settings-modal');
-            const closeModal = document.getElementById('close-modal');
-            const cancelSettings = document.getElementById('cancel-settings');
-            const saveSettings = document.getElementById('save-settings');
-            const oldFolderInput = document.getElementById('old-folder-path');
-            const newFolderInput = document.getElementById('new-folder-path');
-            const keywordFileInput = document.getElementById('keyword-file-path');
-            
-            // Show settings modal
-            settingsButton.addEventListener('click', () => {
-                settingsModal.classList.add('active');
-            });
-            
-            // Hide settings modal
-            function hideModal() {
-                settingsModal.classList.remove('active');
-            }
-            
-            closeModal.addEventListener('click', hideModal);
-            cancelSettings.addEventListener('click', hideModal);
-            
-            // Save settings
-            saveSettings.addEventListener('click', async () => {
-                const oldFolderPath = oldFolderInput.value.trim();
-                const newFolderPath = newFolderInput.value.trim();
-                const keywordFilePath = keywordFileInput.value.trim();
-                
-                // Validate paths
-                let isValid = true;
-                
-                if (!oldFolderPath) {
-                    document.getElementById('old-folder-error').textContent = 'Old folder path is required';
-                    isValid = false;
-                } else {
-                    document.getElementById('old-folder-error').textContent = '';
-                }
-                
-                if (!newFolderPath) {
-                    document.getElementById('new-folder-error').textContent = 'New folder path is required';
-                    isValid = false;
-                } else {
-                    document.getElementById('new-folder-error').textContent = '';
-                }
-                
-                // Keyword file path is optional, no validation needed
-                document.getElementById('keyword-file-error').textContent = '';
-                
-                if (isValid) {
-                    try {
-                        const response = await fetch('/api/folders', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                oldFolder: oldFolderPath,
-                                newFolder: newFolderPath,
-                                keywordFile: keywordFilePath
-                            })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (response.ok) {
-                            // Show success message
-                            const statusEl = document.getElementById('settings-status');
-                            statusEl.textContent = `Settings saved successfully${data.keywordCount > 0 ? `. Loaded ${data.keywordCount} keywords` : ''}`;
-                            statusEl.classList.add('success');
-                            statusEl.classList.remove('error');
-                            statusEl.style.display = 'block';
-                            
-                            // Hide message after 3 seconds
-                            setTimeout(() => {
-                                statusEl.style.display = 'none';
-                            }, 3000);
-                            
-                            // Hide modal
-                            hideModal();
-                            
-                            // Reload page to refresh data
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        } else {
-                            // Show error message
-                            if (data.error && data.error.includes('Old folder')) {
-                                document.getElementById('old-folder-error').textContent = data.error;
-                            } else if (data.error && data.error.includes('New folder')) {
-                                document.getElementById('new-folder-error').textContent = data.error;
-                            } else if (data.error && data.error.includes('Keyword file')) {
-                                document.getElementById('keyword-file-error').textContent = data.error;
-                            } else {
-                                const statusEl = document.getElementById('settings-status');
-                                statusEl.textContent = data.error || 'Failed to save settings';
-                                statusEl.classList.add('error');
-                                statusEl.classList.remove('success');
-                                statusEl.style.display = 'block';
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error saving settings:', error);
-                    }
-                }
-            });
-
-            // Close modal when clicking outside the content
-            settingsModal.addEventListener('click', (e) => {
-                if (e.target === settingsModal) {
-                    hideModal();
-                }
-            });
-        });
-        
         // Load folder paths from server
         async function loadFolderPaths() {
             try {
+                console.log('Loading folder paths from server...');
                 const response = await fetch('/api/folders');
                 const data = await response.json();
+                console.log('Server response:', data);
                 
-                if (data.oldFolderPath && data.newFolderPath) {
-                    document.getElementById('old-folder-path').value = data.oldFolderPath;
-                    document.getElementById('new-folder-path').value = data.newFolderPath;
-                }
+                // Always set the values, even if empty - this ensures they're updated after changes
+                document.getElementById('old-folder-path').value = data.oldFolderPath || '';
+                document.getElementById('new-folder-path').value = data.newFolderPath || '';
+                console.log('Updated folder path fields:', { 
+                    old: data.oldFolderPath, 
+                    new: data.newFolderPath 
+                });
                 
                 if (data.keywordFilePath) {
                     document.getElementById('keyword-file-path').value = data.keywordFilePath;
+                    console.log('Updated keyword file path:', data.keywordFilePath);
+                }
+                
+                // Handle scroll-to-top setting
+                const scrollToTopEnabled = localStorage.getItem('scrollToTopEnabled');
+                // Only use server value if local storage value doesn't exist
+                if (scrollToTopEnabled === null && data.scrollToTopEnabled !== undefined) {
+                    localStorage.setItem('scrollToTopEnabled', data.scrollToTopEnabled);
+                    document.getElementById('scroll-top-toggle').checked = data.scrollToTopEnabled;
+                    window.appState.scrollToTopEnabled = data.scrollToTopEnabled;
+                    console.log('Initialized scroll-to-top from server:', data.scrollToTopEnabled);
                 }
             } catch (error) {
                 console.error('Error loading folder paths:', error);
@@ -3405,23 +3426,23 @@
     <script>
         // Consolidated keyboard shortcuts handler for all application functions
         document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function(event) {
                 // Skip if we're in an input or textarea, but still allow Ctrl+N to toggle New Only
-                const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
-                if (isInput && !(e.ctrlKey && e.key.toLowerCase() === 'n')) {
+                const isInput = event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA';
+                if (isInput && !(event.ctrlKey && event.key.toLowerCase() === 'n')) {
                     return;
                 }
                 
                 // Sidebar toggle: Ctrl+E
-                if (e.ctrlKey && e.key.toLowerCase() === 'e') {
-                    e.preventDefault();
+                if (event.ctrlKey && event.key.toLowerCase() === 'e') {
+                    event.preventDefault();
                     const sidebarToggle = document.querySelector('.toggle-sidebar');
                     if (sidebarToggle) sidebarToggle.click();
                 }
                 
                 // Highlight toggle: Ctrl+H
-                if (e.ctrlKey && e.key.toLowerCase() === 'h') {
-                    e.preventDefault();
+                if (event.ctrlKey && event.key.toLowerCase() === 'h') {
+                    event.preventDefault();
                     const hlToggle = document.getElementById('global-highlight-toggle');
                     if (hlToggle) {
                         hlToggle.checked = !hlToggle.checked;
@@ -3430,8 +3451,8 @@
                 }
                 
                 // Diff toggle: Ctrl+D
-                if (e.ctrlKey && e.key.toLowerCase() === 'd') {
-                    e.preventDefault();
+                if (event.ctrlKey && event.key.toLowerCase() === 'd') {
+                    event.preventDefault();
                     const diffToggle = document.getElementById('diff-highlight-toggle');
                     if (diffToggle) {
                         diffToggle.checked = !diffToggle.checked;
@@ -3440,8 +3461,8 @@
                 }
                 
                 // Char diff toggle: Ctrl+M
-                if (e.ctrlKey && e.key.toLowerCase() === 'm') {
-                    e.preventDefault();
+                if (event.ctrlKey && event.key.toLowerCase() === 'm') {
+                    event.preventDefault();
                     const modeToggle = document.getElementById('diff-mode-toggle');
                     if (modeToggle) {
                         modeToggle.checked = !modeToggle.checked;
@@ -3450,8 +3471,8 @@
                 }
                 
                 // Move detection toggle: Ctrl+R
-                if (e.ctrlKey && e.key.toLowerCase() === 'r') {
-                    e.preventDefault();
+                if (event.ctrlKey && event.key.toLowerCase() === 'r') {
+                    event.preventDefault();
                     const moveDetectionToggle = document.getElementById('move-detection-toggle');
                     if (moveDetectionToggle) {
                         moveDetectionToggle.checked = !moveDetectionToggle.checked;
@@ -3460,8 +3481,8 @@
                 }
                 
                 // New only toggle: Ctrl+N
-                if (e.ctrlKey && e.key.toLowerCase() === 'n') {
-                    e.preventDefault();
+                if (event.ctrlKey && event.key.toLowerCase() === 'n') {
+                    event.preventDefault();
                     const newOnlyToggle = document.getElementById('new-only-toggle');
                     if (newOnlyToggle) {
                         newOnlyToggle.checked = !newOnlyToggle.checked;
@@ -3470,21 +3491,21 @@
                 }
                 
                 // Mode toggles: Ctrl+1 and Ctrl+2 for different view modes
-                if (e.ctrlKey && e.key === '1') {
-                    e.preventDefault();
+                if (event.ctrlKey && event.key === '1') {
+                    event.preventDefault();
                     const inlineButton = document.querySelector('.mode-toggle button:first-child');
                     if (inlineButton) inlineButton.click();
                 }
                 
-                if (e.ctrlKey && e.key === '2') {
-                    e.preventDefault();
+                if (event.ctrlKey && event.key === '2') {
+                    event.preventDefault();
                     const sideBySideButton = document.querySelector('.mode-toggle button:last-child');
                     if (sideBySideButton) sideBySideButton.click();
                 }
 
                 // Navigation with arrow keys
-                if (e.key === 'ArrowUp') {
-                    e.preventDefault();
+                if (event.key === 'ArrowUp') {
+                    event.preventDefault();
                     const app = document.getElementById('app');
                     if (app) {
                         const fileEntries = app.querySelectorAll('.file-entry');
@@ -3496,8 +3517,8 @@
                     }
                 }
                 
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
                     const app = document.getElementById('app');
                     if (app) {
                         const fileEntries = app.querySelectorAll('.file-entry');

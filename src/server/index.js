@@ -165,7 +165,8 @@ app.get('/api/folders', (req, res) => {
     oldFolderPath,
     newFolderPath,
     keywordFilePath,
-    keywordCount: Object.keys(keywordHighlights).length
+    keywordCount: Object.keys(keywordHighlights).length,
+    scrollToTopEnabled: true // Default to true for new installs
   });
 });
 
