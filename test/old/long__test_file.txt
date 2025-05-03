@@ -1,0 +1,146 @@
+2025-05-01 14:30:00 "DeltaVision Performance Test File (NEW VERSION)"
+
+## Section 1: Introduction
+
+This is a long test file designed to test the performance and rendering capabilities of DeltaVision.
+The file contains multiple sections with various types of content to compare.
+Our goal is to evaluate how well DeltaVision handles large files with substantial changes.
+
+## Section 2: Technical Specifications
+
+DeltaVision is a file comparison tool that allows users to:
+- Compare files from two different directories
+- Highlight changes at character or word level
+- Navigate through files easily
+- Customize the appearance with different themes
+- Filter and search for specific changes
+
+The application runs on Node.js with an Express backend and a React frontend.
+It uses a responsive design that works well on different screen sizes.
+
+## Section 3: Sample Code
+
+```javascript
+function calculateDifferences(oldText, newText, mode = 'char') {
+  // This is a placeholder function
+  const differences = [];
+  
+  if (mode === 'char') {
+    // Perform character-level diff
+    for (let i = 0; i < Math.max(oldText.length, newText.length); i++) {
+      if (oldText[i] !== newText[i]) {
+        differences.push({
+          type: oldText[i] ? (newText[i] ? 'change' : 'delete') : 'add',
+          position: i,
+          oldChar: oldText[i],
+          newChar: newText[i]
+        });
+      }
+    }
+  } else if (mode === 'word') {
+    // Perform word-level diff
+    const oldWords = oldText.split(/\s+/);
+    const newWords = newText.split(/\s+/);
+    // Implementation omitted for brevity
+  }
+  
+  return differences;
+}
+```
+
+## Section 4: Performance Considerations
+
+When dealing with large files, several performance considerations should be taken into account:
+1. Memory usage when loading files
+2. Computation time for difference calculations
+3. Rendering performance for the UI
+4. Responsiveness of the interface during heavy operations
+
+The current implementation uses lazy loading and windowing techniques to improve performance
+when handling large files. This allows the application to remain responsive even when
+comparing files with thousands of lines.
+
+## Section 5: Known Issues (WILL BE REMOVED)
+
+There are several known issues that need to be addressed:
+- Performance degradation with files larger than 10MB
+- Occasional rendering glitches in the line number column
+- Inconsistent highlighting when switching between char and word diff modes
+- Memory leaks when rapidly switching between multiple files
+
+## Section 6: Future Development
+
+Planned features for future versions include:
+- Three-way merge capabilities
+- Inline editing of files
+- Better syntax highlighting for code files
+- Integration with version control systems
+- Export diff as HTML or PDF
+- Compare directories recursively
+- Custom plugins for specific file formats
+
+## Section 7: Data Analysis
+
+This section contains sample data for testing purposes:
+
+| Year | Revenue | Growth | Expenses | Profit |
+|------|---------|--------|----------|--------|
+| 2020 | $1.2M   | 5%     | $0.8M    | $0.4M  |
+| 2021 | $1.5M   | 25%    | $0.9M    | $0.6M  |
+| 2022 | $1.8M   | 20%    | $1.1M    | $0.7M  |
+| 2023 | $2.0M   | 11%    | $1.3M    | $0.7M  |
+
+## Section 8: User Feedback
+
+User feedback has been generally positive, with an average rating of 4.5/5 stars.
+Common praise includes the intuitive interface, speed, and theme options.
+Areas for improvement include better documentation and more keyboard shortcuts.
+
+## Section 9: Lorem Ipsum (Large Text Block)
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor tortor quis lorem tincidunt, sit amet scelerisque nisi ullamcorper. Proin eget metus vel nunc malesuada finibus. Vestibulum et turpis nec nisl elementum venenatis. Cras condimentum erat at dolor sodales, vitae blandit nibh tincidunt. Integer luctus neque vel libero commodo, vel tincidunt risus vehicula. Donec laoreet magna sit amet massa pretium, eu pharetra libero auctor. Nullam volutpat tellus eget odio congue, vel scelerisque magna commodo.
+
+Fusce vestibulum, mi eu luctus iaculis, turpis justo interdum nisi, et tincidunt est magna vel arcu. Etiam eget dui nec sapien vestibulum tempor. Vestibulum vulputate ligula vel mi euismod, at tincidunt nulla venenatis. Aenean volutpat tincidunt ligula, vel imperdiet ipsum tempus a. Donec consequat nibh vel mi dictum, in aliquet nisl imperdiet. Nulla facilisi. Nulla facilisi. Suspendisse potenti. Nullam ultrices magna ac turpis tempor vulputate.
+
+Integer rutrum metus eget dapibus suscipit. Nam ultricies velit vel lectus laoreet, ac scelerisque velit gravida. Nullam vel est non sem mattis porttitor non eget eros. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nullam ac blandit orci, eget lacinia eros. Cras et velit vel dolor finibus commodo. Sed interdum fringilla nulla, nec efficitur eros elementum quis.
+
+Phasellus bibendum, ipsum non eleifend vulputate, libero leo rutrum justo, at placerat nibh tortor id ante. Suspendisse potenti. Sed eget magna consequat, blandit orci ac, accumsan eros. Nulla aliquet, dolor sit amet venenatis condimentum, quam nibh facilisis justo, eget scelerisque eros ligula at enim. Duis in dui ac leo facilisis tincidunt a ac mi. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Etiam accumsan tellus metus, in rhoncus nisi finibus at.
+
+## Section 10: Configuration Settings
+
+Default configuration settings:
+```json
+{
+  "diffMode": "char",
+  "theme": "nord",
+  "fontFamily": "Fira Code",
+  "fontSize": 14,
+  "lineWrapping": false,
+  "showLineNumbers": true,
+  "highlightChanges": true,
+  "autoScrollToChanges": true,
+  "tabSize": 2,
+  "maxFileSize": 5242880
+}
+```
+
+## Section 11: Installation Instructions
+
+To install DeltaVision, follow these steps:
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Configure the application by editing `config.json`
+4. Start the server with `npm start`
+5. Open a browser and navigate to `http://localhost:3000`
+
+For Docker installation:
+1. Build the Docker image: `docker build -t deltavision .`
+2. Run the container: `docker run -p 3000:3000 deltavision`
+
+## Section 12: Conclusion
+
+This test file demonstrates the various types of content that might be encountered when comparing files.
+The file is intentionally long to test the performance of DeltaVision with substantial content.
+If the application handles this file well, it should be capable of handling most real-world scenarios.
+
+END OF TEST FILE

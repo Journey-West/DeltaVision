@@ -1,0 +1,172 @@
+2025-05-03 15:45:00 "DeltaVision Performance Test File (NEW VERSION)"
+
+## Section 1: Introduction
+
+This is a comprehensive test file designed to evaluate the performance and rendering capabilities of DeltaVision.
+The file contains multiple sections with various types of content to compare.
+Our goal is to assess how effectively DeltaVision handles large files with significant changes between versions.
+
+## Section 2: Technical Specifications
+
+DeltaVision is a powerful file comparison tool that enables users to:
+- Compare files from two different directories
+- Highlight changes at character or word level
+- Navigate through files easily with keyboard shortcuts
+- Customize the appearance with multiple themes including the new Hackerman theme
+- Filter and search for specific changes or content
+- Toggle auto-scroll behavior
+
+The application is built on Node.js with an Express backend and a React frontend.
+It features a responsive design that adapts to various screen sizes and devices.
+
+## Section 3: Sample Code
+
+```javascript
+function calculateDifferences(oldText, newText, mode = 'char') {
+  // Implementation of difference calculation algorithm
+  const differences = [];
+  
+  if (mode === 'char') {
+    // Perform character-level diff (optimized algorithm)
+    for (let i = 0; i < Math.max(oldText.length, newText.length); i++) {
+      if (oldText[i] !== newText[i]) {
+        differences.push({
+          type: oldText[i] ? (newText[i] ? 'change' : 'delete') : 'add',
+          position: i,
+          oldChar: oldText[i],
+          newChar: newText[i]
+        });
+      }
+    }
+  } else if (mode === 'word') {
+    // Perform word-level diff
+    const oldWords = oldText.split(/\s+/);
+    const newWords = newText.split(/\s+/);
+    
+    // Using dynamic programming to find the longest common subsequence
+    const lcs = findLongestCommonSubsequence(oldWords, newWords);
+    // Convert LCS to diff format
+    differences = convertLCSToDiff(lcs, oldWords, newWords);
+  }
+  
+  return differences;
+}
+
+function findLongestCommonSubsequence(array1, array2) {
+  // Implementation of LCS algorithm
+  // ...
+}
+
+function convertLCSToDiff(lcs, oldArray, newArray) {
+  // Convert LCS to diff format
+  // ...
+}
+```
+
+## Section 4: Performance Considerations
+
+When working with large files, several performance optimizations have been implemented:
+1. Virtual scrolling for efficient DOM rendering
+2. Web Workers for non-blocking difference calculations
+3. Memoization of diff results to prevent redundant calculations
+4. Progressive loading of file content
+5. Throttling of UI updates during scrolling operations
+
+These optimizations ensure the application remains responsive even when
+comparing files with tens of thousands of lines or complex formatting.
+
+## Section 5: New Features
+
+Recent additions to DeltaVision include:
+- Improved diff algorithm with better accuracy
+- Toggle for auto-scrolling to the top when selecting files
+- New Hackerman theme with matrix-inspired styling
+- Enhanced keyboard shortcut system
+- Better handling of binary files
+- Cleaner header layout without redundant title
+- Performance improvements for large file comparisons
+
+## Section 6: Future Development
+
+Our roadmap for upcoming versions includes:
+- Three-way merge capabilities
+- Inline editing of files
+- Enhanced syntax highlighting for various programming languages
+- Integration with Git and other version control systems
+- Export diff as HTML, PDF or image
+- Compare directories recursively with intelligent filtering
+- Custom plugins architecture for extensibility
+- Collaborative real-time comparison sessions
+
+## Section 7: Data Analysis
+
+This section contains updated sample data for testing purposes:
+
+| Year | Revenue | Growth | Expenses | Profit | Margin |
+|------|---------|--------|----------|--------|--------|
+| 2020 | $1.2M   | 5%     | $0.8M    | $0.4M  | 33.3%  |
+| 2021 | $1.5M   | 25%    | $0.9M    | $0.6M  | 40.0%  |
+| 2022 | $1.8M   | 20%    | $1.1M    | $0.7M  | 38.9%  |
+| 2023 | $2.0M   | 11%    | $1.3M    | $0.7M  | 35.0%  |
+| 2024 | $2.4M   | 20%    | $1.4M    | $1.0M  | 41.7%  |
+
+## Section 8: User Feedback
+
+User feedback continues to be positive, with an average rating increasing to 4.7/5 stars.
+Users particularly appreciate the new themes, keyboard shortcuts, and performance optimizations.
+Requested improvements include better documentation and additional export options.
+
+## Section 9: Lorem Ipsum (Large Text Block)
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor tortor quis lorem tincidunt, sit amet scelerisque nisi ullamcorper. Proin eget metus vel nunc malesuada finibus. Vestibulum et turpis nec nisl elementum venenatis. Cras condimentum erat at dolor sodales, vitae blandit nibh tincidunt. Integer luctus neque vel libero commodo, vel tincidunt risus vehicula. Donec laoreet magna sit amet massa pretium, eu pharetra libero auctor. Nullam volutpat tellus eget odio congue, vel scelerisque magna commodo.
+
+Fusce vestibulum, mi eu luctus iaculis, turpis justo interdum nisi, et tincidunt est magna vel arcu. Etiam eget dui nec sapien vestibulum tempor. Vestibulum vulputate ligula vel mi euismod, at tincidunt nulla venenatis. Aenean volutpat tincidunt ligula, vel imperdiet ipsum tempus a. Donec consequat nibh vel mi dictum, in aliquet nisl imperdiet. Nulla facilisi. Nulla facilisi. Suspendisse potenti. Nullam ultrices magna ac turpis tempor vulputate.
+
+Integer rutrum metus eget dapibus suscipit. Nam ultricies velit vel lectus laoreet, ac scelerisque velit gravida. Nullam vel est non sem mattis porttitor non eget eros. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nullam ac blandit orci, eget lacinia eros. Cras et velit vel dolor finibus commodo. Sed interdum fringilla nulla, nec efficitur eros elementum quis.
+
+Phasellus bibendum, ipsum non eleifend vulputate, libero leo rutrum justo, at placerat nibh tortor id ante. Suspendisse potenti. Sed eget magna consequat, blandit orci ac, accumsan eros. Nulla aliquet, dolor sit amet venenatis condimentum, quam nibh facilisis justo, eget scelerisque eros ligula at enim. Duis in dui ac leo facilisis tincidunt a ac mi. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Etiam accumsan tellus metus, in rhoncus nisi finibus at.
+
+Mauris varius lacus ac magna volutpat, vel finibus massa finibus. Sed dignissim magna quis tortor viverra, vel tincidunt magna molestie. Cras at tortor non urna finibus faucibus. Maecenas scelerisque eros et mi faucibus, at tristique velit scelerisque. Suspendisse at odio risus. Nunc varius, sapien quis malesuada commodo, urna mi lacinia nibh, nec aliquet odio sapien id ipsum. Quisque vestibulum neque et eros tincidunt, nec ultrices turpis lacinia.
+
+## Section 10: Configuration Settings
+
+Updated configuration settings:
+```json
+{
+  "diffMode": "char",
+  "theme": "hackerman",
+  "fontFamily": "Fira Code",
+  "fontSize": 14,
+  "lineWrapping": false,
+  "showLineNumbers": true,
+  "highlightChanges": true,
+  "autoScrollToChanges": true,
+  "scrollToTopWhenSelectingFiles": true,
+  "tabSize": 2,
+  "maxFileSize": 10485760
+}
+```
+
+## Section 11: Installation Instructions
+
+To install DeltaVision, follow these steps:
+1. Clone the repository: `git clone https://github.com/example/deltavision.git`
+2. Install dependencies with `npm install`
+3. Configure the application by editing `config.json`
+4. Start the server with `npm start`
+5. Open a browser and navigate to `http://localhost:3000`
+
+For Docker installation (recommended):
+1. Build the Docker image: `docker build -t deltavision .`
+2. Run the container: `docker run -p 3000:3000 -v /path/to/files:/data deltavision`
+3. Access the application at `http://localhost:3000`
+
+## Section 12: Conclusion
+
+This test file demonstrates the various types of content that might be encountered when comparing files.
+The file is intentionally long and contains numerous differences from its previous version to 
+test DeltaVision's performance with substantial content and changes.
+The application should identify and highlight all differences effectively while maintaining
+a responsive and smooth user experience.
+
+END OF TEST FILE
