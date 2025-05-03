@@ -1924,6 +1924,7 @@
 
             // Handle file selection for Old vs New comparison
             const handleFileSelect = (index) => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 // Clear any selected time comparison
                 setSelectedTimeFileIndex(null);
                 setSelectedFileIndex(index);
@@ -1950,6 +1951,7 @@
 
             // Handle file selection for Time Comparison
             const handleTimeFileSelect = (index) => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 // Clear any selected old/new comparison
                 setSelectedFileIndex(null);
                 setSelectedTimeFileIndex(index);
@@ -3336,8 +3338,9 @@
         // Consolidated keyboard shortcuts handler for all application functions
         document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('keydown', function(e) {
-                // Skip if we're in an input or textarea
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                // Skip if we're in an input or textarea, but still allow Ctrl+N to toggle New Only
+                const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+                if (isInput && !(e.ctrlKey && e.key.toLowerCase() === 'n')) {
                     return;
                 }
                 
