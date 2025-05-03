@@ -1427,6 +1427,17 @@
             background-color: white;
         }
         
+        /* More distinct styles for toggle OFF state */
+        .custom-checkbox input:not(:checked) + .checkmark {
+            background-color: rgba(255, 255, 255, 0.1); /* lighter grey background */
+            border-color: var(--border-color);
+        }
+        
+        .custom-checkbox input:not(:checked) + .checkmark:before {
+            transform: none; /* ensure knob on left */
+            background-color: var(--text-muted);
+        }
+        
         .settings-section-header {
             font-size: 1rem;
             font-weight: 600;
@@ -1635,12 +1646,6 @@
         // Initialize Theme Manager
         document.addEventListener('DOMContentLoaded', function() {
             window.themeManager = new ThemeManager();
-            
-            // Initial load of folder paths to ensure they're available 
-            // when document is ready, separate from settings modal opening
-            setTimeout(() => {
-                loadFolderPaths();
-            }, 500);
         });
     </script>
 
@@ -1759,31 +1764,17 @@
                                     key={`${file.type}-${index}`} 
                                     className={`file-entry ${isSelected ? 'selected' : ''}`}
                                     onClick={() => {
-                                        if (window.appState.scrollToTopEnabled) {
-                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        if (isOldNew) {
+                                            onSelectFile(files.findIndex(f => 
+                                                f.oldFile.path === file.oldFile.path && 
+                                                f.newFile.path === file.newFile.path
+                                            ));
+                                        } else {
+                                            onSelectTimeFile(timeFiles.findIndex(f => 
+                                                f.newerFile.path === file.newerFile.path && 
+                                                f.olderFile.path === file.olderFile.path
+                                            ));
                                         }
-                                        // Clear any selected time comparison
-                                        setSelectedTimeFileIndex(null);
-                                        setSelectedFileIndex(index);
-                                        setCurrentComparisonType('oldNew');
-                                        
-                                        const selectedFile = files[index];
-                                        
-                                        // Fetch file contents for comparison
-                                        fetch(`/api/compare?oldPath=${encodeURIComponent(selectedFile.oldFile.path)}&newPath=${encodeURIComponent(selectedFile.newFile.path)}`)
-                                            .then(response => {
-                                                if (!response.ok) {
-                                                    throw new Error('Failed to fetch file contents');
-                                                }
-                                                return response.json();
-                                            })
-                                            .then(data => {
-                                                setOldContent(data.oldContent);
-                                                setNewContent(data.newContent);
-                                            })
-                                            .catch(err => {
-                                                setError(err.message);
-                                            });
                                     }}
                                 >
                                     <div className={`type-indicator ${isOldNew ? 'type-old-new' : 'type-time'}`}></div>
@@ -3267,18 +3258,10 @@
         
         // Initialize scroll-to-top toggle from localStorage
         scrollToggleCheckbox.checked = localStorage.getItem('scrollToTopEnabled') !== 'false';
-        window.appState.scrollToTopEnabled = scrollToggleCheckbox.checked;
-        // Save scroll-to-top preference on change without reloading
-        scrollToggleCheckbox.addEventListener('change', (e) => {
-            const enabled = e.target.checked;
-            localStorage.setItem('scrollToTopEnabled', enabled);
-            window.appState.scrollToTopEnabled = enabled;
-            console.log('Scroll-to-top preference saved:', enabled);
-        });
         
         // Show settings modal
         settingsButton.addEventListener('click', () => {
-            loadFolderPaths(); // Load folder paths from server before showing the modal
+            loadFolderPaths();
             settingsModal.classList.add('active');
         });
         
@@ -3295,6 +3278,7 @@
             const oldFolderPath = oldFolderInput.value.trim();
             const newFolderPath = newFolderInput.value.trim();
             const keywordFilePath = keywordFileInput.value.trim();
+            const scrollToTopEnabled = scrollToggleCheckbox.checked;
             
             // Validate paths
             let isValid = true;
@@ -3316,6 +3300,9 @@
             // Keyword file path is optional, no validation needed
             document.getElementById('keyword-file-error').textContent = '';
             
+            // Save scroll-to-top toggle state to localStorage
+            localStorage.setItem('scrollToTopEnabled', scrollToTopEnabled);
+
             if (isValid) {
                 try {
                     const response = await fetch('/api/folders', {
@@ -3381,25 +3368,147 @@
             }
         });
 
+        // Load saved folder paths on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFolderPaths();
+            
+            // Set up settings modal
+            const settingsButton = document.getElementById('settings-button');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeModal = document.getElementById('close-modal');
+            const cancelSettings = document.getElementById('cancel-settings');
+            const saveSettings = document.getElementById('save-settings');
+            const oldFolderInput = document.getElementById('old-folder-path');
+            const newFolderInput = document.getElementById('new-folder-path');
+            const keywordFileInput = document.getElementById('keyword-file-path');
+            const scrollToggleCheckbox = document.getElementById('scroll-top-toggle');
+            
+            // Initialize scroll-to-top toggle from localStorage
+            scrollToggleCheckbox.checked = localStorage.getItem('scrollToTopEnabled') !== 'false';
+            
+            // Show settings modal
+            settingsButton.addEventListener('click', () => {
+                loadFolderPaths();
+                settingsModal.classList.add('active');
+            });
+            
+            // Hide settings modal
+            function hideModal() {
+                settingsModal.classList.remove('active');
+            }
+            
+            closeModal.addEventListener('click', hideModal);
+            cancelSettings.addEventListener('click', hideModal);
+            
+            // Save settings
+            saveSettings.addEventListener('click', async () => {
+                const oldFolderPath = oldFolderInput.value.trim();
+                const newFolderPath = newFolderInput.value.trim();
+                const keywordFilePath = keywordFileInput.value.trim();
+                const scrollToTopEnabled = scrollToggleCheckbox.checked;
+                
+                // Validate paths
+                let isValid = true;
+                
+                if (!oldFolderPath) {
+                    document.getElementById('old-folder-error').textContent = 'Old folder path is required';
+                    isValid = false;
+                } else {
+                    document.getElementById('old-folder-error').textContent = '';
+                }
+                
+                if (!newFolderPath) {
+                    document.getElementById('new-folder-error').textContent = 'New folder path is required';
+                    isValid = false;
+                } else {
+                    document.getElementById('new-folder-error').textContent = '';
+                }
+                
+                // Keyword file path is optional, no validation needed
+                document.getElementById('keyword-file-error').textContent = '';
+                
+                // Save scroll-to-top toggle state to localStorage
+                localStorage.setItem('scrollToTopEnabled', scrollToTopEnabled);
+
+                if (isValid) {
+                    try {
+                        const response = await fetch('/api/folders', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                oldFolder: oldFolderPath,
+                                newFolder: newFolderPath,
+                                keywordFile: keywordFilePath
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            // Show success message
+                            const statusEl = document.getElementById('settings-status');
+                            statusEl.textContent = `Settings saved successfully${data.keywordCount > 0 ? `. Loaded ${data.keywordCount} keywords` : ''}`;
+                            statusEl.classList.add('success');
+                            statusEl.classList.remove('error');
+                            statusEl.style.display = 'block';
+                            
+                            // Hide message after 3 seconds
+                            setTimeout(() => {
+                                statusEl.style.display = 'none';
+                            }, 3000);
+                            
+                            // Hide modal
+                            hideModal();
+                            
+                            // Reload page to refresh data
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        } else {
+                            // Show error message
+                            if (data.error && data.error.includes('Old folder')) {
+                                document.getElementById('old-folder-error').textContent = data.error;
+                            } else if (data.error && data.error.includes('New folder')) {
+                                document.getElementById('new-folder-error').textContent = data.error;
+                            } else if (data.error && data.error.includes('Keyword file')) {
+                                document.getElementById('keyword-file-error').textContent = data.error;
+                            } else {
+                                const statusEl = document.getElementById('settings-status');
+                                statusEl.textContent = data.error || 'Failed to save settings';
+                                statusEl.classList.add('error');
+                                statusEl.classList.remove('success');
+                                statusEl.style.display = 'block';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error saving settings:', error);
+                    }
+                }
+            });
+
+            // Close modal when clicking outside the content
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) {
+                    hideModal();
+                }
+            });
+        });
+        
         // Load folder paths from server
         async function loadFolderPaths() {
             try {
-                console.log('Loading folder paths from server...');
                 const response = await fetch('/api/folders');
                 const data = await response.json();
-                console.log('Server response:', data);
                 
-                // Always set the values, even if empty - this ensures they're updated after changes
-                document.getElementById('old-folder-path').value = data.oldFolderPath || '';
-                document.getElementById('new-folder-path').value = data.newFolderPath || '';
-                console.log('Updated folder path fields:', { 
-                    old: data.oldFolderPath, 
-                    new: data.newFolderPath 
-                });
+                if (data.oldFolderPath && data.newFolderPath) {
+                    document.getElementById('old-folder-path').value = data.oldFolderPath;
+                    document.getElementById('new-folder-path').value = data.newFolderPath;
+                }
                 
                 if (data.keywordFilePath) {
                     document.getElementById('keyword-file-path').value = data.keywordFilePath;
-                    console.log('Updated keyword file path:', data.keywordFilePath);
                 }
                 
                 // Handle scroll-to-top setting
