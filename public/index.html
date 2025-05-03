@@ -3156,7 +3156,7 @@
                 updateToggleLabel();
                 
                 // Add change event listener
-                globalHighlightToggle.addEventListener('change', (event) => {
+                globalHighlightToggle.addEventListener('change', () => {
                     // Update global app state
                     window.appState.highlightingEnabled = globalHighlightToggle.checked;
                     
@@ -3167,10 +3167,10 @@
                     updateToggleLabel();
                     
                     // Trigger a custom event for the React component to listen to
-                    const customEvent = new CustomEvent('highlightToggleChanged', {
+                    const event = new CustomEvent('highlightToggleChanged', {
                         detail: { enabled: globalHighlightToggle.checked }
                     });
-                    document.dispatchEvent(customEvent);
+                    document.dispatchEvent(event);
                 });
             }
         })();
@@ -3188,7 +3188,7 @@
                     if (label) label.textContent = `Diff ${globalDiffHighlightToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                globalDiffHighlightToggle.addEventListener('change', (event) => {
+                globalDiffHighlightToggle.addEventListener('change', () => {
                     updateToggleLabel();
                     document.dispatchEvent(new CustomEvent('diffHighlightToggleChanged', { detail: { enabled: globalDiffHighlightToggle.checked } }));
                 });
@@ -3208,7 +3208,7 @@
                     if (label) label.textContent = `Detect Moves ${globalMoveDetectionToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                globalMoveDetectionToggle.addEventListener('change', (event) => {
+                globalMoveDetectionToggle.addEventListener('change', () => {
                     updateToggleLabel();
                     document.dispatchEvent(new CustomEvent('moveDetectionToggleChanged', { detail: { enabled: globalMoveDetectionToggle.checked } }));
                 });
@@ -3228,7 +3228,7 @@
                     if (label) label.textContent = `New Only ${globalNewOnlyToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                globalNewOnlyToggle.addEventListener('change', (event) => {
+                globalNewOnlyToggle.addEventListener('change', () => {
                     updateToggleLabel();
                     document.dispatchEvent(new CustomEvent('newOnlyToggleChanged', { detail: { enabled: globalNewOnlyToggle.checked } }));
                 });
@@ -3244,7 +3244,7 @@
                     if (label) label.textContent = `Diff ${globalDiffModeToggle.checked ? 'Word' : 'Char'}`;
                 };
                 updateLabel();
-                globalDiffModeToggle.addEventListener('change', (event) => {
+                globalDiffModeToggle.addEventListener('change', () => {
                     updateLabel();
                     document.dispatchEvent(new CustomEvent('diffModeToggle', { detail: { mode: globalDiffModeToggle.checked ? 'word' : 'char' } }));
                 });
@@ -3267,20 +3267,13 @@
         
         // Initialize scroll-to-top toggle from localStorage
         scrollToggleCheckbox.checked = localStorage.getItem('scrollToTopEnabled') !== 'false';
-        
-        // Add event listener to save scroll toggle state when changed
-        scrollToggleCheckbox.addEventListener('change', function(event) {
-            const isEnabled = this.checked;
-            console.log(`Saving scroll-to-top preference: ${isEnabled}`);
-            localStorage.setItem('scrollToTopEnabled', isEnabled);
-            window.appState.scrollToTopEnabled = isEnabled;
-            
-            // We need to explicitly prevent the default action and propagation
-            // to ensure the settings form doesn't attempt to submit
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
+        window.appState.scrollToTopEnabled = scrollToggleCheckbox.checked;
+        // Save scroll-to-top preference on change without reloading
+        scrollToggleCheckbox.addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            localStorage.setItem('scrollToTopEnabled', enabled);
+            window.appState.scrollToTopEnabled = enabled;
+            console.log('Scroll-to-top preference saved:', enabled);
         });
         
         // Show settings modal
@@ -3298,7 +3291,7 @@
         cancelSettingsButton.addEventListener('click', hideModal);
         
         // Save settings
-        saveSettingsButton.addEventListener('click', async (event) => {
+        saveSettingsButton.addEventListener('click', async () => {
             const oldFolderPath = oldFolderInput.value.trim();
             const newFolderPath = newFolderInput.value.trim();
             const keywordFilePath = keywordFileInput.value.trim();
@@ -3382,8 +3375,8 @@
         });
 
         // Close modal when clicking outside
-        settingsModal.addEventListener('click', (event) => {
-            if (event.target === settingsModal) {
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
                 hideModal();
             }
         });
@@ -3426,23 +3419,23 @@
     <script>
         // Consolidated keyboard shortcuts handler for all application functions
         document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function(e) {
                 // Skip if we're in an input or textarea, but still allow Ctrl+N to toggle New Only
-                const isInput = event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA';
-                if (isInput && !(event.ctrlKey && event.key.toLowerCase() === 'n')) {
+                const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+                if (isInput && !(e.ctrlKey && e.key.toLowerCase() === 'n')) {
                     return;
                 }
                 
                 // Sidebar toggle: Ctrl+E
-                if (event.ctrlKey && event.key.toLowerCase() === 'e') {
-                    event.preventDefault();
+                if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+                    e.preventDefault();
                     const sidebarToggle = document.querySelector('.toggle-sidebar');
                     if (sidebarToggle) sidebarToggle.click();
                 }
                 
                 // Highlight toggle: Ctrl+H
-                if (event.ctrlKey && event.key.toLowerCase() === 'h') {
-                    event.preventDefault();
+                if (e.ctrlKey && e.key.toLowerCase() === 'h') {
+                    e.preventDefault();
                     const hlToggle = document.getElementById('global-highlight-toggle');
                     if (hlToggle) {
                         hlToggle.checked = !hlToggle.checked;
@@ -3451,8 +3444,8 @@
                 }
                 
                 // Diff toggle: Ctrl+D
-                if (event.ctrlKey && event.key.toLowerCase() === 'd') {
-                    event.preventDefault();
+                if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+                    e.preventDefault();
                     const diffToggle = document.getElementById('diff-highlight-toggle');
                     if (diffToggle) {
                         diffToggle.checked = !diffToggle.checked;
@@ -3461,8 +3454,8 @@
                 }
                 
                 // Char diff toggle: Ctrl+M
-                if (event.ctrlKey && event.key.toLowerCase() === 'm') {
-                    event.preventDefault();
+                if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+                    e.preventDefault();
                     const modeToggle = document.getElementById('diff-mode-toggle');
                     if (modeToggle) {
                         modeToggle.checked = !modeToggle.checked;
@@ -3471,8 +3464,8 @@
                 }
                 
                 // Move detection toggle: Ctrl+R
-                if (event.ctrlKey && event.key.toLowerCase() === 'r') {
-                    event.preventDefault();
+                if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+                    e.preventDefault();
                     const moveDetectionToggle = document.getElementById('move-detection-toggle');
                     if (moveDetectionToggle) {
                         moveDetectionToggle.checked = !moveDetectionToggle.checked;
@@ -3481,8 +3474,8 @@
                 }
                 
                 // New only toggle: Ctrl+N
-                if (event.ctrlKey && event.key.toLowerCase() === 'n') {
-                    event.preventDefault();
+                if (e.ctrlKey && e.key.toLowerCase() === 'n') {
+                    e.preventDefault();
                     const newOnlyToggle = document.getElementById('new-only-toggle');
                     if (newOnlyToggle) {
                         newOnlyToggle.checked = !newOnlyToggle.checked;
@@ -3491,21 +3484,21 @@
                 }
                 
                 // Mode toggles: Ctrl+1 and Ctrl+2 for different view modes
-                if (event.ctrlKey && event.key === '1') {
-                    event.preventDefault();
+                if (e.ctrlKey && e.key === '1') {
+                    e.preventDefault();
                     const inlineButton = document.querySelector('.mode-toggle button:first-child');
                     if (inlineButton) inlineButton.click();
                 }
                 
-                if (event.ctrlKey && event.key === '2') {
-                    event.preventDefault();
+                if (e.ctrlKey && e.key === '2') {
+                    e.preventDefault();
                     const sideBySideButton = document.querySelector('.mode-toggle button:last-child');
                     if (sideBySideButton) sideBySideButton.click();
                 }
 
                 // Navigation with arrow keys
-                if (event.key === 'ArrowUp') {
-                    event.preventDefault();
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
                     const app = document.getElementById('app');
                     if (app) {
                         const fileEntries = app.querySelectorAll('.file-entry');
@@ -3517,8 +3510,8 @@
                     }
                 }
                 
-                if (event.key === 'ArrowDown') {
-                    event.preventDefault();
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
                     const app = document.getElementById('app');
                     if (app) {
                         const fileEntries = app.querySelectorAll('.file-entry');
