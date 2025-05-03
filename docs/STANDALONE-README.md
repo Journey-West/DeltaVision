@@ -94,7 +94,7 @@ PORT=8080 ./start-deltavision.sh /path/to/old/folder /path/to/new/folder
 
 ## Custom Keyword Highlighting
 
-DeltaVision can highlight specific keywords in your files. Create a text file with keywords and their colors:
+DeltaVision can highlight specific keywords in your files. Create a text file with one keyword and color pair per line in the format `keyword:color`:
 
 ```
 ERROR:red
@@ -102,6 +102,8 @@ WARNING:yellow
 INFO:blue
 TODO:orange
 ```
+
+Each line should contain exactly one keyword, followed by a colon, followed by the color name. This allows DeltaVision to highlight each term with its specified color.
 
 Then specify this file when starting DeltaVision:
 

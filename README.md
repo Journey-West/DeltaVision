@@ -81,14 +81,16 @@ DeltaVision provides several keyboard shortcuts for efficient navigation:
 
 ## Creating a Keywords File
 
-Keywords allow you to highlight important terms in file diffs. Create a file with one keyword per line:
+Keywords allow you to highlight important terms in file diffs. Create a file with one keyword and color pair per line in the format `keyword:color`:
 
 ```
-important
-critical
-todo
-bug
+important:yellow
+critical:red
+todo:blue
+bug:orange
 ```
+
+Each line should contain exactly one keyword, followed by a colon, followed by the color name. This allows DeltaVision to highlight each term with its specified color.
 
 Specify the path to this file as the third parameter when launching DeltaVision.
 
