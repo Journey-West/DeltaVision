@@ -1396,9 +1396,13 @@
     </style>
     <style>
         .no-diff-indicator {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
             color: var(--no-diff-color);
             font-size: 0.9em;
-            margin-left: 4px;
+            pointer-events: none;
         }
     </style>
     <style>
@@ -2420,6 +2424,7 @@
                                 diffHighlightingEnabled={diffHighlightingEnabled}
                                 moveDetectionEnabled={moveDetectionEnabled}
                                 diffMode={diffMode}
+                                newOnlyEnabled={newOnlyEnabled}
                             />
                         ) : (
                             <div className="file-selection-bar">
@@ -2794,7 +2799,7 @@
         };
 
         // TimeComparison component to show the diff between newest and older files
-        const TimeComparisonView = ({ olderContent, newerContent, fileInfo, keywords, highlightingEnabled, diffHighlightingEnabled, moveDetectionEnabled, diffMode }) => {
+        const TimeComparisonView = ({ olderContent, newerContent, fileInfo, keywords, highlightingEnabled, diffHighlightingEnabled, moveDetectionEnabled, diffMode, newOnlyEnabled }) => {
             if (!fileInfo) {
                 return (
                     <div className="file-selection-bar">
@@ -2958,6 +2963,41 @@
                     </table>
                 );
             };
+
+            if (newOnlyEnabled) {
+                return (
+                    <div className="comparison-container">
+                        <h3>File Comparison - Newer Version Only</h3>
+                        <div className="filename-display">
+                            <div className="row align-items-center mb-3">
+                                <div className="col-md-12">
+                                    <div className="filename-box new-file">
+                                        <h5>Newer Version <span className="file-time">({new Date(fileInfo.newerFile.mtime).toLocaleString()})</span></h5>
+                                        <div className="filename">{fileInfo.newerFile.filename}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="file-details">
+                            <div>
+                                {fileInfo.commandRan}
+                            </div>
+                        </div>
+                        <div className="diff-container">
+                            <table className="diff-table">
+                                <tbody>
+                                    {newerContent.split('\n').map((line, i) => (
+                                        <tr key={i}>
+                                            <td className="line-number">{i+1}</td>
+                                            <td>{highlightKeywords(line, keywords, highlightingEnabled)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
+            }
 
             return (
                 <div className="comparison-container">
