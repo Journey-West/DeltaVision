@@ -1,64 +1,64 @@
 /* Light Owl Theme - DeltaVision */
 :root {
   /* Base colors */
-  --background-color: #FBFBFB;
+  --background-color: #FAFBFB;
   --text-color: #403f53;
-  --header-bg: #E0E0E0;
+  --header-bg: #F0F0F0;
   --header-text: #403f53;
   
   /* Container and borders */
-  --container-bg: #FBFBFB;
-  --border-color: #d9d9d9;
+  --container-bg: #FAFBFB;
+  --border-color: #d3e8f8;
   
   /* File browser */
   --file-entry-bg: #F0F0F0;
-  --file-entry-hover: #E2E2E2;
+  --file-entry-hover: #e9f4fd;
   --file-selected-bg: #d3e8f8;
-  --file-selected-border: #0b6fca;
+  --file-selected-border: #5f7e97;
   
   /* Diff colors */
-  --removed-bg: rgba(255, 88, 116, 0.1);
-  --added-bg: rgba(25, 182, 83, 0.1);
+  --removed-bg: rgba(240, 113, 120, 0.15);
+  --added-bg: rgba(74, 163, 130, 0.15);
   
   /* Accent colors */
-  --primary-color: #4876d6;
-  --secondary-color: #994cc3;
-  --accent-color: #0b6fca;
-  --accent-color-transparent: rgba(11, 111, 202, 0.1);
+  --primary-color: #5f7e97;
+  --secondary-color: #c792ea;
+  --accent-color: #5f7e97;
+  --accent-color-transparent: rgba(95, 126, 151, 0.15);
   
   /* UI Elements */
-  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 4px 6px rgba(0, 27, 72, 0.08);
   --transition-speed: 0.2s;
   --line-number-bg: #F0F0F0;
   --table-row-bg: #F0F0F0;
-  --table-border-color: #d9d9d9;
-  --button-hover-bg: rgba(11, 111, 202, 0.1);
+  --table-border-color: #d3e8f8;
+  --button-hover-bg: rgba(95, 126, 151, 0.15);
   
   /* Tooltips */
   --tooltip-bg: #F0F0F0;
-  --tooltip-border: #d9d9d9;
-  --tooltip-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --tooltip-border: #d3e8f8;
+  --tooltip-shadow: 0 4px 6px rgba(0, 27, 72, 0.08);
   
   /* Status colors */
-  --error-color: #e53935;
-  --success-color: #19b653;
-  --warning-color: #daaa01;
-  --text-muted: #90a7b2;
+  --error-color: #f07178;
+  --success-color: #4aa382;
+  --warning-color: #ecc48d;
+  --text-muted: #8badc1;
   
   /* Modal elements */
-  --modal-overlay-bg: rgba(0, 0, 0, 0.3);
-  --modal-bg: #FBFBFB;
+  --modal-overlay-bg: rgba(0, 27, 72, 0.25);
+  --modal-bg: #FAFBFB;
   --input-bg: #F0F0F0;
-  --input-border: #d9d9d9;
+  --input-border: #d3e8f8;
 
   /* Syntax Highlighting */
-  --syntax-comment: #90a7b2;
-  --syntax-string: #19b653;
-  --syntax-keyword: #994cc3;
-  --syntax-function: #4876d6;
+  --syntax-comment: #8badc1;
+  --syntax-string: #4aa382;
+  --syntax-keyword: #c792ea;
+  --syntax-function: #82aaff;
   --syntax-variable: #403f53;
-  --syntax-number: #aa0982;
-  --syntax-constant: #aa0982;
-  --syntax-class: #994cc3;
-  --syntax-tag: #994cc3;
+  --syntax-number: #f78c6c;
+  --syntax-constant: #7fdbca;
+  --syntax-class: #ffcb8b;
+  --syntax-tag: #7fdbca;
 }

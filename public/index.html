@@ -1558,7 +1558,7 @@
         
         .tally-section .tally-item .count {
             font-weight: bold;
-            background: var(--accent-color);
+            background: var(--primary-color, #0969da);
             color: white;
             border-radius: 20px;
             min-width: 30px;
@@ -1568,6 +1568,8 @@
             justify-content: center;
             padding: 0 10px;
             font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
         
         .tally-toggle-btn {
@@ -1645,7 +1647,7 @@
         
         .tally-section .tally-summary .total-count {
             font-weight: bold;
-            background: var(--accent-color);
+            background: var(--primary-color, #0969da);
             color: white;
             border-radius: 20px;
             min-width: 30px;
@@ -1655,6 +1657,8 @@
             justify-content: center;
             padding: 0 10px;
             font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
@@ -1720,11 +1724,8 @@
         </div>
         <div class="header-buttons">
             <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Dark Mode">
-                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display: none;">
-                    <path d="M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
-                </svg>
-                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M9.5 2c-1.82 0-3.53.5-5 1.35 2.99 1.73 5 4.95 5 8.65s-2.01 6.92-5 8.65c1.47.85 3.18 1.35 5 1.35 5.52 0 10-4.48 10-10S15.02 2 9.5 2z M12 15.6c-1.98 0-3.6-1.62-3.6-3.6 s1.62-3.6 3.6-3.6s3.6 1.62 3.6 3.6S13.98 15.6 12 15.6z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 3c-5 0-9 4-9 9s4 9 9 9 9-4 9-9-4-9-9-9zm0 16c-3.9 0-7-3.1-7-7s3.1-7 7-7 7 3.1 7 7-3.1 7-7 7zm1-11h-2v3H8v2h3v3h2v-3h3v-2h-3z"/>
                 </svg>
                 <span id="theme-text">Dark Mode</span>
             </button>
