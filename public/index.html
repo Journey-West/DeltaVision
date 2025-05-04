@@ -1601,21 +1601,9 @@
                 </div>
                 <div class="settings-section-header">UI Preferences</div>
                 <div class="form-group">
-                    <label class="custom-checkbox-container">
-                        <span class="custom-checkbox">
-                            <input type="checkbox" id="scroll-top-toggle" />
-                            <span class="checkmark"></span>
-                        </span>
-                        <span>Scroll to top when selecting files</span>
-                    </label>
-                    <div class="form-hint">
-                        When enabled, the view will automatically scroll to the top when you select a file.
-                    </div>
+                    <button id="save-settings" class="btn btn-primary">Save Changes</button>
+                    <button id="cancel-settings" class="btn btn-secondary">Cancel</button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button id="cancel-settings" class="btn btn-secondary">Cancel</button>
-                <button id="save-settings" class="btn btn-primary">Save Changes</button>
             </div>
             <div id="settings-status" class=""></div>
         </div>
@@ -1662,10 +1650,7 @@
                 : localStorage.getItem('moveDetectionEnabled') === 'true',
             newOnlyEnabled: localStorage.getItem('newOnlyEnabled') === null
                 ? false
-                : localStorage.getItem('newOnlyEnabled') === 'true',
-            scrollToTopEnabled: localStorage.getItem('scrollToTopEnabled') === null 
-                ? true 
-                : localStorage.getItem('scrollToTopEnabled') === 'true'
+                : localStorage.getItem('newOnlyEnabled') === 'true'
         };
 
         // Combined FileList component to display all comparison types
@@ -2046,9 +2031,7 @@
 
             // Handle file selection for Old vs New comparison
             const handleFileSelect = (index) => {
-                if (window.appState.scrollToTopEnabled) {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 // Clear any selected time comparison
                 setSelectedTimeFileIndex(null);
                 setSelectedFileIndex(index);
@@ -2075,9 +2058,7 @@
 
             // Handle file selection for Time Comparison
             const handleTimeFileSelect = (index) => {
-                if (window.appState.scrollToTopEnabled) {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 // Clear any selected old/new comparison
                 setSelectedFileIndex(null);
                 setSelectedTimeFileIndex(index);
@@ -3253,10 +3234,6 @@
         const oldFolderInput = document.getElementById('old-folder-path');
         const newFolderInput = document.getElementById('new-folder-path');
         const keywordFileInput = document.getElementById('keyword-file-path');
-        const scrollToggleCheckbox = document.getElementById('scroll-top-toggle');
-        
-        // Initialize scroll-to-top toggle from localStorage
-        scrollToggleCheckbox.checked = localStorage.getItem('scrollToTopEnabled') !== 'false';
         
         // Show settings modal
         settingsButton.addEventListener('click', () => {
@@ -3277,7 +3254,6 @@
             const oldFolderPath = oldFolderInput.value.trim();
             const newFolderPath = newFolderInput.value.trim();
             const keywordFilePath = keywordFileInput.value.trim();
-            const scrollToTopEnabled = scrollToggleCheckbox.checked;
             
             // Validate paths
             let isValid = true;
@@ -3299,9 +3275,6 @@
             // Keyword file path is optional, no validation needed
             document.getElementById('keyword-file-error').textContent = '';
             
-            // Save scroll-to-top toggle state to localStorage
-            localStorage.setItem('scrollToTopEnabled', scrollToTopEnabled);
-
             if (isValid) {
                 try {
                     const response = await fetch('/api/folders', {
@@ -3333,11 +3306,6 @@
                         
                         // Hide modal
                         hideModal();
-                        
-                        // Reload page to refresh data
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
                     } else {
                         // Show error message
                         if (data.error && data.error.includes('Old folder')) {
@@ -3367,134 +3335,6 @@
             }
         });
 
-        // Load saved folder paths on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFolderPaths();
-            
-            // Set up settings modal
-            const settingsButton = document.getElementById('settings-button');
-            const settingsModal = document.getElementById('settings-modal');
-            const closeModal = document.getElementById('close-modal');
-            const cancelSettings = document.getElementById('cancel-settings');
-            const saveSettings = document.getElementById('save-settings');
-            const oldFolderInput = document.getElementById('old-folder-path');
-            const newFolderInput = document.getElementById('new-folder-path');
-            const keywordFileInput = document.getElementById('keyword-file-path');
-            const scrollToggleCheckbox = document.getElementById('scroll-top-toggle');
-            
-            // Initialize scroll-to-top toggle from localStorage
-            scrollToggleCheckbox.checked = localStorage.getItem('scrollToTopEnabled') !== 'false';
-            
-            // Show settings modal
-            settingsButton.addEventListener('click', () => {
-                loadFolderPaths();
-                settingsModal.classList.add('active');
-            });
-            
-            // Hide settings modal
-            function hideModal() {
-                settingsModal.classList.remove('active');
-            }
-            
-            closeModal.addEventListener('click', hideModal);
-            cancelSettings.addEventListener('click', hideModal);
-            
-            // Save settings
-            saveSettings.addEventListener('click', async () => {
-                const oldFolderPath = oldFolderInput.value.trim();
-                const newFolderPath = newFolderInput.value.trim();
-                const keywordFilePath = keywordFileInput.value.trim();
-                const scrollToTopEnabled = scrollToggleCheckbox.checked;
-                
-                // Validate paths
-                let isValid = true;
-                
-                if (!oldFolderPath) {
-                    document.getElementById('old-folder-error').textContent = 'Old folder path is required';
-                    isValid = false;
-                } else {
-                    document.getElementById('old-folder-error').textContent = '';
-                }
-                
-                if (!newFolderPath) {
-                    document.getElementById('new-folder-error').textContent = 'New folder path is required';
-                    isValid = false;
-                } else {
-                    document.getElementById('new-folder-error').textContent = '';
-                }
-                
-                // Keyword file path is optional, no validation needed
-                document.getElementById('keyword-file-error').textContent = '';
-                
-                // Save scroll-to-top toggle state to localStorage
-                localStorage.setItem('scrollToTopEnabled', scrollToTopEnabled);
-
-                if (isValid) {
-                    try {
-                        const response = await fetch('/api/folders', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                oldFolder: oldFolderPath,
-                                newFolder: newFolderPath,
-                                keywordFile: keywordFilePath
-                            })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (response.ok) {
-                            // Show success message
-                            const statusEl = document.getElementById('settings-status');
-                            statusEl.textContent = `Settings saved successfully${data.keywordCount > 0 ? `. Loaded ${data.keywordCount} keywords` : ''}`;
-                            statusEl.classList.add('success');
-                            statusEl.classList.remove('error');
-                            statusEl.style.display = 'block';
-                            
-                            // Hide message after 3 seconds
-                            setTimeout(() => {
-                                statusEl.style.display = 'none';
-                            }, 3000);
-                            
-                            // Hide modal
-                            hideModal();
-                            
-                            // Reload page to refresh data
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        } else {
-                            // Show error message
-                            if (data.error && data.error.includes('Old folder')) {
-                                document.getElementById('old-folder-error').textContent = data.error;
-                            } else if (data.error && data.error.includes('New folder')) {
-                                document.getElementById('new-folder-error').textContent = data.error;
-                            } else if (data.error && data.error.includes('Keyword file')) {
-                                document.getElementById('keyword-file-error').textContent = data.error;
-                            } else {
-                                const statusEl = document.getElementById('settings-status');
-                                statusEl.textContent = data.error || 'Failed to save settings';
-                                statusEl.classList.add('error');
-                                statusEl.classList.remove('success');
-                                statusEl.style.display = 'block';
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error saving settings:', error);
-                    }
-                }
-            });
-
-            // Close modal when clicking outside the content
-            settingsModal.addEventListener('click', (e) => {
-                if (e.target === settingsModal) {
-                    hideModal();
-                }
-            });
-        });
-        
         // Load folder paths from server
         async function loadFolderPaths() {
             try {
@@ -3508,16 +3348,6 @@
                 
                 if (data.keywordFilePath) {
                     document.getElementById('keyword-file-path').value = data.keywordFilePath;
-                }
-                
-                // Handle scroll-to-top setting
-                const scrollToTopEnabled = localStorage.getItem('scrollToTopEnabled');
-                // Only use server value if local storage value doesn't exist
-                if (scrollToTopEnabled === null && data.scrollToTopEnabled !== undefined) {
-                    localStorage.setItem('scrollToTopEnabled', data.scrollToTopEnabled);
-                    document.getElementById('scroll-top-toggle').checked = data.scrollToTopEnabled;
-                    window.appState.scrollToTopEnabled = data.scrollToTopEnabled;
-                    console.log('Initialized scroll-to-top from server:', data.scrollToTopEnabled);
                 }
             } catch (error) {
                 console.error('Error loading folder paths:', error);
