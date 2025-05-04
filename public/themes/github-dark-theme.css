@@ -1,48 +1,64 @@
 /* GitHub Dark Theme - DeltaVision */
 :root {
+  /* Base colors */
   --background-color: #0d1117;
   --text-color: #c9d1d9;
   --header-bg: #161b22;
   --header-text: #c9d1d9;
+  
+  /* Container and borders */
   --container-bg: #0d1117;
   --border-color: #30363d;
-  --file-entry-bg: #0d1117;
-  --file-entry-hover: #161b22;
-  --file-selected-bg: #1d2d3e;
-  --file-selected-border: #388bfd;
+  
+  /* File browser */
+  --file-entry-bg: #161b22;
+  --file-entry-hover: #21262d;
+  --file-selected-bg: #1f6feb40;
+  --file-selected-border: #1f6feb;
+  
+  /* Diff colors */
   --removed-bg: rgba(248, 81, 73, 0.15);
   --added-bg: rgba(63, 185, 80, 0.15);
+  
+  /* Accent colors */
   --primary-color: #58a6ff;
-  --secondary-color: #3fb950;
-  --accent-color: #f0883e;
-  --card-shadow: 0 0 0 1px #30363d;
-  --transition-speed: 0.3s;
+  --secondary-color: #bc8cff;
+  --accent-color: #1f6feb;
+  --accent-color-transparent: rgba(31, 111, 235, 0.2);
+  
+  /* UI Elements */
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --transition-speed: 0.2s;
   --line-number-bg: #161b22;
-  --table-row-bg: #0d1117;
+  --table-row-bg: #161b22;
   --table-border-color: #30363d;
-  --button-hover-bg: rgba(255, 255, 255, 0.05);
+  --button-hover-bg: rgba(56, 139, 253, 0.1);
+  
+  /* Tooltips */
   --tooltip-bg: #161b22;
   --tooltip-border: #30363d;
-  --tooltip-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --tooltip-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  
+  /* Status colors */
   --error-color: #f85149;
   --success-color: #3fb950;
-  --warning-color: #f0883e;
-  --modal-overlay-bg: rgba(0, 0, 0, 0.6);
+  --warning-color: #d29922;
+  --text-muted: #8b949e;
+  
+  /* Modal elements */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
   --modal-bg: #0d1117;
-  --input-bg: #0d1117;
+  --input-bg: #161b22;
   --input-border: #30363d;
-  --input-focus-border: #388bfd;
-  --input-focus-shadow: 0 0 0 3px rgba(56, 139, 253, 0.3);
-  --input-placeholder: #8b949e;
-  --btn-primary-bg: #238636;
-  --btn-primary-text: #ffffff;
-  --btn-primary-hover-bg: #2ea043;
-  --btn-secondary-bg: #21262d;
-  --btn-secondary-text: #c9d1d9;
-  --btn-secondary-hover-bg: #30363d;
-  --scrollbar-track: #0d1117;
-  --scrollbar-thumb: #30363d;
-  --scrollbar-thumb-hover: #6e7681;
-  --primary-darker: #1f6feb;
-  --text-secondary: #8b949e;
+
+  /* Syntax Highlighting */
+  --syntax-comment: #8b949e;
+  --syntax-string: #a5d6ff;
+  --syntax-keyword: #ff7b72;
+  --syntax-function: #d2a8ff;
+  --syntax-variable: #79c0ff;
+  --syntax-number: #79c0ff;
+  --syntax-constant: #79c0ff;
+  --syntax-class: #ffa657;
+  --syntax-tag: #7ee787;
 }

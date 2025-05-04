@@ -1,0 +1,64 @@
+/* Cobalt2 Theme - DeltaVision */
+:root {
+  /* Base colors */
+  --background-color: #193549;
+  --text-color: #fff;
+  --header-bg: #122738;
+  --header-text: #fff;
+  
+  /* Container and borders */
+  --container-bg: #193549;
+  --border-color: #0d3a58;
+  
+  /* File browser */
+  --file-entry-bg: #15232D;
+  --file-entry-hover: #1F4662;
+  --file-selected-bg: #234E6D;
+  --file-selected-border: #ffc600;
+  
+  /* Diff colors */
+  --removed-bg: rgba(255, 88, 88, 0.2);
+  --added-bg: rgba(127, 199, 0, 0.2);
+  
+  /* Accent colors */
+  --primary-color: #ffc600;
+  --secondary-color: #FF9D00;
+  --accent-color: #ffc600;
+  --accent-color-transparent: rgba(255, 198, 0, 0.2);
+  
+  /* UI Elements */
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --transition-speed: 0.2s;
+  --line-number-bg: #15232D;
+  --table-row-bg: #15232D;
+  --table-border-color: #0d3a58;
+  --button-hover-bg: rgba(255, 198, 0, 0.2);
+  
+  /* Tooltips */
+  --tooltip-bg: #122738;
+  --tooltip-border: #0d3a58;
+  --tooltip-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  
+  /* Status colors */
+  --error-color: #ff2c96;
+  --success-color: #3ad900;
+  --warning-color: #FF9D00;
+  --text-muted: #0088ff;
+  
+  /* Modal elements */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-bg: #193549;
+  --input-bg: #15232D;
+  --input-border: #0d3a58;
+
+  /* Syntax Highlighting */
+  --syntax-comment: #0088ff;
+  --syntax-string: #a5ff90;
+  --syntax-keyword: #ff9d00;
+  --syntax-function: #ffc600;
+  --syntax-variable: #e1efff;
+  --syntax-number: #ff628c;
+  --syntax-constant: #ff628c;
+  --syntax-class: #ffc600;
+  --syntax-tag: #9effff;
+}

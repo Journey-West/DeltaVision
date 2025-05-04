@@ -1,36 +1,26 @@
 class ThemeManager {
   constructor() {
-    // Available themes with their names and css files
+    // Available themes with their names and css files - Top 10 VS Code themes
     this.themes = {
-      'light': { name: 'Light', file: '/themes/light-theme.css' },
-      'dark': { name: 'Dark', file: '/themes/dark-theme.css' },
-      'vscode-dark': { name: 'VS Code Dark', file: '/themes/vscode-dark-theme.css' },
-      'github-light': { name: 'GitHub Light', file: '/themes/github-light-theme.css' },
-      'github-dark': { name: 'GitHub Dark', file: '/themes/github-dark-theme.css' },
-      'solarized-light': { name: 'Solarized Light', file: '/themes/solarized-light-theme.css' },
-      'solarized-dark': { name: 'Solarized Dark', file: '/themes/solarized-dark-theme.css' },
-      'high-contrast': { name: 'High Contrast', file: '/themes/high-contrast-dark-theme.css' },
-      'nord': { name: 'Nord', file: '/themes/nord-theme.css' },
-      'synthwave': { name: 'Synthwave', file: '/themes/synthwave-theme.css' },
-      'material': { name: 'Material', file: '/themes/material-theme.css' },
-      // New themes
-      'hackerman': { name: 'Hackerman', file: '/themes/hackerman-theme.css' },
-      'dracula': { name: 'Dracula', file: '/themes/dracula-theme.css' },
+      // Top 10 VS Code themes
       'one-dark-pro': { name: 'One Dark Pro', file: '/themes/one-dark-pro-theme.css' },
-      'tokyo-night': { name: 'Tokyo Night', file: '/themes/tokyo-night-theme.css' },
+      'dracula': { name: 'Dracula', file: '/themes/dracula-theme.css' },
       'night-owl': { name: 'Night Owl', file: '/themes/night-owl-theme.css' },
+      'light-owl': { name: 'Light Owl', file: '/themes/light-owl-theme.css' },
+      'github-dark': { name: 'GitHub Dark', file: '/themes/github-dark-theme.css' },
+      'github-light': { name: 'GitHub Light', file: '/themes/github-light-theme.css' },
+      'tokyo-night': { name: 'Tokyo Night', file: '/themes/tokyo-night-theme.css' },
+      'ayu-dark': { name: 'Ayu Dark', file: '/themes/ayu-dark-theme.css' },
       'ayu-light': { name: 'Ayu Light', file: '/themes/ayu-light-theme.css' },
-      'quiet-light': { name: 'Quiet Light', file: '/themes/quiet-light-theme.css' },
-      'monochrome': { name: 'Monochrome', file: '/themes/monochrome-theme.css' },
-      'colorblind-friendly': { name: 'Colorblind Friendly', file: '/themes/colorblind-friendly-theme.css' },
-      'winter': { name: 'Winter', file: '/themes/winter-theme.css' },
-      'summer': { name: 'Summer', file: '/themes/summer-theme.css' },
-      'autumn': { name: 'Autumn', file: '/themes/autumn-theme.css' },
-      'witch-hazel': { name: 'Witch Hazel', file: '/themes/witch-hazel-theme.css' }
+      'ayu-mirage': { name: 'Ayu Mirage', file: '/themes/ayu-mirage-theme.css' },
+      'monokai-pro': { name: 'Monokai Pro', file: '/themes/monokai-pro-theme.css' },
+      'nord': { name: 'Nord', file: '/themes/nord-theme.css' },
+      'atom-one-dark': { name: 'Atom One Dark', file: '/themes/atom-one-dark-theme.css' },
+      'cobalt2': { name: 'Cobalt2', file: '/themes/cobalt2-theme.css' }
     };
     
     // Get saved theme or use default
-    this.currentTheme = localStorage.getItem('selectedTheme') || 'nord';
+    this.currentTheme = localStorage.getItem('selectedTheme') || 'dracula';
     
     // Create theme stylesheet link
     this.themeLink = document.createElement('link');
@@ -89,13 +79,12 @@ class ThemeManager {
     modal.style.width = '100%';
     modal.style.height = '100%';
     modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    modal.style.zIndex = '9999';
     modal.style.display = 'flex';
     modal.style.justifyContent = 'center';
-    modal.style.alignItems = 'flex-start';
-    modal.style.zIndex = '9999999';
-    modal.style.padding = '60px 20px 20px 20px';
+    modal.style.alignItems = 'center';
     
-    // Create theme selector container
+    // Create container
     const container = document.createElement('div');
     container.style.backgroundColor = 'var(--container-bg)';
     container.style.borderRadius = '8px';
@@ -116,15 +105,13 @@ class ThemeManager {
     header.style.paddingBottom = '10px';
     header.style.marginBottom = '10px';
     header.style.fontWeight = 'bold';
-    header.style.color = 'var(--text-primary)';
+    header.style.color = 'var(--text-color)';
     container.appendChild(header);
     
     // Group the themes by categories
     const themeCategories = {
-      'Dark Themes': ['dark', 'vscode-dark', 'github-dark', 'solarized-dark', 'dracula', 'one-dark-pro', 'tokyo-night', 'night-owl', 'nord', 'witch-hazel', 'hackerman'],
-      'Light Themes': ['light', 'github-light', 'solarized-light', 'ayu-light', 'quiet-light'],
-      'Special Themes': ['high-contrast', 'monochrome', 'colorblind-friendly', 'synthwave', 'material'],
-      'Seasonal': ['winter', 'summer', 'autumn']
+      'Dark Themes': ['one-dark-pro', 'dracula', 'night-owl', 'github-dark', 'tokyo-night', 'ayu-dark', 'ayu-mirage', 'monokai-pro', 'nord', 'atom-one-dark', 'cobalt2'],
+      'Light Themes': ['light-owl', 'github-light', 'ayu-light']
     };
     
     // Add theme categories
@@ -135,7 +122,7 @@ class ThemeManager {
       categoryHeader.style.fontWeight = 'bold';
       categoryHeader.style.fontSize = '0.9rem';
       categoryHeader.style.padding = '8px 0 4px 0';
-      categoryHeader.style.color = 'var(--text-secondary)';
+      categoryHeader.style.color = 'var(--text-muted, var(--text-color))';
       categoryHeader.style.borderBottom = '1px solid var(--border-color)';
       categoryHeader.style.marginTop = '10px';
       container.appendChild(categoryHeader);
@@ -149,7 +136,7 @@ class ThemeManager {
         option.style.padding = '8px 10px';
         option.style.cursor = 'pointer';
         option.style.borderRadius = '4px';
-        option.style.color = 'var(--text-primary)';
+        option.style.color = 'var(--text-color)';
         option.style.display = 'flex';
         option.style.alignItems = 'center';
         option.style.justifyContent = 'space-between';
@@ -168,7 +155,7 @@ class ThemeManager {
         }
         
         option.addEventListener('mouseover', () => {
-          option.style.backgroundColor = 'var(--hover-bg)';
+          option.style.backgroundColor = 'var(--file-entry-hover)';
         });
         
         option.addEventListener('mouseout', () => {

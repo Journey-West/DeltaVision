@@ -1,0 +1,64 @@
+/* Monokai Pro Theme - DeltaVision */
+:root {
+  /* Base colors */
+  --background-color: #2D2A2E;
+  --text-color: #FCFCFA;
+  --header-bg: #221F22;
+  --header-text: #FCFCFA;
+  
+  /* Container and borders */
+  --container-bg: #2D2A2E;
+  --border-color: #3A3739;
+  
+  /* File browser */
+  --file-entry-bg: #363234;
+  --file-entry-hover: #403C3E;
+  --file-selected-bg: #514D50;
+  --file-selected-border: #FFD866;
+  
+  /* Diff colors */
+  --removed-bg: rgba(255, 97, 136, 0.2);
+  --added-bg: rgba(166, 226, 46, 0.2);
+  
+  /* Accent colors */
+  --primary-color: #78DCE8;
+  --secondary-color: #AB9DF2;
+  --accent-color: #FFD866;
+  --accent-color-transparent: rgba(255, 216, 102, 0.2);
+  
+  /* UI Elements */
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --transition-speed: 0.2s;
+  --line-number-bg: #363234;
+  --table-row-bg: #363234;
+  --table-border-color: #3A3739;
+  --button-hover-bg: rgba(255, 216, 102, 0.2);
+  
+  /* Tooltips */
+  --tooltip-bg: #221F22;
+  --tooltip-border: #3A3739;
+  --tooltip-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  
+  /* Status colors */
+  --error-color: #FF6188;
+  --success-color: #A9DC76;
+  --warning-color: #FFD866;
+  --text-muted: #939293;
+  
+  /* Modal elements */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-bg: #2D2A2E;
+  --input-bg: #363234;
+  --input-border: #3A3739;
+
+  /* Syntax Highlighting */
+  --syntax-comment: #727072;
+  --syntax-string: #A9DC76;
+  --syntax-keyword: #FF6188;
+  --syntax-function: #78DCE8;
+  --syntax-variable: #FCFCFA;
+  --syntax-number: #AB9DF2;
+  --syntax-constant: #AB9DF2;
+  --syntax-class: #FFD866;
+  --syntax-tag: #FF6188;
+}

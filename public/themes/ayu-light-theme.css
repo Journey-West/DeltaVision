@@ -1,48 +1,64 @@
 /* Ayu Light Theme - DeltaVision */
 :root {
-  --background-color: #fafafa;
-  --text-color: #575f66;
-  --header-bg: #f3f4f5;
-  --header-text: #5c6773;
-  --container-bg: #f8f9fa;
-  --border-color: #d9dbde;
-  --file-entry-bg: #f5f6f7;
-  --file-entry-hover: #eaebec;
-  --file-selected-bg: #e7e8e9;
-  --file-selected-border: #ff9940;
-  --removed-bg: rgba(255, 83, 112, 0.15);
-  --added-bg: rgba(134, 179, 0, 0.15);
-  --primary-color: #55b4d4;
-  --secondary-color: #86b300;
-  --accent-color: #ff9940;
-  --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  --transition-speed: 0.3s;
-  --line-number-bg: #f5f6f7;
-  --table-row-bg: #f8f9fa;
-  --table-border-color: #e7e8e9;
-  --button-hover-bg: rgba(0, 0, 0, 0.03);
-  --tooltip-bg: #ffffff;
-  --tooltip-border: #e7e8e9;
-  --tooltip-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  --error-color: #f07171;
-  --success-color: #86b300;
-  --warning-color: #fa8d3e;
+  /* Base colors */
+  --background-color: #FAFAFA;
+  --text-color: #575F66;
+  --header-bg: #F3F4F5;
+  --header-text: #575F66;
+  
+  /* Container and borders */
+  --container-bg: #FAFAFA;
+  --border-color: #E8E8E8;
+  
+  /* File browser */
+  --file-entry-bg: #F5F5F5;
+  --file-entry-hover: #E8E8E8;
+  --file-selected-bg: #DEEAFD;
+  --file-selected-border: #5AA7FF;
+  
+  /* Diff colors */
+  --removed-bg: rgba(255, 88, 88, 0.1);
+  --added-bg: rgba(134, 179, 0, 0.1);
+  
+  /* Accent colors */
+  --primary-color: #55B4D4;
+  --secondary-color: #F2AE49;
+  --accent-color: #FF8F40;
+  --accent-color-transparent: rgba(255, 143, 64, 0.1);
+  
+  /* UI Elements */
+  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.2s;
+  --line-number-bg: #F5F5F5;
+  --table-row-bg: #F5F5F5;
+  --table-border-color: #E8E8E8;
+  --button-hover-bg: rgba(255, 143, 64, 0.1);
+  
+  /* Tooltips */
+  --tooltip-bg: #F3F4F5;
+  --tooltip-border: #E8E8E8;
+  --tooltip-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  /* Status colors */
+  --error-color: #F51818;
+  --success-color: #86B300;
+  --warning-color: #FA8D3E;
+  --text-muted: #8A9199;
+  
+  /* Modal elements */
   --modal-overlay-bg: rgba(0, 0, 0, 0.3);
-  --modal-bg: #ffffff;
-  --input-bg: #f5f6f7;
-  --input-border: #e7e8e9;
-  --input-focus-border: #ff9940;
-  --input-focus-shadow: 0 0 0 0.25rem rgba(255, 153, 64, 0.25);
-  --input-placeholder: #8a9199;
-  --btn-primary-bg: #ff9940;
-  --btn-primary-text: #ffffff;
-  --btn-primary-hover-bg: #ffaa5d;
-  --btn-secondary-bg: #e7e8e9;
-  --btn-secondary-text: #5c6773;
-  --btn-secondary-hover-bg: #dfe0e1;
-  --scrollbar-track: #f5f6f7;
-  --scrollbar-thumb: #d1d5da;
-  --scrollbar-thumb-hover: #bcbfc3;
-  --accent-color-transparent: rgba(255, 153, 64, 0.15);
-  --hover-bg: rgba(255, 153, 64, 0.05);
+  --modal-bg: #FAFAFA;
+  --input-bg: #F5F5F5;
+  --input-border: #E8E8E8;
+
+  /* Syntax Highlighting */
+  --syntax-comment: #ABB0B6;
+  --syntax-string: #86B300;
+  --syntax-keyword: #FA6E32;
+  --syntax-function: #399EE6;
+  --syntax-variable: #68878E;
+  --syntax-number: #FF9940;
+  --syntax-constant: #FF9940;
+  --syntax-class: #FA8D3E;
+  --syntax-tag: #55B4D4;
 }

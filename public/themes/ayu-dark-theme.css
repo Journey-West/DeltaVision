@@ -1,0 +1,64 @@
+/* Ayu Dark Theme - DeltaVision */
+:root {
+  /* Base colors */
+  --background-color: #0A0E14;
+  --text-color: #B3B1AD;
+  --header-bg: #0D1017;
+  --header-text: #B3B1AD;
+  
+  /* Container and borders */
+  --container-bg: #0A0E14;
+  --border-color: #1c2029;
+  
+  /* File browser */
+  --file-entry-bg: #0F1419;
+  --file-entry-hover: #151A21;
+  --file-selected-bg: #1A1F29;
+  --file-selected-border: #F29E74;
+  
+  /* Diff colors */
+  --removed-bg: rgba(255, 51, 51, 0.15);
+  --added-bg: rgba(192, 255, 140, 0.15);
+  
+  /* Accent colors */
+  --primary-color: #39BAE6;
+  --secondary-color: #F29E74;
+  --accent-color: #FFCC66;
+  --accent-color-transparent: rgba(255, 204, 102, 0.2);
+  
+  /* UI Elements */
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --transition-speed: 0.2s;
+  --line-number-bg: #0F1419;
+  --table-row-bg: #0F1419;
+  --table-border-color: #1c2029;
+  --button-hover-bg: rgba(255, 204, 102, 0.2);
+  
+  /* Tooltips */
+  --tooltip-bg: #0D1017;
+  --tooltip-border: #1c2029;
+  --tooltip-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  
+  /* Status colors */
+  --error-color: #FF3333;
+  --success-color: #C2D94C;
+  --warning-color: #FFCC66;
+  --text-muted: #607080;
+  
+  /* Modal elements */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-bg: #0A0E14;
+  --input-bg: #0F1419;
+  --input-border: #1c2029;
+
+  /* Syntax Highlighting */
+  --syntax-comment: #5C6773;
+  --syntax-string: #C2D94C;
+  --syntax-keyword: #FF7733;
+  --syntax-function: #39BAE6;
+  --syntax-variable: #B3B1AD;
+  --syntax-number: #FFCC66;
+  --syntax-constant: #FFCC66;
+  --syntax-class: #FFCC66;
+  --syntax-tag: #FF7733;
+}

@@ -1,48 +1,64 @@
 /* GitHub Light Theme - DeltaVision */
 :root {
+  /* Base colors */
   --background-color: #ffffff;
   --text-color: #24292e;
-  --header-bg: #24292e;
-  --header-text: #ffffff;
+  --header-bg: #f6f8fa;
+  --header-text: #24292e;
+  
+  /* Container and borders */
   --container-bg: #ffffff;
   --border-color: #e1e4e8;
-  --file-entry-bg: #ffffff;
-  --file-entry-hover: #f6f8fa;
-  --file-selected-bg: #f1f8ff;
-  --file-selected-border: #c8e1ff;
-  --removed-bg: #ffdce0;
-  --added-bg: #e6ffec;
-  --primary-color: #0366d6;
-  --secondary-color: #28a745;
-  --accent-color: #f9c513;
-  --card-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  --transition-speed: 0.3s;
+  
+  /* File browser */
+  --file-entry-bg: #f6f8fa;
+  --file-entry-hover: #e9ebef;
+  --file-selected-bg: #ddf4ff;
+  --file-selected-border: #0969da;
+  
+  /* Diff colors */
+  --removed-bg: rgba(255, 129, 130, 0.15);
+  --added-bg: rgba(74, 194, 107, 0.15);
+  
+  /* Accent colors */
+  --primary-color: #0969da;
+  --secondary-color: #8250df;
+  --accent-color: #0969da;
+  --accent-color-transparent: rgba(9, 105, 218, 0.1);
+  
+  /* UI Elements */
+  --card-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.2s;
   --line-number-bg: #f6f8fa;
-  --table-row-bg: #f8f8f8;
-  --table-border-color: #eaecef;
-  --button-hover-bg: rgba(0, 0, 0, 0.05);
-  --tooltip-bg: #ffffff;
+  --table-row-bg: #f6f8fa;
+  --table-border-color: #e1e4e8;
+  --button-hover-bg: rgba(9, 105, 218, 0.1);
+  
+  /* Tooltips */
+  --tooltip-bg: #f6f8fa;
   --tooltip-border: #e1e4e8;
-  --tooltip-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  --tooltip-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  
+  /* Status colors */
   --error-color: #d73a49;
-  --success-color: #28a745;
-  --warning-color: #f9c513;
-  --modal-overlay-bg: rgba(27, 31, 35, 0.5);
+  --success-color: #22863a;
+  --warning-color: #b08800;
+  --text-muted: #6a737d;
+  
+  /* Modal elements */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.3);
   --modal-bg: #ffffff;
-  --input-bg: #ffffff;
+  --input-bg: #f6f8fa;
   --input-border: #e1e4e8;
-  --input-focus-border: #0366d6;
-  --input-focus-shadow: 0 0 0 3px rgba(3, 102, 214, 0.3);
-  --input-placeholder: #6a737d;
-  --btn-primary-bg: #2ea44f;
-  --btn-primary-text: #ffffff;
-  --btn-primary-hover-bg: #22863a;
-  --btn-secondary-bg: #fafbfc;
-  --btn-secondary-text: #24292e;
-  --btn-secondary-hover-bg: #f3f4f6;
-  --scrollbar-track: #f6f8fa;
-  --scrollbar-thumb: #d1d5da;
-  --scrollbar-thumb-hover: #959da5;
-  --primary-darker: #044289;
-  --text-secondary: #6a737d;
+
+  /* Syntax Highlighting */
+  --syntax-comment: #6a737d;
+  --syntax-string: #032f62;
+  --syntax-keyword: #d73a49;
+  --syntax-function: #6f42c1;
+  --syntax-variable: #24292e;
+  --syntax-number: #005cc5;
+  --syntax-constant: #005cc5;
+  --syntax-class: #6f42c1;
+  --syntax-tag: #22863a;
 }

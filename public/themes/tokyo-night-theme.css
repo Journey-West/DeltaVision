@@ -1,48 +1,64 @@
 /* Tokyo Night Theme - DeltaVision */
 :root {
+  /* Base colors */
   --background-color: #1a1b26;
   --text-color: #a9b1d6;
   --header-bg: #16161e;
-  --header-text: #c0caf5;
-  --container-bg: #24283b;
-  --border-color: #414868;
+  --header-text: #a9b1d6;
+  
+  /* Container and borders */
+  --container-bg: #1a1b26;
+  --border-color: #292e42;
+  
+  /* File browser */
   --file-entry-bg: #24283b;
   --file-entry-hover: #292e42;
-  --file-selected-bg: #2f354d;
+  --file-selected-bg: #3d59a1;
   --file-selected-border: #7aa2f7;
-  --removed-bg: rgba(247, 118, 142, 0.2);
-  --added-bg: rgba(158, 206, 106, 0.2);
+  
+  /* Diff colors */
+  --removed-bg: rgba(247, 118, 142, 0.15);
+  --added-bg: rgba(158, 206, 106, 0.15);
+  
+  /* Accent colors */
   --primary-color: #7aa2f7;
-  --secondary-color: #9ece6a;
-  --accent-color: #bb9af7;
+  --secondary-color: #bb9af7;
+  --accent-color: #7aa2f7;
+  --accent-color-transparent: rgba(122, 162, 247, 0.2);
+  
+  /* UI Elements */
   --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --transition-speed: 0.3s;
-  --line-number-bg: #1a1b26;
+  --transition-speed: 0.2s;
+  --line-number-bg: #24283b;
   --table-row-bg: #24283b;
-  --table-border-color: #414868;
-  --button-hover-bg: rgba(255, 255, 255, 0.1);
+  --table-border-color: #292e42;
+  --button-hover-bg: rgba(122, 162, 247, 0.2);
+  
+  /* Tooltips */
   --tooltip-bg: #16161e;
-  --tooltip-border: #414868;
-  --tooltip-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --tooltip-border: #292e42;
+  --tooltip-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  
+  /* Status colors */
   --error-color: #f7768e;
   --success-color: #9ece6a;
   --warning-color: #e0af68;
+  --text-muted: #565f89;
+  
+  /* Modal elements */
   --modal-overlay-bg: rgba(0, 0, 0, 0.7);
-  --modal-bg: #24283b;
-  --input-bg: #1a1b26;
-  --input-border: #414868;
-  --input-focus-border: #7aa2f7;
-  --input-focus-shadow: 0 0 0 0.25rem rgba(122, 162, 247, 0.25);
-  --input-placeholder: #565f89;
-  --btn-primary-bg: #7aa2f7;
-  --btn-primary-text: #1a1b26;
-  --btn-primary-hover-bg: #89abf4;
-  --btn-secondary-bg: #414868;
-  --btn-secondary-text: #c0caf5;
-  --btn-secondary-hover-bg: #4b5479;
-  --scrollbar-track: #1a1b26;
-  --scrollbar-thumb: #414868;
-  --scrollbar-thumb-hover: #545b7e;
-  --accent-color-transparent: rgba(122, 162, 247, 0.2);
-  --hover-bg: rgba(122, 162, 247, 0.1);
+  --modal-bg: #1a1b26;
+  --input-bg: #24283b;
+  --input-border: #292e42;
+
+  /* Syntax Highlighting */
+  --syntax-comment: #565f89;
+  --syntax-string: #9ece6a;
+  --syntax-keyword: #bb9af7;
+  --syntax-function: #7aa2f7;
+  --syntax-variable: #c0caf5;
+  --syntax-number: #ff9e64;
+  --syntax-constant: #ff9e64;
+  --syntax-class: #e0af68;
+  --syntax-tag: #f7768e;
 }

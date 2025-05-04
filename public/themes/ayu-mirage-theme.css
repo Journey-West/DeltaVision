@@ -1,0 +1,64 @@
+/* Ayu Mirage Theme - DeltaVision */
+:root {
+  /* Base colors */
+  --background-color: #1F2430;
+  --text-color: #CBCCC6;
+  --header-bg: #191E2A;
+  --header-text: #CBCCC6;
+  
+  /* Container and borders */
+  --container-bg: #1F2430;
+  --border-color: #2D3640;
+  
+  /* File browser */
+  --file-entry-bg: #242B38;
+  --file-entry-hover: #2A3546;
+  --file-selected-bg: #34455A;
+  --file-selected-border: #FFAD66;
+  
+  /* Diff colors */
+  --removed-bg: rgba(255, 83, 112, 0.15);
+  --added-bg: rgba(195, 232, 141, 0.15);
+  
+  /* Accent colors */
+  --primary-color: #5CCFE6;
+  --secondary-color: #FFAD66;
+  --accent-color: #FFD173;
+  --accent-color-transparent: rgba(255, 209, 115, 0.2);
+  
+  /* UI Elements */
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --transition-speed: 0.2s;
+  --line-number-bg: #242B38;
+  --table-row-bg: #242B38;
+  --table-border-color: #2D3640;
+  --button-hover-bg: rgba(255, 209, 115, 0.2);
+  
+  /* Tooltips */
+  --tooltip-bg: #191E2A;
+  --tooltip-border: #2D3640;
+  --tooltip-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  
+  /* Status colors */
+  --error-color: #FF5370;
+  --success-color: #C3E88D;
+  --warning-color: #FFD173;
+  --text-muted: #707A8C;
+  
+  /* Modal elements */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-bg: #1F2430;
+  --input-bg: #242B38;
+  --input-border: #2D3640;
+
+  /* Syntax Highlighting */
+  --syntax-comment: #5C6773;
+  --syntax-string: #BAE67E;
+  --syntax-keyword: #FFA759;
+  --syntax-function: #5CCFE6;
+  --syntax-variable: #CBCCC6;
+  --syntax-number: #FFD173;
+  --syntax-constant: #FFD173;
+  --syntax-class: #FFD173;
+  --syntax-tag: #5CCFE6;
+}

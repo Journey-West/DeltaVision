@@ -383,7 +383,7 @@
             border-radius: 6px;
             font-size: 0.9rem;
             z-index: 100; /* Ensure tooltip is above scrollbar */
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             width: 170px;
             pointer-events: none; /* Prevent tooltip from blocking interactions */
         }
@@ -1488,6 +1488,175 @@
             --no-diff-color: #81c784;
         }
     </style>
+    <style>
+        /* Keyword Tally Panel */
+        .app-container { display: flex; }
+        .file-list-section { flex: 0 0 250px; }
+        .comparison-section { flex: 1; overflow-y: auto; }
+        .tally-section { 
+            position: fixed;
+            top: 60px;
+            right: -320px;
+            width: 320px;
+            height: calc(100vh - 60px);
+            border-left: 1px solid var(--border-color);
+            background: var(--container-bg);
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .tally-section.open {
+            right: 0;
+        }
+        
+        .tally-section .tally-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--header-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .tally-section .tally-header h4 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--header-text);
+            font-weight: 500;
+        }
+        
+        .tally-section .tally-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .tally-section .tally-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            background: var(--file-entry-bg);
+            transition: all 0.2s;
+            border-left: 3px solid var(--accent-color);
+        }
+        
+        .tally-section .tally-item:hover {
+            background: var(--file-entry-hover);
+            transform: translateX(2px);
+        }
+        
+        .tally-section .tally-item .keyword {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        .tally-section .tally-item .count {
+            font-weight: bold;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 20px;
+            min-width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            font-size: 14px;
+        }
+        
+        .tally-toggle-btn {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+            z-index: 101;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .tally-toggle-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            background: var(--primary-color);
+        }
+        
+        .tally-toggle-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+        
+        .tally-toggle-btn.open {
+            right: 340px;
+        }
+        
+        .no-keywords {
+            color: var(--text-muted, var(--text-color));
+            font-style: italic;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .tally-section .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .tally-section .btn-close:hover {
+            opacity: 1;
+        }
+        
+        .tally-section .tally-summary {
+            background: var(--header-bg);
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .tally-section .tally-summary .total {
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--header-text);
+        }
+        
+        .tally-section .tally-summary .total-count {
+            font-weight: bold;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 20px;
+            min-width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -1555,7 +1724,7 @@
                     <path d="M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
                 </svg>
                 <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M9.5 2c-1.82 0-3.53.5-5 1.35 2.99 1.73 5 4.95 5 8.65s-2.01 6.92-5 8.65c1.47.85 3.18 1.35 5 1.35 5.52 0 10-4.48 10-10S15.02 2 9.5 2z"/>
+                    <path d="M9.5 2c-1.82 0-3.53.5-5 1.35 2.99 1.73 5 4.95 5 8.65s-2.01 6.92-5 8.65c1.47.85 3.18 1.35 5 1.35 5.52 0 10-4.48 10-10S15.02 2 9.5 2z M12 15.6c-1.98 0-3.6-1.62-3.6-3.6 s1.62-3.6 3.6-3.6s3.6 1.62 3.6 3.6S13.98 15.6 12 15.6z"/>
                 </svg>
                 <span id="theme-text">Dark Mode</span>
             </button>
@@ -1802,6 +1971,35 @@
             const [diffMode, setDiffMode] = React.useState('char');
             const [searchQuery, setSearchQuery] = React.useState('');
             const [fileContents, setFileContents] = React.useState({});
+            const [tallyPanelOpen, setTallyPanelOpen] = React.useState(false);
+
+            // Compute keyword tally counts across all loaded files
+            const keywordCounts = React.useMemo(() => {
+                const counts = {};
+                Object.keys(keywords).forEach(k => counts[k] = 0);
+                Object.values(fileContents).forEach(pair => {
+                    ['old', 'new'].forEach(side => {
+                        const text = pair[side] || '';
+                        Object.keys(keywords).forEach(kw => {
+                            const regex = new RegExp(`\\b${kw}\\b`, 'gi');
+                            const match = text.match(regex);
+                            if (match) counts[kw] += match.length;
+                        });
+                    });
+                });
+                // Sort by count (descending)
+                return Object.entries(counts)
+                    .sort((a, b) => b[1] - a[1])
+                    .reduce((acc, [key, value]) => {
+                        acc[key] = value;
+                        return acc;
+                    }, {});
+            }, [fileContents, keywords]);
+
+            // Toggle tally panel
+            const toggleTallyPanel = () => {
+                setTallyPanelOpen(!tallyPanelOpen);
+            };
 
             // Direct connection between toggle and React state
             const setHighlightState = (enabled) => {
@@ -2520,6 +2718,45 @@
                             </div>
                         )}
                     </div>
+                    <div className={`tally-section ${tallyPanelOpen ? 'open' : ''}`}>
+                        <div className="tally-header">
+                            <h4>Keyword Tally</h4>
+                            <button 
+                                onClick={toggleTallyPanel}
+                                className="btn-close"
+                                aria-label="Close"
+                            >×</button>
+                        </div>
+                        <div className="tally-content">
+                            {Object.keys(keywordCounts).length > 0 && (
+                                <div className="tally-summary">
+                                    <span className="total">Total Occurrences</span>
+                                    <span className="total-count">
+                                        {Object.values(keywordCounts).reduce((sum, count) => sum + count, 0)}
+                                    </span>
+                                </div>
+                            )}
+                            {Object.keys(keywordCounts).length > 0 ? (
+                                Object.entries(keywordCounts).map(([kw, count]) => (
+                                    <div key={kw} className="tally-item">
+                                        <span className="keyword">{kw}</span>
+                                        <span className="count">{count}</span>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="no-keywords">No keywords defined</div>
+                            )}
+                        </div>
+                    </div>
+                    <button 
+                        className={`tally-toggle-btn ${tallyPanelOpen ? 'open' : ''}`} 
+                        onClick={toggleTallyPanel}
+                        title="Toggle keyword tally"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 7h18M3 12h12M3 17h6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                        </svg>
+                    </button>
                 </div>
             );
         };
@@ -3519,7 +3756,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: var(--warning-color, #ff9800);
+            background-color: #ff9800;
             color: white;
             padding: 10px 15px;
             border-radius: 4px;
