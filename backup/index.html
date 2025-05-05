@@ -877,7 +877,6 @@
             font-weight: 600;
             border-radius: 2px;
             padding: 0 1px;
-            text-decoration-color: var(--primary-color);
         }
         
         .optional-label {
@@ -1545,6 +1544,7 @@
             background: var(--file-entry-bg);
             transition: all 0.2s;
             border-left: 3px solid var(--accent-color);
+            align-items: center;
         }
         
         .tally-section .tally-item:hover {
@@ -1555,12 +1555,51 @@
         .tally-section .tally-item .keyword {
             font-weight: 500;
             color: var(--text-color);
+            flex: 1;
         }
         
-        .tally-section .tally-item .count {
+        .tally-section .tally-item .count-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .tally-section .tally-item .count-details {
+            display: flex;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+            align-items: center;
+        }
+        
+        .tally-section .tally-item .count-label {
+            margin-right: 2px;
+        }
+        
+        .tally-section .tally-item .count-label.old {
+            color: var(--error-color, #f07178);
+        }
+        
+        .tally-section .tally-item .count-label.new {
+            margin-left: 8px;
+            color: var(--success-color, #4aa382);
+        }
+        
+        .tally-section .tally-item .count.old {
+            color: var(--error-color, #f07178);
+            font-weight: 500;
+        }
+        
+        .tally-section .tally-item .count.new {
+            color: var(--success-color, #4aa382);
+            font-weight: 500;
+        }
+        
+        .tally-section .tally-item .count.total {
             font-weight: bold;
             background: var(--primary-color, #0969da);
             color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
             border-radius: 20px;
             min-width: 30px;
             height: 30px;
@@ -1569,7 +1608,6 @@
             justify-content: center;
             padding: 0 10px;
             font-size: 14px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
         
@@ -1660,83 +1698,6 @@
             font-size: 14px;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-    </style>
-    <style>
-        .tally-section .tally-item .keyword {
-            flex: 1;
-            color: var(--text-color);
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s;
-            user-select: none;
-        }
-
-        .tally-section .tally-item .keyword:hover {
-            color: var(--primary-color);
-        }
-
-        .tally-section .tally-item .keyword.active-filter {
-            color: var(--primary-color);
-            font-weight: 700;
-        }
-
-        .filter-indicator {
-            font-size: 0.8em;
-            color: var(--accent-color);
-            margin-left: 5px;
-        }
-
-        .btn-filter-clear {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 3px 8px;
-            border-radius: 4px;
-            margin-right: 10px;
-            font-size: 0.8em;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-filter-clear:hover {
-            background-color: var(--primary-color);
-        }
-    </style>
-    <style>
-        .tally-category {
-            margin-bottom: 15px;
-        }
-        
-        .tally-category-title {
-            padding: 6px 10px;
-            margin: 0 0 8px 0;
-            font-size: 0.9em;
-            font-weight: 600;
-            border-radius: 4px;
-            text-transform: capitalize;
-            background-color: var(--file-entry-bg);
-            border-left: 4px solid;
-        }
-        
-        .category-toggle {
-            font-size: 1.2em;
-            margin-right: 5px;
-            cursor: pointer;
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            line-height: 1;
-            transition: transform 0.2s ease;
-            transform: rotate(90deg);
-        }
-        
-        .category-toggle.collapsed {
-            transform: rotate(0deg);
-        }
-        
-        .category-toggle.expanded {
-            transform: rotate(90deg);
         }
     </style>
 </head>
@@ -1902,7 +1863,7 @@
         };
 
         // Combined FileList component to display all comparison types
-        const FileList = ({ files, timeFiles, onSelectFile, onSelectTimeFile, selectedFile, selectedTimeFile, searchQuery, fileContents, activeKeywordFilter }) => {
+        const FileList = ({ files, timeFiles, onSelectFile, onSelectTimeFile, selectedFile, selectedTimeFile, searchQuery, fileContents }) => {
             if (files.length === 0 && timeFiles.length === 0) {
                 return (
                     <div className="alert alert-info">
@@ -1932,12 +1893,7 @@
             combinedFiles.sort((a, b) => b.timestamp - a.timestamp);
 
             const lowerQuery = (searchQuery || '').trim().toLowerCase();
-            const checkContentForKeyword = (content, keyword) => {
-                if (!content || !keyword) return false;
-                const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-                return regex.test(content);
-            };
-            const displayedFiles = lowerQuery || activeKeywordFilter
+            const displayedFiles = lowerQuery
                 ? combinedFiles.filter(file => {
                     const isOldNew = file.type === 'oldNew';
                     const origIdx = isOldNew
@@ -1965,22 +1921,7 @@
                     }
                     hayArray.push(entry.old || '', entry.new || '');
                     const hay = hayArray.join(' ').toLowerCase();
-                    
-                    // Check if both search query and keyword filter are active
-                    if (lowerQuery && activeKeywordFilter) {
-                        return hay.includes(lowerQuery) && 
-                               (checkContentForKeyword(entry.old, activeKeywordFilter) || 
-                                checkContentForKeyword(entry.new, activeKeywordFilter));
-                    }
-                    // Check if only keyword filter is active
-                    else if (activeKeywordFilter) {
-                        return checkContentForKeyword(entry.old, activeKeywordFilter) || 
-                               checkContentForKeyword(entry.new, activeKeywordFilter);
-                    }
-                    // Check if only search query is active
-                    else {
-                        return hay.includes(lowerQuery);
-                    }
+                    return hay.includes(lowerQuery);
                   })
                 : combinedFiles;
 
@@ -2071,74 +2012,64 @@
             const [searchQuery, setSearchQuery] = React.useState('');
             const [fileContents, setFileContents] = React.useState({});
             const [tallyPanelOpen, setTallyPanelOpen] = React.useState(false);
-            const [activeKeywordFilter, setActiveKeywordFilter] = React.useState(null);
-            const [collapsedCategories, setCollapsedCategories] = React.useState({});
 
             // Compute keyword tally counts across all loaded files
             const keywordCounts = React.useMemo(() => {
-                const countsOld = {};
-                const countsNew = {};
-                Object.keys(keywords).forEach(k => { countsOld[k] = 0; countsNew[k] = 0; });
+                const counts = {
+                    old: {},
+                    new: {},
+                    total: {}
+                };
+                
+                Object.keys(keywords).forEach(k => {
+                    counts.old[k] = 0;
+                    counts.new[k] = 0;
+                    counts.total[k] = 0;
+                });
+                
                 Object.values(fileContents).forEach(pair => {
+                    // Count keywords in old files
                     const oldText = pair.old || '';
+                    Object.keys(keywords).forEach(kw => {
+                        const regex = new RegExp(`\\b${kw}\\b`, 'gi');
+                        const match = oldText.match(regex);
+                        if (match) {
+                            counts.old[kw] += match.length;
+                            counts.total[kw] += match.length;
+                        }
+                    });
+                    
+                    // Count keywords in new files
                     const newText = pair.new || '';
                     Object.keys(keywords).forEach(kw => {
                         const regex = new RegExp(`\\b${kw}\\b`, 'gi');
-                        const matchOld = oldText.match(regex);
-                        if (matchOld) countsOld[kw] += matchOld.length;
-                        const matchNew = newText.match(regex);
-                        if (matchNew) countsNew[kw] += matchNew.length;
+                        const match = newText.match(regex);
+                        if (match) {
+                            counts.new[kw] += match.length;
+                            counts.total[kw] += match.length;
+                        }
                     });
                 });
-                // Create entries with category information
-                const entries = Object.keys(keywords)
-                    .map(kw => {
-                        const keywordObj = keywords[kw];
-                        const category = typeof keywordObj === 'object' ? keywordObj.category : 'general';
-                        const color = typeof keywordObj === 'object' ? keywordObj.color : keywordObj;
-                        return { 
-                            keyword: kw, 
-                            category: category || 'general', 
-                            color: color, 
-                            old: countsOld[kw], 
-                            new: countsNew[kw], 
-                            total: countsOld[kw] + countsNew[kw] 
-                        };
-                    })
-                    .filter(entry => entry.total > 0);
                 
-                // Group by category
-                const byCategory = {};
-                entries.forEach(entry => {
-                    if (!byCategory[entry.category]) {
-                        byCategory[entry.category] = [];
-                    }
-                    byCategory[entry.category].push(entry);
-                });
+                // Sort by count (descending)
+                const sortedTotal = Object.entries(counts.total)
+                    .sort((a, b) => b[1] - a[1])
+                    .filter(([_, count]) => count > 0)
+                    .reduce((acc, [key, value]) => {
+                        acc[key] = value;
+                        return acc;
+                    }, {});
                 
-                // Sort categories and entries within categories
-                return Object.entries(byCategory)
-                    .sort(([catA], [catB]) => catA.localeCompare(catB))
-                    .map(([category, items]) => ({
-                        category,
-                        // Use the color of the first item in the category as the category color
-                        color: items[0].color,
-                        items: items.sort((a, b) => a.keyword.localeCompare(b.keyword))
-                    }))
-                    .filter(group => group.items.length > 0);
+                return {
+                    old: counts.old,
+                    new: counts.new,
+                    total: sortedTotal
+                };
             }, [fileContents, keywords]);
 
             // Toggle tally panel
             const toggleTallyPanel = () => {
                 setTallyPanelOpen(!tallyPanelOpen);
-            };
-
-            // Toggle collapse state for keyword categories
-            const toggleCategoryCollapse = (category) => {
-                setCollapsedCategories(prev => ({
-                    ...prev,
-                    [category]: !prev[category]
-                }));
             };
 
             // Direct connection between toggle and React state
@@ -2288,28 +2219,6 @@
                     }});
                 });
             }, [searchQuery, oldContent, newContent, newerContent, olderContent, diffMode, currentComparisonType]);
-
-            // Update collapsed categories whenever keywords change
-            React.useEffect(() => {
-                // Get all unique categories from keywords
-                const categories = new Set();
-                Object.values(keywords).forEach(keyword => {
-                    if (typeof keyword === 'object' && keyword.category) {
-                        categories.add(keyword.category);
-                    } else {
-                        categories.add('general');
-                    }
-                });
-                
-                // Set all categories to be collapsed by default
-                const newCollapsedState = {};
-                categories.forEach(category => {
-                    newCollapsedState[category] = true;
-                });
-                
-                setCollapsedCategories(newCollapsedState);
-                console.log('Categories initialized as collapsed:', newCollapsedState);
-            }, [keywords]);
 
             // Fetch files from the API
             const fetchFiles = () => {
@@ -2497,15 +2406,13 @@
                             
                             if (keywordMatch) {
                                 const color = keywords[keywordMatch];
-                                // Handle both new format (color is inside object) and old format (color is direct string)
-                                const textColor = typeof color === 'object' ? color.color : color;
                                 return (
                                     <span 
                                         key={i} 
                                         className="highlight-keyword" 
                                         style={{ 
                                             textDecoration: 'underline',
-                                            textDecorationColor: textColor,
+                                            textDecorationColor: color,
                                             textDecorationThickness: '2px'
                                         }}>
                                         {part}
@@ -2585,7 +2492,7 @@
                                         return (
                                             <div className="diff-word-line">
                                                 {parts.map((part, j) => 
-                                                    !part.added ? <span key={j} className={part.removed ? 'word-removed' : ''}>{part.value}</span> : null
+                                                    !part.added ? <span key={j} className={part.removed ? 'word-removed' : ''}>{highlightKeywords(part.value, keywords, highlightingEnabled)}</span> : null
                                                 )}
                                             </div>
                                         );
@@ -2598,7 +2505,7 @@
                                         return (
                                             <div className="diff-word-line">
                                                 {parts.map((part, j) => 
-                                                    !part.removed ? <span key={j} className={part.added ? 'word-added' : ''}>{part.value}</span> : null
+                                                    !part.removed ? <span key={j} className={part.added ? 'word-added' : ''}>{highlightKeywords(part.value, keywords, highlightingEnabled)}</span> : null
                                                 )}
                                             </div>
                                         );
@@ -2623,59 +2530,6 @@
                         </tbody>
                     </table>
                 );
-            };
-
-            // Function to find character-level differences within a line
-            const enhancedFindDiffInLines = (oldLine, newLine, keywords) => {
-                if (oldLine === newLine) {
-                    return {
-                        oldFormatted: highlightKeywords(oldLine, keywords, highlightingEnabled),
-                        newFormatted: highlightKeywords(newLine, keywords, highlightingEnabled)
-                    };
-                }
-                
-                // Simple character-level diff implementation
-                let i = 0;
-                let j = oldLine.length - 1;
-                let k = newLine.length - 1;
-                
-                // Find common prefix
-                while (i <= j && i <= k && oldLine.charAt(i) === newLine.charAt(i)) {
-                    i++;
-                }
-                
-                // Find common suffix
-                while (j >= i && k >= i && oldLine.charAt(j) === newLine.charAt(k)) {
-                    j--;
-                    k--;
-                }
-                
-                const oldPrefix = oldLine.substring(0, i);
-                const oldDiff = oldLine.substring(i, j + 1);
-                const oldSuffix = oldLine.substring(j + 1);
-                
-                const newPrefix = newLine.substring(0, i);
-                const newDiff = newLine.substring(i, k + 1);
-                const newSuffix = newLine.substring(k + 1);
-                
-                // Generate formatted output with inline highlighting and keyword highlighting
-                const oldFormatted = (
-                    <React.Fragment>
-                        {highlightKeywords(oldPrefix, keywords, highlightingEnabled)}
-                        <span className="diff-char-removed">{highlightKeywords(oldDiff, keywords, highlightingEnabled)}</span>
-                        {highlightKeywords(oldSuffix, keywords, highlightingEnabled)}
-                    </React.Fragment>
-                );
-                
-                const newFormatted = (
-                    <React.Fragment>
-                        {highlightKeywords(newPrefix, keywords, highlightingEnabled)}
-                        <span className="diff-char-added">{highlightKeywords(newDiff, keywords, highlightingEnabled)}</span>
-                        {highlightKeywords(newSuffix, keywords, highlightingEnabled)}
-                    </React.Fragment>
-                );
-                
-                return { oldFormatted, newFormatted };
             };
 
             // Create line-by-line diff
@@ -2804,7 +2658,6 @@
                             selectedTimeFile={selectedTimeFileIndex}
                             searchQuery={searchQuery}
                             fileContents={fileContents}
-                            activeKeywordFilter={activeKeywordFilter}
                         />
                     </div>
                     <div className="comparison-section">
@@ -2886,15 +2739,6 @@
                     <div className={`tally-section ${tallyPanelOpen ? 'open' : ''}`}>
                         <div className="tally-header">
                             <h4>Keyword Tally</h4>
-                            {activeKeywordFilter && (
-                                <button 
-                                    onClick={() => setActiveKeywordFilter(null)}
-                                    className="btn-filter-clear"
-                                    title="Clear filter"
-                                >
-                                    Clear Filter
-                                </button>
-                            )}
                             <button 
                                 onClick={toggleTallyPanel}
                                 className="btn-close"
@@ -2902,55 +2746,31 @@
                             >×</button>
                         </div>
                         <div className="tally-content">
-                            {keywordCounts.length > 0 && (
+                            {Object.keys(keywordCounts.total).length > 0 && (
                                 <div className="tally-summary">
-                                    <span className="total">Old Total</span>
+                                    <span className="total">Total Occurrences</span>
                                     <span className="total-count">
-                                        {keywordCounts.reduce((sum, group) => 
-                                            sum + group.items.reduce((s, item) => s + item.old, 0), 0)}
-                                    </span>
-                                    <span className="total">New Total</span>
-                                    <span className="total-count">
-                                        {keywordCounts.reduce((sum, group) => 
-                                            sum + group.items.reduce((s, item) => s + item.new, 0), 0)}
+                                        {Object.values(keywordCounts.total).reduce((sum, count) => sum + count, 0)}
                                     </span>
                                 </div>
                             )}
-                            {keywordCounts.length > 0 ? (
-                                keywordCounts.map(entry => (
-                                    <div key={entry.category} className="tally-category">
-                                        <h5 
-                                            className="tally-category-title" 
-                                            style={{color: entry.color, cursor: 'pointer'}}
-                                            onClick={() => toggleCategoryCollapse(entry.category)}
-                                        >
-                                            <span className="category-toggle">
-                                                {collapsedCategories[entry.category] ? '▶' : '▼'}
-                                            </span>
-                                            {entry.category}
-                                        </h5>
-                                        {!collapsedCategories[entry.category] && entry.items.map(item => (
-                                            <div key={item.keyword} className="tally-item">
-                                                <span 
-                                                    className={`keyword ${activeKeywordFilter === item.keyword ? 'active-filter' : ''}`}
-                                                    onClick={() => setActiveKeywordFilter(item.keyword)}
-                                                    style={{cursor: 'pointer'}}
-                                                >
-                                                    {item.keyword}
-                                                    {activeKeywordFilter === item.keyword && 
-                                                        <span className="filter-indicator"> (Filter Active)</span>
-                                                    }
-                                                </span>
-                                                <span className="count">
-                                                    <span className="old-count">{item.old}</span> /
-                                                    <span className="new-count">{item.new}</span>
-                                                </span>
+                            {Object.keys(keywordCounts.total).length > 0 ? (
+                                Object.entries(keywordCounts.total).map(([kw, count]) => (
+                                    <div key={kw} className="tally-item">
+                                        <span className="keyword">{kw}</span>
+                                        <div className="count-container">
+                                            <div className="count-details">
+                                                <span className="count-label old">Old: </span>
+                                                <span className="count old">{keywordCounts.old[kw]}</span>
+                                                <span className="count-label new">New: </span>
+                                                <span className="count new">{keywordCounts.new[kw]}</span>
                                             </div>
-                                        ))}
+                                            <span className="count total">{count}</span>
+                                        </div>
                                     </div>
                                 ))
                             ) : (
-                                <div className="no-keywords">No keywords defined</div>
+                                <div className="no-keywords">No keywords found</div>
                             )}
                         </div>
                     </div>
@@ -2960,7 +2780,7 @@
                         title="Toggle keyword tally"
                     >
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 7h18M3 12h12M3 17h6" strokeWidth="1.5" stroke="currentColor" strokeLinecap="round"/>
+                            <path d="M3 7h18M3 12h12M3 17h6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
                         </svg>
                     </button>
                 </div>
@@ -2993,15 +2813,13 @@
                         
                         if (keywordMatch) {
                             const color = keywords[keywordMatch];
-                            // Handle both new format (color is inside object) and old format (color is direct string)
-                            const textColor = typeof color === 'object' ? color.color : color;
                             return (
                                 <span 
                                     key={i} 
                                     className="highlight-keyword" 
                                     style={{ 
                                         textDecoration: 'underline',
-                                        textDecorationColor: textColor,
+                                        textDecorationColor: color,
                                         textDecorationThickness: '2px'
                                     }}>
                                     {part}
@@ -3081,7 +2899,7 @@
                                     return (
                                         <div className="diff-word-line">
                                             {parts.map((part, j) => 
-                                                !part.added ? <span key={j} className={part.removed ? 'word-removed' : ''}>{part.value}</span> : null
+                                                !part.added ? <span key={j} className={part.removed ? 'word-removed' : ''}>{highlightKeywords(part.value, keywords, highlightingEnabled)}</span> : null
                                             )}
                                         </div>
                                     );
@@ -3094,7 +2912,7 @@
                                     return (
                                         <div className="diff-word-line">
                                             {parts.map((part, j) => 
-                                                !part.removed ? <span key={j} className={part.added ? 'word-added' : ''}>{part.value}</span> : null
+                                                !part.removed ? <span key={j} className={part.added ? 'word-added' : ''}>{highlightKeywords(part.value, keywords, highlightingEnabled)}</span> : null
                                             )}
                                         </div>
                                     );
@@ -3557,18 +3375,36 @@
         (() => {
             const globalHighlightToggle = document.getElementById('global-highlight-toggle');
             if (globalHighlightToggle) {
-                // Initialize and sync
+                // Apply the initial state from the global app state
                 globalHighlightToggle.checked = window.appState.highlightingEnabled;
+                
+                // Update the toggle label based on current state
                 const updateToggleLabel = () => {
                     const label = document.querySelector('.highlight-toggle-header .toggle-label');
-                    if (label) label.textContent = `Highlights ${globalHighlightToggle.checked ? 'ON' : 'OFF'}`;
+                    if (label) {
+                        label.textContent = `Highlights ${globalHighlightToggle.checked ? 'ON' : 'OFF'}`;
+                    }
                 };
+                
+                // Initialize state
                 updateToggleLabel();
-                // On change, update React state via exposed function and label
+                
+                // Add change event listener
                 globalHighlightToggle.addEventListener('change', () => {
-                    const enabled = globalHighlightToggle.checked;
-                    window.setHighlightState(enabled);
+                    // Update global app state
+                    window.appState.highlightingEnabled = globalHighlightToggle.checked;
+                    
+                    // Update localStorage
+                    localStorage.setItem('highlightingEnabled', globalHighlightToggle.checked);
+                    
+                    // Update the label
                     updateToggleLabel();
+                    
+                    // Trigger a custom event for the React component to listen to
+                    const event = new CustomEvent('highlightToggleChanged', {
+                        detail: { enabled: globalHighlightToggle.checked }
+                    });
+                    document.dispatchEvent(event);
                 });
             }
         })();
@@ -3577,18 +3413,18 @@
         (() => {
             const globalDiffHighlightToggle = document.getElementById('diff-highlight-toggle');
             if (globalDiffHighlightToggle) {
-                // Initialize and sync
+                // Apply the initial state from the global app state
                 globalDiffHighlightToggle.checked = window.appState.diffHighlightingEnabled;
+                
+                // Update the toggle label based on current state
                 const updateToggleLabel = () => {
                     const label = globalDiffHighlightToggle.parentElement.nextElementSibling;
                     if (label) label.textContent = `Diff ${globalDiffHighlightToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                // On change, update React state via exposed function and label
                 globalDiffHighlightToggle.addEventListener('change', () => {
-                    const enabled = globalDiffHighlightToggle.checked;
-                    window.setDiffHighlightState(enabled);
                     updateToggleLabel();
+                    document.dispatchEvent(new CustomEvent('diffHighlightToggleChanged', { detail: { enabled: globalDiffHighlightToggle.checked } }));
                 });
             }
         })();
@@ -3597,18 +3433,18 @@
         (() => {
             const globalMoveDetectionToggle = document.getElementById('move-detection-toggle');
             if (globalMoveDetectionToggle) {
-                // Initialize and sync
+                // Apply the initial state from the global app state
                 globalMoveDetectionToggle.checked = window.appState.moveDetectionEnabled;
+                
+                // Update the toggle label based on current state
                 const updateToggleLabel = () => {
                     const label = globalMoveDetectionToggle.parentElement.nextElementSibling;
                     if (label) label.textContent = `Detect Moves ${globalMoveDetectionToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                // On change, update React state via exposed function and label
                 globalMoveDetectionToggle.addEventListener('change', () => {
-                    const enabled = globalMoveDetectionToggle.checked;
-                    window.setMoveDetectionState(enabled);
                     updateToggleLabel();
+                    document.dispatchEvent(new CustomEvent('moveDetectionToggleChanged', { detail: { enabled: globalMoveDetectionToggle.checked } }));
                 });
             }
         })();
@@ -3617,18 +3453,18 @@
         (() => {
             const globalNewOnlyToggle = document.getElementById('new-only-toggle');
             if (globalNewOnlyToggle) {
-                // Initialize and sync
+                // Apply the initial state from the global app state
                 globalNewOnlyToggle.checked = window.appState.newOnlyEnabled;
+                
+                // Update the toggle label based on current state
                 const updateToggleLabel = () => {
                     const label = globalNewOnlyToggle.parentElement.nextElementSibling;
                     if (label) label.textContent = `New Only ${globalNewOnlyToggle.checked ? 'ON' : 'OFF'}`;
                 };
                 updateToggleLabel();
-                // On change, update React state via exposed function and label
                 globalNewOnlyToggle.addEventListener('change', () => {
-                    const enabled = globalNewOnlyToggle.checked;
-                    window.setNewOnlyEnabled(enabled);
                     updateToggleLabel();
+                    document.dispatchEvent(new CustomEvent('newOnlyToggleChanged', { detail: { enabled: globalNewOnlyToggle.checked } }));
                 });
             }
         })();
@@ -3642,11 +3478,9 @@
                     if (label) label.textContent = `Diff ${globalDiffModeToggle.checked ? 'Word' : 'Char'}`;
                 };
                 updateLabel();
-                // On change, update React state via exposed function and label
                 globalDiffModeToggle.addEventListener('change', () => {
-                    const enabled = globalDiffModeToggle.checked;
-                    window.setDiffMode(enabled ? 'word' : 'char');
                     updateLabel();
+                    document.dispatchEvent(new CustomEvent('diffModeToggle', { detail: { mode: globalDiffModeToggle.checked ? 'word' : 'char' } }));
                 });
             }
         })();
@@ -3891,7 +3725,7 @@
                 }
             });
             
-            // Add the has-hotkey class to elements that will contain tooltips to make them visible on hover
+            // Add the has-hotkey class to elements with tooltips to make them visible on hover
             document.querySelectorAll('.hotkey-tooltip').forEach(tooltip => {
                 tooltip.parentElement.classList.add('has-hotkey');
             });

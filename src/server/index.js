@@ -373,17 +373,21 @@ async function loadKeywordsFromFile() {
     if (keywordFilePath && fs.existsSync(keywordFilePath)) {
       const fileContent = await readFileAsync(keywordFilePath, 'utf8');
       
-      // Parse the keyword file (format: keyword:color)
+      // Parse the keyword file (format: category:color:keyword or keyword:color)
       const newKeywords = {};
       const lines = fileContent.split('\n');
-      
       lines.forEach(line => {
-        const trimmedLine = line.trim();
-        if (trimmedLine && trimmedLine.includes(':')) {
-          const [keyword, color] = trimmedLine.split(':');
-          if (keyword && color) {
-            newKeywords[keyword.trim().toLowerCase()] = color.trim();
-          }
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        const parts = trimmed.split(':');
+        if (parts.length === 2) {
+          const [keyword, color] = parts;
+          newKeywords[keyword.trim().toLowerCase()] = color.trim();
+        } else if (parts.length >= 3) {
+          const category = parts[0].trim();
+          const color = parts[1].trim();
+          const keyword = parts.slice(2).join(':').trim();
+          newKeywords[keyword.toLowerCase()] = { color, category };
         }
       });
       
@@ -408,17 +412,21 @@ app.post('/api/keywords', express.text(), async (req, res) => {
   try {
     const fileContent = req.body;
     
-    // Parse the keyword file (format: keyword:color)
+    // Parse the keyword file (format: category:color:keyword or keyword:color)
     const newKeywords = {};
     const lines = fileContent.split('\n');
-    
     lines.forEach(line => {
-      const trimmedLine = line.trim();
-      if (trimmedLine && trimmedLine.includes(':')) {
-        const [keyword, color] = trimmedLine.split(':');
-        if (keyword && color) {
-          newKeywords[keyword.trim().toLowerCase()] = color.trim();
-        }
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const parts = trimmed.split(':');
+      if (parts.length === 2) {
+        const [keyword, color] = parts;
+        newKeywords[keyword.trim().toLowerCase()] = color.trim();
+      } else if (parts.length >= 3) {
+        const category = parts[0].trim();
+        const color = parts[1].trim();
+        const keyword = parts.slice(2).join(':').trim();
+        newKeywords[keyword.toLowerCase()] = { color, category };
       }
     });
     

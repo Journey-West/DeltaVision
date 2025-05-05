@@ -1,0 +1,3 @@
+// Find line 2781 (the line with the error) and replace it with this:
+<div className="category-header" style={{color: (categoryGroups[category] && categoryGroups[category][0] && categoryGroups[category][0].color) || 'gray'}}>
+// This avoids using the optional chaining operator (?.) which isn't supported
