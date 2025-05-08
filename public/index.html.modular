@@ -3,15 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeltaVision - Intelligent File Comparison</title>
-    
-    <!-- External CSS -->
+    <title>DeltaVision</title>
     <link href="/vendor/css/bootstrap.min.css" rel="stylesheet">
     <link href="/vendor/fonts/inter.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="/css/main.css" rel="stylesheet">
-    <link href="/css/filtered-entries.css" rel="stylesheet">
-    <link href="/css/keyboard-shortcuts.css" rel="stylesheet">
     
     <!-- Additional stylesheets specific to components -->
     <style>
@@ -393,57 +388,52 @@
 <body>
     <div id="app">
         <!-- Header component -->
-        {{ header }}
+        <div id="headerComponent"></div>
         
         <!-- Main container -->
         <div class="main-container">
             <!-- Sidebar component -->
-            {{ sidebar }}
+            <div id="sidebarComponent"></div>
             
             <!-- Comparison section component -->
-            {{ comparison-section }}
+            <div id="comparisonSectionComponent"></div>
         </div>
         
-        <!-- Keywords panel component -->
-        {{ keywords-panel }}
-        
         <!-- Settings panel component -->
-        {{ settings-panel }}
+        <div id="settingsPanelComponent"></div>
         
         <!-- Hotkeys panel component -->
-        {{ hotkeys-panel }}
+        <div id="hotkeysPanelComponent"></div>
         
         <!-- Offline indicator component -->
-        {{ offline-indicator }}
+        <div id="offlineIndicatorComponent"></div>
     </div>
 
-    <!-- Main JS -->
-    <script type="module">
-        import { initFileManager } from './js/modules/file-manager.js';
-        import { initThemeManager } from './js/modules/theme-manager.js';
-        import { initUiComponents } from './js/modules/ui-components.js';
-        import { initKeywordSystem } from './js/modules/keyword-system.js';
-        import { initThemeLoader, createThemeEditor } from './js/theme-loader.js';
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize theme system first
-            const themeManager = initThemeManager();
-            
-            // Load custom themes
-            await initThemeLoader(themeManager);
-            
-            // Add theme editor
-            createThemeEditor(themeManager);
-            
-            // Initialize UI components
-            initUiComponents();
-            
-            // Initialize file manager
-            const fileManager = initFileManager();
-            
-            // Initialize keyword system
-            initKeywordSystem(fileManager);
+    <!-- Load components -->
+    <script>
+        // Helper function to load HTML components
+        async function loadComponent(componentId, componentPath) {
+            try {
+                const response = await fetch(componentPath);
+                const html = await response.text();
+                document.getElementById(componentId).innerHTML = html;
+            } catch (error) {
+                console.error(`Error loading component ${componentPath}:`, error);
+            }
+        }
+        
+        // Load all components
+        document.addEventListener('DOMContentLoaded', function() {
+            loadComponent('headerComponent', '/components/header.html');
+            loadComponent('sidebarComponent', '/components/sidebar.html');
+            loadComponent('comparisonSectionComponent', '/components/comparison-section.html');
+            loadComponent('settingsPanelComponent', '/components/settings-panel.html');
+            loadComponent('hotkeysPanelComponent', '/components/hotkeys-panel.html');
+            loadComponent('offlineIndicatorComponent', '/components/offline-indicator.html');
         });
     </script>
+    
+    <!-- Load app script module -->
+    <script type="module" src="/js/app.js"></script>
 </body>
 </html>

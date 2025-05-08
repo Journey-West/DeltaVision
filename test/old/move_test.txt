@@ -1,0 +1,26 @@
+# Move Detection Test Document
+
+## Section 1: Introduction
+This is a test document for demonstrating move detection in DeltaVision.
+The application should highlight content that has been moved from one location to another.
+
+## Section 2: Features
+DeltaVision has several important features:
+- Diff highlighting
+- Move detection
+- Keyword highlighting
+- Support for various diff modes (line, word, character)
+
+## Section 3: Technical Details
+Move detection works by analyzing the content and identifying blocks of text
+that appear in both versions but at different locations in the document.
+This is particularly useful for code refactoring and document reorganization.
+
+## Section 4: Conclusion
+This test document demonstrates the move detection capabilities of DeltaVision.
+When enabled, moved blocks should be highlighted distinctly from added or removed content.
+
+## Section 5: References
+- DeltaVision Documentation
+- Diff Algorithms
+- Text Comparison Techniques

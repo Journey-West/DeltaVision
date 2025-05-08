@@ -1,0 +1,48 @@
+{
+  "id": "nord",
+  "theme": {
+    "name": "Nord",
+    "author": "DeltaVision User",
+    "description": "A cool blue theme inspired by the Nord color palette",
+    "category": "dark",
+    "variables": {
+      "--background-color": "#2e3440",
+      "--container-bg": "#3b4252",
+      "--header-bg": "#2e3440",
+      "--header-text": "#e5e9f0",
+      "--text-color": "#e5e9f0",
+      "--text-muted": "#9299a9",
+      "--accent-color": "#88c0d0",
+      "--primary-color": "#81a1c1",
+      "--primary-darker": "#5e81ac",
+      "--primary-rgb": "129, 161, 193",
+      "--primary-transparent": "rgba(129, 161, 193, 0.1)",
+      "--secondary-color": "#a3be8c",
+      "--border-color": "#4c566a",
+      "--sidebar-bg": "#2e3440",
+      "--file-entry-bg": "#3b4252",
+      "--file-entry-hover": "#434c5e",
+      "--card-shadow": "0 2px 10px rgba(0, 0, 0, 0.3)",
+      "--tooltip-bg": "#3b4252",
+      "--tooltip-text": "#e5e9f0",
+      "--transition-speed": "0.3s",
+      "--added-color": "#a3be8c",
+      "--removed-color": "#bf616a",
+      "--bg-secondary": "#3b4252",
+      "--bg-tertiary": "#434c5e",
+      "--hover-color": "rgba(136, 192, 208, 0.1)",
+      
+      "--keyword-panel-bg": "linear-gradient(to bottom, #3b4252 0%, #2e3440 100%)",
+      "--keyword-panel-header-bg": "#2e3440",
+      "--keyword-panel-border": "#4c566a",
+      "--keyword-panel-shadow": "0 4px 20px rgba(0, 0, 0, 0.35)",
+      "--keyword-item-bg": "rgba(255, 255, 255, 0.03)",
+      "--keyword-item-hover-bg": "#434c5e",
+      "--keyword-item-active-bg": "rgba(129, 161, 193, 0.15)",
+      "--keyword-count-bg": "rgba(255, 255, 255, 0.08)",
+      "--keyword-count-old": "#bf616a",
+      "--keyword-count-new": "#a3be8c",
+      "--keyword-count-separator": "#9299a9"
+    }
+  }
+}

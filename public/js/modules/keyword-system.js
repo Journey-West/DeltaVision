@@ -1,0 +1,572 @@
+// Keyword system module
+export function initKeywordSystem() {
+    // Keywords state
+    let keywords = {};
+    let activeKeywordFilter = null;
+    
+    // Initialize the keyword highlighting system
+    window.keywordHighlight = {
+        // Process keywords from API
+        setKeywords: function(keywordData) {
+            keywords = keywordData || {};
+        },
+        
+        // Highlight keywords in a line of text
+        highlightLine: function(line) {
+            if (!line || Object.keys(keywords).length === 0) {
+                return escapeHtml(line);
+            }
+            // Sort keywords by length (descending) to prevent shorter keywords from breaking longer ones
+            const sortedKeywords = Object.keys(keywords).sort((a, b) => b.length - a.length);
+            // Build a regex that matches any keyword
+            const escapedKeywords = sortedKeywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            if (escapedKeywords.length === 0) return escapeHtml(line);
+            const regex = new RegExp(`\\b(${escapedKeywords.join('|')})\\b`, 'gi');
+            let lastIndex = 0;
+            let result = '';
+            let match;
+            while ((match = regex.exec(line)) !== null) {
+                // Escape text before the match
+                result += escapeHtml(line.slice(lastIndex, match.index));
+                // Get color for this keyword
+                const keyword = match[0];
+                const keywordData = keywords[keyword] || keywords[keyword.toLowerCase()] || keywords[keyword.toUpperCase()];
+                const color = typeof keywordData === 'string' ? keywordData : keywordData.color;
+                // Insert highlighted keyword - only border-bottom, no background
+                result += `<span class="highlighted-keyword" style="border-bottom: 1px solid ${color}; padding: 0 2px;">${escapeHtml(keyword)}</span>`;
+                lastIndex = regex.lastIndex;
+            }
+            // Escape any remaining text after the last keyword
+            result += escapeHtml(line.slice(lastIndex));
+            return result;
+        },
+        
+        // Check if a word should be highlighted as a keyword
+        shouldHighlight: function(word) {
+            if (!word || Object.keys(keywords).length === 0) {
+                return false;
+            }
+            
+            // Check if this word matches any keywords (case insensitive)
+            const wordLower = word.toLowerCase();
+            return Object.keys(keywords).some(keyword => 
+                keyword.toLowerCase() === wordLower || 
+                wordLower.match(new RegExp(`\\b${keyword.toLowerCase()}\\b`))
+            );
+        },
+        
+        // Highlight a single word if it's a keyword
+        highlightWord: function(word) {
+            if (!word || Object.keys(keywords).length === 0) {
+                return escapeHtml(word);
+            }
+            
+            const wordLower = word.toLowerCase();
+            
+            // Find matching keyword (case insensitive)
+            const keywordMatch = Object.keys(keywords).find(keyword => 
+                keyword.toLowerCase() === wordLower || 
+                wordLower.match(new RegExp(`\\b${keyword.toLowerCase()}\\b`))
+            );
+            
+            if (keywordMatch) {
+                const keywordData = keywords[keywordMatch];
+                const color = typeof keywordData === 'string' ? keywordData : keywordData.color;
+                
+                // Highlight the word - only border-bottom, no background
+                return `<span class="highlighted-keyword" style="border-bottom: 1px solid ${color}; padding: 0 2px;">${escapeHtml(word)}</span>`;
+            }
+            
+            return escapeHtml(word);
+        },
+        
+        // Highlight a single character if it's part of a keyword
+        highlightChar: function(char) {
+            // For individual characters, we'll use a simplified approach
+            // since keywords are typically longer than a single character
+            return escapeHtml(char);
+        },
+        
+        // Get all keywords formatted for display in the tally panel
+        getKeywordsForTally: function() {
+            if (Object.keys(keywords).length === 0) {
+                return {};
+            }
+            
+            // Process keywords into categories
+            const categorizedKeywords = {};
+            
+            Object.entries(keywords).forEach(([keyword, data]) => {
+                if (!keyword) return;
+                
+                let category = 'Uncategorized';
+                let color = '#777777';
+                
+                if (typeof data === 'string') {
+                    // Old format: keyword:color
+                    color = data;
+                } else if (data && data.category && data.color) {
+                    // New format: category:color:keyword
+                    category = data.category;
+                    color = data.color;
+                }
+                
+                if (!categorizedKeywords[category]) {
+                    categorizedKeywords[category] = [];
+                }
+                
+                categorizedKeywords[category].push({
+                    text: keyword, 
+                    color,
+                    count: 0
+                });
+            });
+            
+            return categorizedKeywords;
+        },
+        
+        // Set the active keyword filter
+        setActiveFilter: function(keyword) {
+            activeKeywordFilter = keyword;
+            updateActiveTallyItem();
+            return activeKeywordFilter;
+        },
+        
+        // Clear the active keyword filter
+        clearActiveFilter: function() {
+            activeKeywordFilter = null;
+            updateActiveTallyItem();
+        },
+        
+        // Get the current active filter
+        getActiveFilter: function() {
+            return activeKeywordFilter;
+        }
+    };
+    
+    // Fetch keywords from API
+    async function fetchKeywords() {
+        try {
+            const response = await fetch('/api/keywords');
+            const keywordData = await response.json();
+            
+            // Set keywords for highlighting
+            window.keywordHighlight.setKeywords(keywordData);
+            
+            // Update the keyword tally display
+            updateKeywordTally();
+            
+            return keywordData;
+        } catch (error) {
+            console.error('Error fetching keywords:', error);
+            return {};
+        }
+    }
+    
+    // Update the keyword tally panel with all available keywords
+    function updateKeywordTally() {
+        const tallyElement = document.getElementById('keywordTally');
+        if (!tallyElement) return;
+        
+        const categorizedKeywords = window.keywordHighlight.getKeywordsForTally();
+        
+        // If no keywords, show empty state
+        if (Object.keys(categorizedKeywords).length === 0) {
+            tallyElement.innerHTML = '<div class="empty-state">No keywords configured</div>';
+            return;
+        }
+        
+        let html = '';
+        
+        // Get content counts for each keyword
+        return fetch('/api/keyword-counts')
+            .then(response => response.json())
+            .then(counts => {
+                // Process each category
+                Object.entries(categorizedKeywords).forEach(([category, categoryKeywords]) => {
+                    // Add counts to keywords
+                    categoryKeywords.forEach(keyword => {
+                        // Check if we have the new format with separate old/new counts
+                        const keywordCount = counts[keyword.text] || { old: 0, new: 0, total: 0 };
+                        
+                        if (typeof keywordCount === 'object') {
+                            // New format with separate counts
+                            keyword.oldCount = keywordCount.old || 0;
+                            keyword.newCount = keywordCount.new || 0;
+                            keyword.count = keywordCount.total || 0;
+                        } else {
+                            // Legacy format with just total count
+                            keyword.count = keywordCount || 0;
+                            keyword.oldCount = 0;
+                            keyword.newCount = 0;
+                        }
+                    });
+                    
+                    // Skip empty categories (no content has these keywords)
+                    if (categoryKeywords.every(k => k.count === 0)) {
+                        return;
+                    }
+                    
+                    // Add category header
+                    html += `<div class="keyword-category">
+                        <h4 class="category-header" style="color: ${categoryKeywords[0]?.color || 'inherit'}">${category}</h4>
+                        <div class="category-items">`;
+                    
+                    // Add each keyword with its count
+                    categoryKeywords
+                        .filter(k => k.count > 0)
+                        .sort((a, b) => a.text.localeCompare(b.text))  // Sort alphabetically
+                        .forEach(keyword => {
+                            const isActive = activeKeywordFilter === keyword.text;
+                            html += `
+                                <div class="keyword-item ${isActive ? 'active' : ''}" 
+                                     data-keyword="${keyword.text}" 
+                                     style="--keyword-color: ${keyword.color}">
+                                    <span class="keyword-text">${keyword.text}</span>
+                                    <span class="keyword-count-container">
+                                        <span class="keyword-count-old" title="Old file matches">${keyword.oldCount}</span>
+                                        <span class="keyword-count-separator">/</span>
+                                        <span class="keyword-count-new" title="New file matches">${keyword.newCount}</span>
+                                    </span>
+                                </div>
+                            `;
+                        });
+                    
+                    html += '</div></div>';
+                });
+                
+                tallyElement.innerHTML = html;
+                
+                // Add click event listeners to keyword items
+                document.querySelectorAll('.keyword-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const keyword = this.dataset.keyword;
+                        
+                        // If already active, clear the filter
+                        if (activeKeywordFilter === keyword) {
+                            clearKeywordFilter();
+                        } else {
+                            // Otherwise, set this as the active filter
+                            setKeywordFilter(keyword);
+                        }
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error updating keyword tally:', error);
+                tallyElement.innerHTML = '<div class="error">Error loading keyword counts</div>';
+            });
+    }
+    
+    // Set a keyword filter to show only files containing the keyword
+    async function setKeywordFilter(keyword) {
+        try {
+            // Update UI to show loading state
+            document.getElementById('activeFilterLabel').textContent = keyword;
+            document.getElementById('activeFilterIndicator').style.display = 'flex';
+            document.getElementById('unifiedFileList').innerHTML = '<div class="loading-indicator">Searching files for keyword...</div>';
+            
+            // Set active filter in the keyword system
+            window.keywordHighlight.setActiveFilter(keyword);
+            
+            // Fetch filtered file list
+            const params = new URLSearchParams();
+            params.append('keyword', keyword);
+            
+            console.log(`Fetching files filtered by keyword: ${keyword}`);
+            const response = await fetch(`/api/filter-by-keyword?${params.toString()}`);
+            
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+            
+            const filteredData = await response.json();
+            console.log('Received filtered data:', filteredData);
+            console.log(`Old/New files: ${filteredData.oldNewFiles?.length || 0}, Time comparisons: ${filteredData.timeComparisons?.length || 0}`);
+            
+            // Add some debug counters
+            if (filteredData.oldNewFiles) {
+                const withOldPath = filteredData.oldNewFiles.filter(f => f.oldPath || (f.oldFile && f.oldFile.path)).length;
+                const withNewPath = filteredData.oldNewFiles.filter(f => f.newPath || (f.newFile && f.newFile.path)).length;
+                console.log(`oldNewFiles with oldPath: ${withOldPath}, with newPath: ${withNewPath}`);
+            }
+            
+            // Update file lists with filtered data
+            updateFileListsWithFilteredData(filteredData);
+            
+            // Update filter count if counts are provided
+            if (filteredData.counts) {
+                document.getElementById('activeFilterLabel').textContent = 
+                    `${keyword} (${filteredData.counts.total} ${filteredData.counts.total === 1 ? 'match' : 'matches'})`;
+            }
+            
+        } catch (error) {
+            console.error('Error setting keyword filter:', error);
+            document.getElementById('unifiedFileList').innerHTML = 
+                '<div class="error-state">Error filtering files. Please try again.</div>';
+        }
+    }
+    
+    // Clear the keyword filter and show all files
+    async function clearKeywordFilter() {
+        console.log('Clearing keyword filter');
+        
+        // Clear the active filter in the keyword system
+        if (window.keywordHighlight) {
+            window.keywordHighlight.clearActiveFilter();
+        }
+        
+        // Hide the active filter indicator
+        const filterIndicator = document.getElementById('activeFilterIndicator');
+        if (filterIndicator) {
+            filterIndicator.style.display = 'none';
+        }
+        
+        // Show loading indicator while refreshing
+        const fileList = document.getElementById('unifiedFileList');
+        if (fileList) {
+            fileList.innerHTML = '<div class="loading-indicator">Loading all files...</div>';
+        }
+        
+        try {
+            // Refresh file lists to show all files using direct API call if the file manager method fails
+            if (window.fileManager && typeof window.fileManager.refreshFiles === 'function') {
+                console.log('Calling file manager refreshFiles()');
+                await window.fileManager.refreshFiles();
+            } else {
+                console.log('File manager refreshFiles not available, fetching files directly');
+                // Direct API call as fallback
+                const response = await fetch('/api/files');
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                const files = await response.json();
+                
+                // Manually render the file list using the same structure as in file-manager
+                renderFallbackFileList(files);
+            }
+        } catch (error) {
+            console.error('Error refreshing files after clearing filter:', error);
+            if (fileList) {
+                fileList.innerHTML = '<div class="error-state">Error loading files. Please refresh the page.</div>';
+            }
+        }
+    }
+    
+    // Fallback function to render file list if the fileManager is not accessible
+    function renderFallbackFileList(files) {
+        const fileListElement = document.getElementById('unifiedFileList');
+        if (!fileListElement) return;
+        
+        if (!files || files.length === 0) {
+            fileListElement.innerHTML = '<div class="empty-state">No files found.</div>';
+            return;
+        }
+        
+        // Sort files by timestamp (newest first)
+        files.sort((a, b) => b.timestamp - a.timestamp);
+        
+        let html = '';
+        
+        // Create HTML for each file entry using same format as in file-manager.js
+        files.forEach(file => {
+            const { fileType, oldFile, newFile, command, commandRan } = file;
+            
+            // Get the display name (prefer commandRan, fallback to command, then filename)
+            const displayText = commandRan || command || (newFile ? newFile.filename : oldFile ? oldFile.filename : 'Unknown');
+            
+            // Create appropriate entry based on file type
+            if (fileType === 'new-only') {
+                html += `
+                    <div class="file-entry new-only" data-new-path="${newFile.path}">
+                        <strong>${displayText}</strong>
+                    </div>
+                `;
+            } else if (fileType === 'old-only') {
+                html += `
+                    <div class="file-entry old-only" data-old-path="${oldFile.path}">
+                        <strong>${displayText}</strong>
+                    </div>
+                `;
+            } else {
+                // Regular comparison
+                html += `
+                    <div class="file-entry comparison" data-old-path="${oldFile?.path || ''}" data-new-path="${newFile?.path || ''}">
+                        <strong>${displayText}</strong>
+                    </div>
+                `;
+            }
+        });
+        
+        fileListElement.innerHTML = html;
+        
+        // Add click event listeners to file entries
+        document.querySelectorAll('#unifiedFileList .file-entry').forEach(entry => {
+            entry.addEventListener('click', function() {
+                // Remove selected class from all entries
+                document.querySelectorAll('.file-entry').forEach(e => {
+                    e.classList.remove('selected');
+                });
+                
+                // Add selected class to this entry
+                this.classList.add('selected');
+                
+                // Load file comparison if window.loadFileComparison exists
+                if (window.loadFileComparison) {
+                    const oldPath = this.dataset.oldPath || null;
+                    const newPath = this.dataset.newPath || null;
+                    window.loadFileComparison(oldPath, newPath);
+                }
+            });
+        });
+        
+        console.log('Fallback file list rendering complete');
+    }
+    
+    // Update the file lists with filtered data
+    function updateFileListsWithFilteredData(filteredData) {
+        console.log('Processing filtered data:', filteredData);
+        
+        // Get the unified file list element
+        const fileListElement = document.getElementById('unifiedFileList');
+        
+        if (!fileListElement) {
+            console.error('Could not find unifiedFileList element');
+            return;
+        }
+        
+        // Check if we have valid data structure
+        if (!filteredData || typeof filteredData !== 'object') {
+            console.error('Invalid data structure received from server');
+            fileListElement.innerHTML = '<div class="error-state">Invalid data received from server</div>';
+            return;
+        }
+        
+        // Ensure we have the expected properties, even if empty
+        const oldNewFiles = filteredData.oldNewFiles || [];
+        const timeComparisons = filteredData.timeComparisons || [];
+        
+        console.log(`Processing ${oldNewFiles.length} old-new comparisons and ${timeComparisons.length} time comparisons`);
+        
+        // Check if we have any matches
+        if (oldNewFiles.length === 0 && timeComparisons.length === 0) {
+            console.log('No matches found for the keyword');
+            fileListElement.innerHTML = '<div class="empty-state">No files match the keyword filter</div>';
+            return;
+        }
+        
+        // Build the filtered file list HTML
+        let html = '';
+        
+        // Add old-new files to the unified list
+        oldNewFiles.forEach(file => {
+            // Handle both direct paths and nested paths inside oldFile/newFile objects
+            const oldPath = file.oldPath || (file.oldFile && file.oldFile.path) || '';
+            const newPath = file.newPath || (file.newFile && file.newFile.path) || '';
+            
+            console.log(`Adding file entry: command=${file.command}, oldPath=${oldPath}, newPath=${newPath}`);
+            
+            let fileType = 'unknown';
+            if (oldPath && newPath) fileType = 'modified';
+            else if (oldPath && !newPath) fileType = 'deleted';
+            else if (!oldPath && newPath) fileType = 'new-only';
+            
+            // Create file entry with the same structure as the regular file list
+            html += `<div class="file-entry ${fileType}" 
+                      data-old-path="${oldPath}" 
+                      data-new-path="${newPath}">
+                <strong>${file.commandRan || ''}</strong>
+            </div>`;
+        });
+        
+        // Add time-based comparisons to the unified list
+        timeComparisons.forEach(comp => {
+            const olderPath = comp.olderPath || (comp.olderFile && comp.olderFile.path) || '';
+            const newerPath = comp.newerPath || (comp.newerFile && comp.newerFile.path) || '';
+            
+            console.log(`Adding time comparison: command=${comp.command}, olderPath=${olderPath}, newerPath=${newerPath}`);
+            
+            // Create time comparison entry with the same structure as the regular file list
+            html += `<div class="file-entry time-comparison" 
+                      data-older-path="${olderPath}" 
+                      data-newer-path="${newerPath}">
+                <strong>${comp.commandRan || ''}</strong>
+            </div>`;
+        });
+        
+        fileListElement.innerHTML = html;
+        
+        // Add click event listeners to file entries
+        document.querySelectorAll('#unifiedFileList .file-entry').forEach(entry => {
+            entry.addEventListener('click', function() {
+                // Handle different data attributes based on comparison type
+                let oldPath = this.dataset.oldPath;
+                let newPath = this.dataset.newPath;
+                const olderPath = this.dataset.olderPath;
+                const newerPath = this.dataset.newerPath;
+                
+                // If this is a time-based comparison
+                if (olderPath && newerPath) {
+                    oldPath = olderPath;
+                    newPath = newerPath;
+                }
+                
+                // Remove selected class from all entries
+                document.querySelectorAll('.file-entry').forEach(e => {
+                    e.classList.remove('selected');
+                });
+                
+                // Add selected class to this entry
+                this.classList.add('selected');
+                
+                // Load file comparison
+                if (window.loadFileComparison) {
+                    window.loadFileComparison(oldPath, newPath);
+                }
+            });
+        });
+        
+        // Log success message
+        console.log(`Displayed ${oldNewFiles.length + timeComparisons.length} filtered files`);
+    }
+    
+    // Update active tally item visual indicator
+    function updateActiveTallyItem() {
+        document.querySelectorAll('.keyword-item').forEach(item => {
+            if (item.dataset.keyword === activeKeywordFilter) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+    
+    // Set up clear filter button
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', clearKeywordFilter);
+    }
+    
+    // Utility for escaping HTML special characters
+    function escapeHtml(text) {
+        return text.replace(/[&<>"']/g, function (c) {
+            return ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[c];
+        });
+    }
+    
+    // Initial setup
+    fetchKeywords();
+    
+    // Return public methods
+    return {
+        updateKeywordTally,
+        setKeywordFilter,
+        clearKeywordFilter
+    };
+}

@@ -1,0 +1,51 @@
+<div class="comparison-section">
+    <div class="comparison-header">
+        <div class="file-info-panel">
+            <div class="file-paths-container">
+                <div class="file-path-row">
+                    <div class="path-label old-label">Old:</div>
+                    <span id="oldFilePath" class="path-value">No file selected</span>
+                </div>
+                <div class="file-path-row">
+                    <div class="path-label new-label">New:</div>
+                    <span id="newFilePath" class="path-value">No file selected</span>
+                </div>
+            </div>
+            <div class="file-stats-container">
+                <div class="stat-item" title="Lines added">
+                    <span class="stat-icon added-icon">+</span>
+                    <span id="addedLines" class="stat-value">0</span>
+                </div>
+                <div class="stat-item" title="Lines removed">
+                    <span class="stat-icon removed-icon">-</span>
+                    <span id="removedLines" class="stat-value">0</span>
+                </div>
+                <div class="stat-item" title="Lines moved">
+                    <span class="stat-icon moved-icon">↔</span>
+                    <span id="movedLines" class="stat-value">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="file-metadata">
+            <div class="metadata-row">
+                <span class="metadata-item" id="fileType">Type: -</span>
+                <span class="metadata-item" id="fileSize">Size: -</span>
+                <span class="metadata-item" id="modifiedTime">Modified: -</span>
+            </div>
+        </div>
+        <div class="view-toggle-container">
+            <div class="view-toggle-label">View Mode:</div>
+            <div class="view-toggle-buttons">
+                <button id="diffViewButton" class="view-button active" title="Show difference between old and new files">Diff</button>
+                <button id="newViewButton" class="view-button" title="Show only the new file">New File</button>
+            </div>
+        </div>
+    </div>
+    <div id="comparisonSection" class="comparison-container">
+        <div id="diffViewer" class="diff-viewer">
+            <div class="empty-state">
+                <p>Select a file from the sidebar to view comparison</p>
+            </div>
+        </div>
+    </div>
+</div>

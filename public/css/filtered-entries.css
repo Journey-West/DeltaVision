@@ -1,0 +1,142 @@
+/* Styles for filtered file entries */
+.file-entry.filtered {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    background-color: var(--file-entry-bg);
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.15s, border-left 0.2s;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.file-entry.filtered:hover {
+    background-color: var(--file-entry-hover);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateX(2px);
+}
+
+.file-entry.filtered.selected {
+    background-color: var(--file-entry-hover);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateX(2px);
+    border-left-width: 5px;
+    border-left-color: var(--primary-color);
+}
+
+/* File type border colors */
+.file-entry.filtered .comparison-type.new-only {
+    color: #42A5F5;
+}
+
+.file-entry.filtered .comparison-type.deleted {
+    color: #FF7043;
+}
+
+.file-entry.filtered .comparison-type.modified {
+    color: #7E57C2;
+}
+
+.file-entry.filtered .comparison-type.time-based {
+    color: #26A69A;
+}
+
+/* Style based on file type */
+.file-entry.filtered[data-new-path]:not([data-old-path]), 
+.file-entry.filtered[data-new-path][data-old-path=""] {
+    border-left-color: #42A5F5; /* Blue for new files */
+}
+
+.file-entry.filtered[data-old-path]:not([data-new-path]),
+.file-entry.filtered[data-old-path][data-new-path=""] {
+    border-left-color: #FF7043; /* Orange for old/deleted files */
+}
+
+.file-entry.filtered[data-old-path][data-new-path]:not([data-old-path=""]):not([data-new-path=""]) {
+    border-left-color: #7E57C2; /* Purple for modified files */
+}
+
+.file-entry.filtered[data-older-path][data-newer-path] {
+    border-left-color: #26A69A; /* Teal for time comparison files */
+}
+
+/* File name styling */
+.file-entry.filtered .file-name {
+    font-size: 0.9rem;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+/* Active filter indicator in the top filter bar */
+#activeFilterIndicator {
+    display: none;
+    align-items: center;
+    padding: 4px 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 4px;
+    margin-left: 10px;
+    font-size: 0.85rem;
+}
+
+#activeFilterIndicator button {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+}
+
+#activeFilterIndicator button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Loading indicator */
+.loading-indicator {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.loading-indicator:before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--primary-color);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error state */
+.error-state {
+    padding: 20px;
+    text-align: center;
+    color: #f44336;
+    font-style: italic;
+}

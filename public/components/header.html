@@ -1,0 +1,80 @@
+<header class="header">
+    <h1>DeltaVision</h1>
+    
+    <!-- Diff View Controls -->
+    <div class="header-controls">
+        <div class="toggle-control">
+            <label class="switch" for="diffHighlighting">
+                <input type="checkbox" id="diffHighlighting" checked>
+                <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Diff</span>
+        </div>
+        <div class="toggle-control">
+            <label class="switch" for="moveDetection">
+                <input type="checkbox" id="moveDetection" checked>
+                <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Moves</span>
+        </div>
+        <div class="toggle-control">
+            <label class="switch" for="keywordHighlighting">
+                <input type="checkbox" id="keywordHighlighting" checked>
+                <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Keywords</span>
+        </div>
+        <div class="toggle-control diff-level-control">
+            <select id="diffLevel">
+                <option value="line">Line Diff</option>
+                <option value="word">Word Diff</option>
+                <option value="char">Char Diff</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Theme toggle button -->
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+    
+    <!-- Settings button -->
+    <button id="settingsButton" class="settings-button" aria-label="Settings">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+    </button>
+    
+    <!-- Refresh button -->
+    <button id="refreshButton" class="refresh-button" aria-label="Refresh files">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"></path>
+            <path d="M1 20v-6h6"></path>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+            <path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+    </button>
+    
+    <!-- Keywords button -->
+    <button id="openKeywordsPanel" class="keywords-button" aria-label="Show Keywords Panel">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+        </svg>
+    </button>
+</header>
+
+<!-- Active filter indicator -->
+<div id="activeFilterIndicator" class="active-filter-indicator" style="display: none;">
+    <div class="filter-label">Filtered by keyword:</div>
+    <div id="activeFilterLabel" class="filter-value"></div>
+    <button id="clearFilterBtn" class="clear-filter-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </button>
+</div>

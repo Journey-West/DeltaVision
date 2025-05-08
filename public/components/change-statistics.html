@@ -1,0 +1,72 @@
+<!-- Change Statistics Component -->
+<div class="change-statistics" id="changeStatistics">
+    <div class="statistics-header">
+        <h3>Change Statistics</h3>
+        <div class="statistics-actions">
+            <button id="exportStatsBtn" title="Export statistics as CSV">
+                <i class="fas fa-download"></i> Export
+            </button>
+            <button id="toggleStatsBtn" title="Toggle statistics panel">
+                <i class="fas fa-chevron-up"></i>
+            </button>
+        </div>
+    </div>
+    <div class="statistics-body">
+        <div class="stat-grid">
+            <div class="stat-item">
+                <div class="stat-item-header">
+                    <div class="stat-icon added">+</div>
+                    <div class="stat-label">Added</div>
+                </div>
+                <div class="stat-value" id="detailedAddedCount">0</div>
+                <div class="stat-bar-container">
+                    <div class="stat-bar added" id="addedBar"></div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-item-header">
+                    <div class="stat-icon removed">-</div>
+                    <div class="stat-label">Removed</div>
+                </div>
+                <div class="stat-value" id="detailedRemovedCount">0</div>
+                <div class="stat-bar-container">
+                    <div class="stat-bar removed" id="removedBar"></div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-item-header">
+                    <div class="stat-icon modified">~</div>
+                    <div class="stat-label">Modified</div>
+                </div>
+                <div class="stat-value" id="detailedModifiedCount">0</div>
+                <div class="stat-bar-container">
+                    <div class="stat-bar modified" id="modifiedBar"></div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-item-header">
+                    <div class="stat-icon moved">⟲</div>
+                    <div class="stat-label">Moved</div>
+                </div>
+                <div class="stat-value" id="detailedMovedCount">0</div>
+                <div class="stat-bar-container">
+                    <div class="stat-bar moved" id="movedBar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-summary">
+            <div>
+                <span id="totalChangesCount">0</span> total changes
+            </div>
+            <div>
+                <span id="charChangesCount">0</span> characters modified
+            </div>
+        </div>
+        
+        <div class="percentage-display">
+            <div class="percentage-bar" id="percentageBar"></div>
+            <div class="percentage-text" id="percentageText">0% of file changed</div>
+        </div>
+    </div>
+</div>

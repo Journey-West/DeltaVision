@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
 const { promisify } = require('util');
+const componentLoader = require('./component-loader');
 
 const readFileAsync = promisify(fs.readFile);
 const readdirAsync = promisify(fs.readdir);
@@ -23,16 +24,23 @@ const configFilePath = path.join(process.cwd(), 'folder-config.json');
 // Load saved folder paths if they exist
 async function loadFolderConfig() {
   try {
+    console.log('Loading folder configuration from:', configFilePath);
     if (fs.existsSync(configFilePath)) {
       const configData = await readFileAsync(configFilePath, 'utf8');
+      console.log('Raw config data:', configData);
       const config = JSON.parse(configData);
-      if (config.oldFolderPath && config.newFolderPath) {
-        oldFolderPath = config.oldFolderPath;
+      
+      // Update oldFolderPath - allow it to be empty for new-only mode
+      oldFolderPath = config.oldFolderPath !== undefined ? config.oldFolderPath : '';
+      
+      // Update newFolderPath - required
+      if (config.newFolderPath) {
         newFolderPath = config.newFolderPath;
-        console.log('Loaded folder configuration:');
-        console.log(`Old folder: ${oldFolderPath}`);
-        console.log(`New folder: ${newFolderPath}`);
       }
+      
+      console.log('Loaded folder configuration:');
+      console.log(`Old folder: ${oldFolderPath || '(empty - new-only mode)'}`);
+      console.log(`New folder: ${newFolderPath}`);
       
       // Load keyword file path if it exists
       if (config.keywordFilePath) {
@@ -43,6 +51,7 @@ async function loadFolderConfig() {
         await loadKeywordsFromFile();
       }
     } else {
+      console.log('No config file found - creating default empty config');
       // Create default config with empty paths
       await saveFolderConfig("", "", "");
     }
@@ -92,10 +101,6 @@ function setupWatcher(folderPath) {
   }
 }
 
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, '../../public')));
-app.use(express.json());
-
 // Function to extract command part before double underscore
 function extractCommand(filename) {
   const parts = filename.split('__');
@@ -108,18 +113,39 @@ async function extractCommandRan(filePath) {
     const data = await readFileAsync(filePath, 'utf8');
     const firstLine = data.split('\n')[0];
     
-    // Extract command ran part from the line
-    // Format is typically: DATE TIME "command ran"
-    const match = firstLine.match(/"([^"]+)"/);
-    return match ? match[1] : null;
+    // First try the quoted format: DATE TIME "command ran"
+    const quoteMatch = firstLine.match(/"([^"]+)"/);
+    if (quoteMatch) {
+      return quoteMatch[1];
+    }
+    
+    // If no quotes, try extracting the first line as-is (trimmed)
+    if (firstLine && firstLine.trim()) {
+      // If it's a long line, truncate it
+      const trimmedLine = firstLine.trim();
+      if (trimmedLine.length > 50) {
+        return trimmedLine.substring(0, 47) + '...';
+      }
+      return trimmedLine;
+    }
+    
+    // If both approaches fail, use the filename
+    const filename = path.basename(filePath);
+    // Remove the __test.txt or similar suffix
+    const parts = filename.split('__');
+    if (parts.length > 1) {
+      return parts[0];
+    }
+    
+    return filename;
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error);
-    return null;
+    return path.basename(filePath); // Fallback to filename
   }
 }
 
 // Function to get all files from a directory with their metadata
-async function getFilesWithMetadata(dirPath) {
+async function getFilesWithMetadata(dirPath, showAllFiles = false) {
   try {
     // Check if directory exists
     if (!dirPath || !fs.existsSync(dirPath)) {
@@ -127,32 +153,65 @@ async function getFilesWithMetadata(dirPath) {
       return [];
     }
 
+    console.log(`Reading files from ${dirPath} (showAllFiles: ${showAllFiles})`);
     const files = await readdirAsync(dirPath);
+    console.log(`Found ${files.length} total files/directories in ${dirPath}`);
     
-    const intermediateFileData = await Promise.all(
-      files
-        .filter(file => file.includes('__') && file.endsWith('.txt'))
-        .map(async (file) => {
-          const filePath = path.join(dirPath, file);
-          const command = extractCommand(file);
-          const commandRan = await extractCommandRan(filePath);
+    // First filter to excluded directories
+    const fileStats = await Promise.all(
+      files.map(async file => {
+        const filePath = path.join(dirPath, file);
+        try {
           const stats = await statAsync(filePath);
+          return { file, filePath, isDirectory: stats.isDirectory(), stats };
+        } catch (error) {
+          console.error(`Error getting stats for ${filePath}:`, error);
+          return null;
+        }
+      })
+    );
+    
+    // Filter out nulls and directories
+    const filteredFileStats = fileStats
+      .filter(item => item !== null && !item.isDirectory);
+    
+    console.log(`After removing directories: ${filteredFileStats.length} files`);
+    
+    // Map files to their metadata
+    const fileData = await Promise.all(
+      filteredFileStats.map(async ({ file, filePath, stats }) => {
+        try {
+          // Default values for non-comparison files
+          let command = file;
+          let commandRan = null;
+          
+          // Try to extract command info for all files
+          if (file.includes('__')) {
+            command = extractCommand(file);
+          }
+          
+          // Extract command ran from first line for all files
+          commandRan = await extractCommandRan(filePath);
           
           return {
             filename: file,
             path: filePath,
             command,
             commandRan,
-            content: await readFileAsync(filePath, 'utf8'),
             mtime: stats.mtime.getTime() // Add modification time as timestamp
           };
-        })
+        } catch (error) {
+          console.error(`Error processing file ${filePath}:`, error);
+          return null;
+        }
+      })
     );
     
-    // Filter out files that don't have a valid command in their first line
-    const fileData = intermediateFileData.filter(file => file.commandRan !== null);
+    // Remove null entries
+    const validFileData = fileData.filter(item => item !== null);
+    console.log(`Valid files after processing: ${validFileData.length}`);
     
-    return fileData;
+    return validFileData;
   } catch (error) {
     console.error(`Error reading directory ${dirPath}:`, error);
     return [];
@@ -229,42 +288,99 @@ app.post('/api/folders', async (req, res) => {
 // API endpoint to get all matched files
 app.get('/api/files', async (req, res) => {
   try {
-    // If folders are not configured yet, return empty array
-    if (!oldFolderPath || !newFolderPath) {
+    console.log('=== /api/files endpoint called ===');
+    // If new folder is not configured, return empty array
+    if (!newFolderPath) {
+      console.log('New folder path not configured, returning empty array');
       return res.json([]);
     }
 
-    const oldFiles = await getFilesWithMetadata(oldFolderPath);
-    const newFiles = await getFilesWithMetadata(newFolderPath);
+    // If old folder is not configured, show all files in the new folder
+    const showAllFiles = !oldFolderPath;
     
-    // Match files based on command and commandRan
+    console.log('oldFolderPath:', oldFolderPath ? oldFolderPath : '(empty)');
+    console.log('newFolderPath:', newFolderPath); 
+    console.log('showAllFiles:', showAllFiles);
+    
+    const newFiles = await getFilesWithMetadata(newFolderPath, showAllFiles);
+    console.log(`Found ${newFiles.length} files in new folder`);
+    
     const matchedFiles = [];
     
-    oldFiles.forEach(oldFile => {
-      const matchingNewFiles = newFiles.filter(newFile => 
-        newFile.command === oldFile.command && 
-        newFile.commandRan === oldFile.commandRan
-      );
+    // If old folder is not configured, show all new files as "new only"
+    if (!oldFolderPath) {
+      console.log('Running in new-only mode, adding all files from new folder');
       
-      matchingNewFiles.forEach(newFile => {
+      newFiles.forEach(newFile => {
         matchedFiles.push({
-          oldFile: {
-            filename: oldFile.filename,
-            path: oldFile.path,
-            mtime: oldFile.mtime
-          },
+          oldFile: null, // Indicates "new only" file
           newFile: {
             filename: newFile.filename,
             path: newFile.path,
             mtime: newFile.mtime
           },
-          command: oldFile.command,
-          commandRan: oldFile.commandRan,
-          // Use the newer file's timestamp for sorting
-          timestamp: Math.max(oldFile.mtime, newFile.mtime)
+          command: newFile.command,
+          commandRan: newFile.commandRan,
+          timestamp: newFile.mtime,
+          fileType: 'new-only' // Special file type for new-only files
         });
       });
-    });
+      
+      console.log(`Added ${matchedFiles.length} files to the result`);
+    } else {
+      // Normal case: match files between old and new directories
+      const oldFiles = await getFilesWithMetadata(oldFolderPath);
+      
+      oldFiles.forEach(oldFile => {
+        const matchingNewFiles = newFiles.filter(newFile => 
+          newFile.command === oldFile.command && 
+          newFile.commandRan === oldFile.commandRan
+        );
+        
+        matchingNewFiles.forEach(newFile => {
+          matchedFiles.push({
+            oldFile: {
+              filename: oldFile.filename,
+              path: oldFile.path,
+              mtime: oldFile.mtime
+            },
+            newFile: {
+              filename: newFile.filename,
+              path: newFile.path,
+              mtime: newFile.mtime
+            },
+            command: oldFile.command,
+            commandRan: oldFile.commandRan,
+            // Use the newer file's timestamp for sorting
+            timestamp: Math.max(oldFile.mtime, newFile.mtime),
+            fileType: 'comparison' // Regular comparison file
+          });
+        });
+      });
+      
+      // Also include new files that don't have a matching old file
+      const unmatchedNewFiles = newFiles.filter(newFile => 
+        !oldFiles.some(oldFile => 
+          oldFile.command === newFile.command && 
+          oldFile.commandRan === newFile.commandRan
+        )
+      );
+      
+      unmatchedNewFiles.forEach(newFile => {
+        matchedFiles.push({
+          oldFile: null,
+          newFile: {
+            filename: newFile.filename,
+            path: newFile.path,
+            mtime: newFile.mtime
+          },
+          command: newFile.command,
+          commandRan: newFile.commandRan,
+          timestamp: newFile.mtime,
+          fileType: 'new-only'
+        });
+      });
+    }
     
     // Sort files by timestamp (newest first)
     matchedFiles.sort((a, b) => b.timestamp - a.timestamp);
@@ -276,23 +392,116 @@ app.get('/api/files', async (req, res) => {
   }
 });
 
-// API endpoint to get content of two files for comparison
+// API endpoint to get all matched files
 app.get('/api/compare', async (req, res) => {
   try {
-    const { oldPath, newPath } = req.query;
+    let { oldPath, newPath } = req.query;
     
-    if (!oldPath || !newPath) {
-      return res.status(400).json({ error: 'Both oldPath and newPath are required' });
+    // Only require one path - allow comparing a new file with nothing or an old file with nothing
+    if (!oldPath && !newPath) {
+      return res.status(400).json({ error: 'At least one of oldPath or newPath is required' });
+    }
+
+    // Add very detailed debugging
+    console.log('Compare endpoint called with:');
+    console.log('Original oldPath:', oldPath);
+    console.log('Original newPath:', newPath);
+    console.log('Files exist check:');
+    
+    if (oldPath) {
+      console.log(`oldPath exists: ${fs.existsSync(oldPath)}`);
     }
     
-    const [oldContent, newContent] = await Promise.all([
-      readFileAsync(oldPath, 'utf8'),
-      readFileAsync(newPath, 'utf8')
-    ]);
+    if (newPath) {
+      console.log(`newPath exists: ${fs.existsSync(newPath)}`);
+    }
+    
+    // Don't try to fix the paths - the frontend is already sending the correct paths
+    // Just use the paths as-is
+    
+    let oldContent = '';
+    let newContent = '';
+    
+    // Load file contents
+    if (oldPath) {
+      try {
+        console.log(`Attempting to read oldPath: ${oldPath}`);
+        // First check if file exists
+        if (!fs.existsSync(oldPath)) {
+          throw new Error(`File does not exist: ${oldPath}`);
+        }
+        oldContent = await readFileAsync(oldPath, 'utf8');
+        console.log(`Successfully read oldContent, length: ${oldContent.length}`);
+      } catch (error) {
+        console.error(`Error reading oldPath ${oldPath}:`, error);
+        return res.status(404).json({ error: `Old file not found or cannot be read: ${error.message}` });
+      }
+    }
+    
+    if (newPath) {
+      try {
+        console.log(`Attempting to read newPath: ${newPath}`);
+        // First check if file exists
+        if (!fs.existsSync(newPath)) {
+          throw new Error(`File does not exist: ${newPath}`);
+        }
+        newContent = await readFileAsync(newPath, 'utf8');
+        console.log(`Successfully read newContent, length: ${newContent.length}`);
+      } catch (error) {
+        console.error(`Error reading newPath ${newPath}:`, error);
+        return res.status(404).json({ error: `New file not found or cannot be read: ${error.message}` });
+      }
+    }
+    
+    // Create diff by comparing line by line
+    const oldLines = oldContent.split('\n');
+    const newLines = newContent.split('\n');
+    
+    // Simple diff algorithm
+    const diff = [];
+    const movedLines = {
+      removed: [],
+      added: []
+    };
+    
+    // Add file type information
+    const fileType = oldPath ? (newPath ? 'comparison' : 'old-only') : 'new-only';
+    
+    // Track potential moved lines (lines that are removed and then added elsewhere)
+    const removedLines = [];
+    
+    // First pass: identify removed lines
+    for (let i = 0; i < oldLines.length; i++) {
+      const line = oldLines[i];
+      if (!newLines.includes(line)) {
+        removedLines.push({ content: line, oldIndex: i });
+        diff.push(`-${line}`);
+      } else {
+        diff.push(` ${line}`);
+      }
+    }
+    
+    // Second pass: identify added and moved lines
+    for (let i = 0; i < newLines.length; i++) {
+      const line = newLines[i];
+      if (!oldLines.includes(line)) {
+        // Check if this added line was in the removed lines (moved)
+        const movedIndex = removedLines.findIndex(removed => removed.content === line);
+        if (movedIndex >= 0) {
+          // This is a moved line
+          movedLines.removed.push(removedLines[movedIndex]);
+          movedLines.added.push({ content: line, newIndex: i });
+        }
+        diff.push(`+${line}`);
+      }
+    }
     
     res.json({
       oldContent,
-      newContent
+      newContent,
+      diff,
+      movedLines,
+      fileType // Include the file type in the response
     });
   } catch (error) {
     console.error('Error comparing files:', error);
@@ -364,43 +573,379 @@ app.get('/api/time-comparisons', async (req, res) => {
   }
 });
 
-// Store keywords for highlighting
-let keywordHighlights = {};
-
-// Function to load keywords from file
-async function loadKeywordsFromFile() {
+// API endpoint to get old and new file comparisons
+app.get('/api/comparisons', async (req, res) => {
   try {
-    if (keywordFilePath && fs.existsSync(keywordFilePath)) {
-      const fileContent = await readFileAsync(keywordFilePath, 'utf8');
+    console.log('=== /api/comparisons endpoint called ===');
+    
+    // If new folder is not configured, return empty arrays
+    if (!newFolderPath) {
+      console.log('New folder path not configured, returning empty arrays');
+      return res.json({ oldFiles: [], newFiles: [] });
+    }
+
+    // Determine if we're in new-only mode
+    const newOnlyMode = !oldFolderPath || oldFolderPath === '';
+    console.log('Running in new-only mode:', newOnlyMode);
+    console.log('oldFolderPath:', oldFolderPath || '(empty)');
+    console.log('newFolderPath:', newFolderPath);
+
+    // Get files from new folder with metadata
+    // In new-only mode, show all files, not just comparison-formatted ones
+    const newFiles = await getFilesWithMetadata(newFolderPath, newOnlyMode);
+    console.log(`Found ${newFiles.length} files in new folder:`, newFiles.map(f => f.filename));
+    
+    // Get old files only if we're not in new-only mode
+    let oldFiles = [];
+    if (!newOnlyMode) {
+      oldFiles = await getFilesWithMetadata(oldFolderPath);
+      console.log(`Found ${oldFiles.length} files in old folder`);
+    }
+    
+    res.json({
+      oldFiles,
+      newFiles
+    });
+  } catch (error) {
+    console.error('Error getting comparisons:', error);
+    res.status(500).json({ error: 'Failed to get comparisons' });
+  }
+});
+
+// API endpoint to get keyword counts from files
+app.get('/api/keyword-counts', async (req, res) => {
+  try {
+    // If folders are not configured yet or no keywords are defined, return empty object
+    if ((!newFolderPath) || Object.keys(keywordHighlights).length === 0) {
+      return res.json({});
+    }
+    
+    // Get all files
+    const oldFiles = oldFolderPath ? await getFilesWithMetadata(oldFolderPath) : [];
+    const newFiles = newFolderPath ? await getFilesWithMetadata(newFolderPath) : [];
+    
+    // Count keyword occurrences with separate counts for old and new files
+    const keywordCounts = {};
+    
+    // Initialize counts for all keywords
+    Object.keys(keywordHighlights).forEach(keyword => {
+      keywordCounts[keyword] = {
+        old: 0,
+        new: 0,
+        total: 0
+      };
+    });
+    
+    // Load file contents
+    await Promise.all([
+      ...oldFiles.map(async file => {
+        try {
+          file.content = await readFileAsync(file.path, 'utf8');
+        } catch (err) {
+          console.error(`Error reading file ${file.path}:`, err);
+          file.content = '';
+        }
+      }),
+      ...newFiles.map(async file => {
+        try {
+          file.content = await readFileAsync(file.path, 'utf8');
+        } catch (err) {
+          console.error(`Error reading file ${file.path}:`, err);
+          file.content = '';
+        }
+      })
+    ]);
+    
+    // Count occurrences in old files (if available)
+    if (oldFiles.length > 0) {
+      oldFiles.forEach(file => {
+        const content = file.content || '';
+        
+        Object.keys(keywordHighlights).forEach(keyword => {
+          // Case insensitive search for keyword
+          const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+          const matches = content.match(regex);
+          
+          if (matches) {
+            keywordCounts[keyword].old += matches.length;
+            keywordCounts[keyword].total += matches.length;
+          }
+        });
+      });
+    }
+    
+    // Count occurrences in new files
+    newFiles.forEach(file => {
+      const content = file.content || '';
       
-      // Parse the keyword file (format: category:color:keyword or keyword:color)
-      const newKeywords = {};
-      const lines = fileContent.split('\n');
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed) return;
-        const parts = trimmed.split(':');
-        if (parts.length === 2) {
-          const [keyword, color] = parts;
-          newKeywords[keyword.trim().toLowerCase()] = color.trim();
-        } else if (parts.length >= 3) {
-          const category = parts[0].trim();
-          const color = parts[1].trim();
-          const keyword = parts.slice(2).join(':').trim();
-          newKeywords[keyword.toLowerCase()] = { color, category };
+      Object.keys(keywordHighlights).forEach(keyword => {
+        // Case insensitive search for keyword
+        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+        const matches = content.match(regex);
+        
+        if (matches) {
+          keywordCounts[keyword].new += matches.length;
+          keywordCounts[keyword].total += matches.length;
         }
       });
-      
-      // Update keywords
-      keywordHighlights = newKeywords;
-      console.log(`Loaded ${Object.keys(keywordHighlights).length} keywords from ${keywordFilePath}`);
-    } else if (keywordFilePath) {
-      console.log(`Keyword file not found: ${keywordFilePath}`);
-    }
+    });
+    
+    res.json(keywordCounts);
   } catch (error) {
-    console.error('Error loading keywords from file:', error);
+    console.error('Error getting keyword counts:', error);
+    res.status(500).json({ error: 'Failed to get keyword counts' });
   }
-}
+});
+
+// API endpoint for filtering files by keyword
+app.get('/api/filter-by-keyword', async (req, res) => {
+  try {
+    console.log('=== /api/filter-by-keyword endpoint called ===');
+    const keyword = req.query.keyword;
+    
+    if (!keyword) {
+      return res.status(400).json({ error: 'Keyword parameter is required' });
+    }
+    
+    console.log(`Filtering by keyword: "${keyword}"`);
+    
+    // If folders are not configured yet, return empty arrays
+    if ((!oldFolderPath && !newFolderPath) || Object.keys(keywordHighlights).length === 0) {
+      console.log('Folders not configured or no keywords loaded, returning empty arrays');
+      return res.json({ oldNewFiles: [], timeComparisons: [] });
+    }
+    
+    // Get all files
+    const oldFiles = oldFolderPath ? await getFilesWithMetadata(oldFolderPath) : [];
+    const newFiles = newFolderPath ? await getFilesWithMetadata(newFolderPath) : [];
+    
+    console.log(`Found ${oldFiles.length} old files and ${newFiles.length} new files to search`);
+    
+    // Escape special regex characters in keyword
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedKeyword, 'gi');
+    
+    // Load content and filter old files containing the keyword
+    const filteredOldFiles = await Promise.all(
+      oldFiles.map(async (file) => {
+        try {
+          // Load file content
+          const content = await readFileAsync(file.path, 'utf8');
+          // Check if content matches keyword
+          if (content.match(regex)) {
+            return { ...file, content };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Error reading file ${file.path}:`, error);
+          return null;
+        }
+      })
+    ).then(results => results.filter(Boolean));
+    
+    // Load content and filter new files containing the keyword
+    const filteredNewFiles = await Promise.all(
+      newFiles.map(async (file) => {
+        try {
+          // Load file content
+          const content = await readFileAsync(file.path, 'utf8');
+          // Check if content matches keyword
+          if (content.match(regex)) {
+            return { ...file, content };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Error reading file ${file.path}:`, error);
+          return null;
+        }
+      })
+    ).then(results => results.filter(Boolean));
+    
+    console.log(`Found ${filteredOldFiles.length} old files and ${filteredNewFiles.length} new files containing keyword "${keyword}"`);
+    
+    // Build old-new comparisons with file paths structured for the client
+    const oldNewFiles = [];
+    
+    console.log(`Building comparisons from ${filteredOldFiles.length} old files and ${filteredNewFiles.length} new files`);
+    
+    // Files that exist in both old and new
+    filteredOldFiles.forEach(oldFile => {
+      const matchingNewFiles = filteredNewFiles.filter(newFile => 
+        newFile.command === oldFile.command
+      );
+      
+      if (matchingNewFiles.length > 0) {
+        // Use the most recent new file
+        const newFile = matchingNewFiles.sort((a, b) => b.mtime - a.mtime)[0];
+        
+        oldNewFiles.push({
+          command: oldFile.command,
+          commandRan: oldFile.commandRan || newFile.commandRan,
+          oldPath: oldFile.path,
+          newPath: newFile.path,
+          timestamp: Math.max(oldFile.mtime, newFile.mtime),
+          fileType: 'modified'
+        });
+        console.log(`Added modified file comparison: ${oldFile.command}`);
+      } else {
+        // Old only
+        oldNewFiles.push({
+          command: oldFile.command,
+          commandRan: oldFile.commandRan,
+          oldPath: oldFile.path,
+          newPath: null,
+          timestamp: oldFile.mtime,
+          fileType: 'deleted'
+        });
+        console.log(`Added deleted file: ${oldFile.command}`);
+      }
+    });
+    
+    // New files that don't have a match in old
+    const unmatchedNewFiles = filteredNewFiles.filter(newFile => 
+      !filteredOldFiles.some(oldFile => oldFile.command === newFile.command)
+    );
+    
+    unmatchedNewFiles.forEach(newFile => {
+      oldNewFiles.push({
+        command: newFile.command,
+        commandRan: newFile.commandRan,
+        oldPath: null,
+        newPath: newFile.path,
+        timestamp: newFile.mtime,
+        fileType: 'new-only'
+      });
+      console.log(`Added new-only file: ${newFile.command}`);
+    });
+    
+    // Build time-based comparisons
+    const timeComparisons = [];
+    
+    // Group new files by command
+    const groupedByCommand = {};
+    filteredNewFiles.forEach(file => {
+      if (!groupedByCommand[file.command]) {
+        groupedByCommand[file.command] = [];
+      }
+      groupedByCommand[file.command].push(file);
+    });
+    
+    // Create time comparisons for commands with multiple executions
+    Object.values(groupedByCommand).forEach(fileGroup => {
+      if (fileGroup.length >= 2) {
+        // Sort by time (newest first)
+        fileGroup.sort((a, b) => b.mtime - a.mtime);
+        
+        // Compare newest with second newest
+        timeComparisons.push({
+          command: fileGroup[0].command,
+          commandRan: fileGroup[0].commandRan,
+          newerPath: fileGroup[0].path,
+          olderPath: fileGroup[1].path,
+          timeDiff: formatTimeDifference(fileGroup[0].mtime - fileGroup[1].mtime)
+        });
+      }
+    });
+    
+    // Sort files by timestamp (newest first)
+    oldNewFiles.sort((a, b) => b.timestamp - a.timestamp);
+    
+    // Add counts to the response
+    const response = {
+      oldNewFiles,
+      timeComparisons,
+      counts: {
+        oldFiles: filteredOldFiles.length,
+        newFiles: filteredNewFiles.length,
+        timeComparisons: timeComparisons.length,
+        total: oldNewFiles.length + timeComparisons.length
+      }
+    };
+    
+    console.log(`Returning ${response.counts.total} total matches for keyword "${keyword}"`);
+    console.log(`Raw data size: ${JSON.stringify(response).length} bytes`);
+    
+    // Log summary of what we're sending
+    if (oldNewFiles.length > 0) {
+      console.log('Sample oldNewFile entry:', JSON.stringify(oldNewFiles[0]));
+    }
+    if (timeComparisons.length > 0) {
+      console.log('Sample timeComparison entry:', JSON.stringify(timeComparisons[0]));
+    }
+    
+    // Send the response
+    res.json(response);
+  } catch (error) {
+    console.error('Error filtering by keyword:', error);
+    res.status(500).json({ error: 'Failed to filter by keyword' });
+  }
+});
+
+// API endpoint to get file metadata (size, modified date, etc.)
+app.get('/api/file-metadata', async (req, res) => {
+    try {
+        const { path: requestedPath } = req.query;
+        
+        if (!requestedPath) {
+            return res.status(400).json({ error: 'File path is required' });
+        }
+        
+        console.log('[API /api/file-metadata] Received request for path:', requestedPath);
+        
+        // Determine if this is a path from old or new directory
+        let filePath = requestedPath;
+        
+        // If the path doesn't exist as-is, try to resolve it relative to old or new folders
+        if (!fs.existsSync(filePath)) {
+            // Try to resolve against the new folder first
+            if (newFolderPath && requestedPath.includes(newFolderPath)) {
+                filePath = requestedPath;
+            } else if (newFolderPath && !path.isAbsolute(requestedPath)) {
+                filePath = path.join(newFolderPath, requestedPath);
+            } else if (oldFolderPath && requestedPath.includes(oldFolderPath)) {
+                filePath = requestedPath;
+            } else if (oldFolderPath && !path.isAbsolute(requestedPath)) {
+                filePath = path.join(oldFolderPath, requestedPath);
+            }
+            
+            console.log('Resolved file path:', filePath);
+        }
+        
+        // Check if file exists after resolution
+        if (!fs.existsSync(filePath)) {
+            console.log('[API /api/file-metadata] File not found after path resolution:', filePath);
+            return res.status(404).json({ 
+                error: 'File not found', 
+                requestedPath,
+                resolvedPath: filePath 
+            });
+        }
+        
+        // Get file metadata
+        const stats = await statAsync(filePath);
+        
+        // Get file extension
+        const extension = path.extname(filePath).replace('.', '').toUpperCase() || 'TXT';
+        
+        // Return formatted metadata
+        res.json({
+            path: filePath,
+            size: stats.size,
+            modified: stats.mtime,
+            created: stats.birthtime,
+            isDirectory: stats.isDirectory(),
+            extension: extension
+        });
+        
+        console.log('Successfully sent metadata for:', filePath);
+    } catch (error) {
+        console.error('[API /api/file-metadata] Error:', error);
+        res.status(500).json({ 
+            error: 'Failed to retrieve file metadata',
+            message: error.message
+        });
+    }
+});
 
 // API endpoint to get current keywords
 app.get('/api/keywords', (req, res) => {
@@ -442,6 +987,123 @@ app.post('/api/keywords', express.text(), async (req, res) => {
     res.status(500).json({ error: 'Failed to process keyword file' });
   }
 });
+
+// API endpoint to get theme files
+app.get('/api/themes', (req, res) => {
+    const themesDir = path.join(__dirname, '../../public/themes');
+    
+    fs.readdir(themesDir, (err, files) => {
+        if (err) {
+            console.error('Error reading themes directory:', err);
+            return res.status(500).json({ error: 'Failed to read themes directory' });
+        }
+        
+        // Filter for JSON files only
+        const themeFiles = files.filter(file => file.endsWith('.json'));
+        res.json(themeFiles);
+    });
+});
+
+// API endpoint to get folder paths (for the settings panel)
+app.get('/api/folder-paths', (req, res) => {
+    res.json({
+        oldFolderPath,
+        newFolderPath,
+        keywordFilePath
+    });
+});
+
+// API endpoint to update folder paths
+app.post('/api/folder-paths', express.json(), async (req, res) => {
+    try {
+        const { oldFolderPath: oldPath, newFolderPath: newPath, keywordFilePath: keywordPath } = req.body;
+
+        // Only require newFolderPath - allow oldFolderPath to be empty for "new-only" mode
+        if (!newPath) {
+            return res.status(400).json({ error: 'newFolderPath is required' });
+        }
+
+        // Update the global variables
+        oldFolderPath = oldPath || ''; // Allow empty string for oldFolderPath
+        newFolderPath = newPath;
+        keywordFilePath = keywordPath || '';
+
+        // Save the new configuration
+        await saveFolderConfig(oldFolderPath, newFolderPath, keywordFilePath);
+
+        // If there's a keyword file, load keywords from it
+        if (keywordFilePath) {
+            await loadKeywordsFromFile();
+        }
+
+        // Update watcher for new folder
+        setupWatcher(newFolderPath);
+
+        res.json({
+            success: true,
+            message: 'Folder paths updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating folder paths:', error);
+        res.status(500).json({ success: false, error: 'Failed to update folder paths' });
+    }
+});
+
+// Store keywords for highlighting
+let keywordHighlights = {};
+
+// Function to load keywords from file
+async function loadKeywordsFromFile() {
+  try {
+    if (keywordFilePath && fs.existsSync(keywordFilePath)) {
+      const fileContent = await readFileAsync(keywordFilePath, 'utf8');
+      
+      // Parse the keyword file (format: category:color:keyword or keyword:color)
+      const newKeywords = {};
+      const lines = fileContent.split('\n');
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        const parts = trimmed.split(':');
+        if (parts.length === 2) {
+          const [keyword, color] = parts;
+          newKeywords[keyword.trim().toLowerCase()] = color.trim();
+        } else if (parts.length >= 3) {
+          const category = parts[0].trim();
+          const color = parts[1].trim();
+          const keyword = parts.slice(2).join(':').trim();
+          newKeywords[keyword.toLowerCase()] = { color, category };
+        }
+      });
+      
+      // Update keywords
+      keywordHighlights = newKeywords;
+      console.log(`Loaded ${Object.keys(keywordHighlights).length} keywords from ${keywordFilePath}`);
+    } else if (keywordFilePath) {
+      console.log(`Keyword file not found: ${keywordFilePath}`);
+    }
+  } catch (error) {
+    console.error('Error loading keywords from file:', error);
+  }
+}
+
+// Serve modular index.html at root route
+app.get('/', async (req, res) => {
+  try {
+    const templatePath = path.join(__dirname, '../../public/index.html');
+    console.log('Rendering modular template from', templatePath);
+    const renderedHtml = await componentLoader.renderTemplate(templatePath);
+    console.log('Template rendered successfully, sending response');
+    res.send(renderedHtml);
+  } catch (error) {
+    console.error('Error serving modular index.html:', error);
+    res.status(500).send('Error loading application');
+  }
+});
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, '../../public')));
+app.use(express.json());
 
 // Helper function to format time difference in a human-readable way
 function formatTimeDifference(milliseconds) {

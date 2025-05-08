@@ -1,0 +1,219 @@
+/* Change Statistics Styling */
+.change-statistics {
+    margin-top: 15px;
+    border-radius: 6px;
+    background-color: var(--container-bg);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.statistics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: var(--table-header-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.statistics-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.statistics-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.statistics-actions button {
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.statistics-actions button:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.statistics-body {
+    padding: 15px;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.stat-item-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.stat-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 8px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.stat-icon.added {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+}
+
+.stat-icon.removed {
+    background-color: rgba(244, 67, 54, 0.15);
+    color: #F44336;
+}
+
+.stat-icon.modified {
+    background-color: rgba(255, 152, 0, 0.15);
+    color: #FF9800;
+}
+
+.stat-icon.moved {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #2196F3;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 5px;
+    color: var(--text-color);
+}
+
+.stat-bar-container {
+    height: 6px;
+    background-color: var(--hover-color);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.stat-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+.stat-bar.added {
+    background-color: #4CAF50;
+}
+
+.stat-bar.removed {
+    background-color: #F44336;
+}
+
+.stat-bar.modified {
+    background-color: #FF9800;
+}
+
+.stat-bar.moved {
+    background-color: #2196F3;
+}
+
+.stat-summary {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.percentage-display {
+    background-color: var(--hover-color);
+    height: 24px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 15px;
+}
+
+.percentage-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50 0%, #FF9800 50%, #F44336 100%);
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+.percentage-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-color);
+    z-index: 1;
+}
+
+/* Dark theme adjustments */
+.dark-theme .statistics-header {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .stat-icon.added {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #81C784;
+}
+
+.dark-theme .stat-icon.removed {
+    background-color: rgba(244, 67, 54, 0.15);
+    color: #E57373;
+}
+
+.dark-theme .stat-icon.modified {
+    background-color: rgba(255, 152, 0, 0.15);
+    color: #FFB74D;
+}
+
+.dark-theme .stat-icon.moved {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #64B5F6;
+}
+
+/* Animation for stats loading */
+@keyframes countUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-value {
+    animation: countUp 0.5s ease forwards;
+}

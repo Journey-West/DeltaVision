@@ -1,0 +1,15 @@
+2025-05-06 13:41:00 "moveLine ran"
+This is a simple test file for testing the move detection functionality.
+
+Line 1: This line will remain in position 1.
+Line 2: This line will remain in position 2.
+Line 3: This is a unique identifier line that will be moved.
+Line 4: This line will be pushed down by a new line.
+Line 5: This line will remain in the same relative position.
+Line 6: This is the final line of the document.
+
+A paragraph of text that will remain unchanged.
+It spans multiple lines and should not be detected as moved.
+This helps ensure that move detection works properly at different levels.
+
+IMPORTANT NOTE: This exact line should be detected as moved when toggle is enabled.
