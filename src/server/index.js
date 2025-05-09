@@ -149,69 +149,66 @@ async function getFilesWithMetadata(dirPath, showAllFiles = false) {
   try {
     // Check if directory exists
     if (!dirPath || !fs.existsSync(dirPath)) {
-      console.warn(`Directory ${dirPath} does not exist or is not set`);
+      console.log(`Directory not found: ${dirPath}`);
       return [];
     }
 
-    console.log(`Reading files from ${dirPath} (showAllFiles: ${showAllFiles})`);
+    console.time('getFilesWithMetadata');
     const files = await readdirAsync(dirPath);
     console.log(`Found ${files.length} total files/directories in ${dirPath}`);
     
-    // First filter to excluded directories
-    const fileStats = await Promise.all(
-      files.map(async file => {
-        const filePath = path.join(dirPath, file);
+    // Process all files in parallel for better performance
+    const filePromises = files
+      .filter(file => !file.startsWith('.')) // Skip hidden files
+      .map(async (file) => {
         try {
+          const filePath = path.join(dirPath, file);
           const stats = await statAsync(filePath);
-          return { file, filePath, isDirectory: stats.isDirectory(), stats };
-        } catch (error) {
-          console.error(`Error getting stats for ${filePath}:`, error);
-          return null;
-        }
-      })
-    );
-    
-    // Filter out nulls and directories
-    const filteredFileStats = fileStats
-      .filter(item => item !== null && !item.isDirectory);
-    
-    console.log(`After removing directories: ${filteredFileStats.length} files`);
-    
-    // Map files to their metadata
-    const fileData = await Promise.all(
-      filteredFileStats.map(async ({ file, filePath, stats }) => {
-        try {
-          // Default values for non-comparison files
-          let command = file;
-          let commandRan = null;
           
-          // Try to extract command info for all files
-          if (file.includes('__')) {
-            command = extractCommand(file);
+          // Skip directories
+          if (stats.isDirectory()) return null;
+          
+          const filename = file;
+          let command = filename;
+          let commandRan = '';
+          
+          // Try to extract command info for comparison files
+          if (filename.includes('__')) {
+            command = extractCommand(filename);
           }
           
-          // Extract command ran from first line for all files
-          commandRan = await extractCommandRan(filePath);
+          // Extract command ran from first line
+          try {
+            commandRan = await extractCommandRan(filePath);
+          } catch (error) {
+            console.log(`Error extracting command from ${filePath}: ${error.message}`);
+            // Use filename as fallback
+            commandRan = filename;
+          }
           
           return {
-            filename: file,
+            filename,
             path: filePath,
             command,
             commandRan,
-            mtime: stats.mtime.getTime() // Add modification time as timestamp
+            mtime: stats.mtimeMs
           };
         } catch (error) {
-          console.error(`Error processing file ${filePath}:`, error);
+          console.error(`Error processing file ${file}:`, error);
           return null;
         }
-      })
-    );
+      });
     
-    // Remove null entries
-    const validFileData = fileData.filter(item => item !== null);
-    console.log(`Valid files after processing: ${validFileData.length}`);
+    // Wait for all file processing to complete in parallel
+    const results = await Promise.all(filePromises);
     
-    return validFileData;
+    // Filter out null results (from directories or errors)
+    const validResults = results.filter(result => result !== null);
+    
+    console.timeEnd('getFilesWithMetadata');
+    console.log(`Processed ${validResults.length} valid files from ${dirPath}`);
+    
+    return validResults;
   } catch (error) {
     console.error(`Error reading directory ${dirPath}:`, error);
     return [];
@@ -1104,6 +1101,11 @@ app.get('/', async (req, res) => {
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, '../../public')));
 app.use(express.json());
+
+// Simple ping endpoint for connection testing
+app.get('/api/ping', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
 // Helper function to format time difference in a human-readable way
 function formatTimeDifference(milliseconds) {

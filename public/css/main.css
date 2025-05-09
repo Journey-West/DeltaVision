@@ -1248,6 +1248,48 @@ body.offline-mode .offline-indicator {
     margin-bottom: 0;
 }
 
+/* Firefox-specific optimizations */
+@-moz-document url-prefix() {
+    /* Optimize scrollbars for Firefox */
+    .diff-container {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-color) transparent;
+    }
+    
+    /* Better text rendering in Firefox for code blocks */
+    .diff-line, 
+    .diff-table .content-cell {
+        text-rendering: optimizeSpeed;
+        will-change: transform;
+    }
+    
+    /* Fix line height issues in Firefox */
+    .diff-table td {
+        line-height: 1.5;
+    }
+    
+    /* Optimize rendering performance for large diffs */
+    .diff-table {
+        contain: content;
+    }
+    
+    /* Prevent jank during scroll operations */
+    .file-list {
+        will-change: transform;
+        scroll-behavior: smooth;
+    }
+    
+    /* Optimize transitions for Firefox */
+    .file-entry {
+        transition: background-color 0.15s ease-out;
+    }
+    
+    /* Improve rendering of keyword highlights */
+    .highlighted-keyword {
+        background-clip: padding-box;
+    }
+}
+
 .category-header {
     font-size: 14px;
     font-weight: 600;

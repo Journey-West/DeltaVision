@@ -629,16 +629,23 @@ export function initFileManager() {
     
     // Update file metadata in the comparison header
     function updateFileMetadata(oldPath, newPath, fileType = 'comparison') {
-    console.log('[updateFileMetadata] Called with:', { oldPath, newPath, fileType });
+        console.log('[updateFileMetadata] Called with:', { oldPath, newPath, fileType });
+        // Get UI elements
         const oldPathElement = document.getElementById('oldFilePath');
         const newPathElement = document.getElementById('newFilePath');
         const oldLabel = document.getElementById('oldLabel');
         const newLabel = document.getElementById('newLabel');
         
+        // Check for missing elements and log warnings
         if (!oldPathElement || !newPathElement) {
-        console.warn('[updateFileMetadata] Missing oldPathElement or newPathElement:', { oldPathElement, newPathElement });
-        // Do not return early; allow metadata update to proceed
-    }
+            console.warn('[updateFileMetadata] Missing path elements:', { oldPathElement, newPathElement });
+        }
+        
+        if (!oldLabel || !newLabel) {
+            console.warn('[updateFileMetadata] Missing label elements:', { oldLabel, newLabel });
+        }
+        
+        // Continue with available elements to maximize functionality
         
         // File type specific handling
         if (fileType === 'new-only') {
@@ -649,7 +656,7 @@ export function initFileManager() {
                 oldPathElement.classList.add('empty');
             }
             
-            if (newPath) newLabel.style.display = 'block';
+            if (newPath && newLabel) newLabel.style.display = 'block';
             if (newPathElement) {
                 newPathElement.textContent = newPath ? newPath.split('/').pop() : 'No file selected';
                 newPathElement.classList.remove('empty');
@@ -672,7 +679,7 @@ export function initFileManager() {
             }
         } else if (fileType === 'old-only') {
             // Only old file is available (no new file)
-            if (oldPath) oldLabel.style.display = 'block';
+            if (oldPath && oldLabel) oldLabel.style.display = 'block';
             if (oldPathElement) {
                 oldPathElement.textContent = oldPath ? oldPath.split('/').pop() : 'No file selected';
                 oldPathElement.classList.remove('empty');
@@ -1009,6 +1016,20 @@ export function initFileManager() {
         
         html += '</tbody></table>';
         container.innerHTML = html;
+        
+        // Update summary statistics in the header
+        updateSummaryCounters(addedCount, removedCount, movedCount);
+        
+        // Also update detailed statistics panel if it exists
+        updateDetailedStatistics({
+            added: addedCount,
+            removed: removedCount,
+            moved: movedCount,
+            modified: modifiedCount,
+            totalChanges: addedCount + removedCount + movedCount + modifiedCount,
+            oldLines: oldLines.length,
+            newLines: newLines.length
+        });
     }
     
     // Detect moved lines between old and new content
@@ -1611,13 +1632,7 @@ export function initFileManager() {
         
         // Fetch fresh data
         await fetchFileData();
-    }
-
-    // Initial setup
-    loadSidebarState();
-    setupToggleListeners();
-    setupKeyboardNavigation(); // Add keyboard navigation setup
-    fetchFileData();
+    } // End of refreshFiles function
     
     // Set up refresh button
     const refreshBtn = document.getElementById('refreshButton');
@@ -1625,8 +1640,72 @@ export function initFileManager() {
         refreshBtn.addEventListener('click', refreshFiles);
     }
     
+    // Helper function to update summary counters in the diff area header
+    function updateSummaryCounters(added, removed, moved) {
+        // Update the line count indicators in the file summary header
+        const addedCounter = document.getElementById('addedLines');
+        const removedCounter = document.getElementById('removedLines');
+        const movedCounter = document.getElementById('movedLines');
+        
+        if (addedCounter) addedCounter.textContent = added;
+        if (removedCounter) removedCounter.textContent = removed;
+        if (movedCounter) movedCounter.textContent = moved;
+    }
+    
+    // Helper function to update detailed statistics panel
+    function updateDetailedStatistics(stats) {
+        // Update the detailed stats in the change statistics panel
+        const detailedElements = {
+            added: document.getElementById('detailedAddedCount'),
+            removed: document.getElementById('detailedRemovedCount'),
+            moved: document.getElementById('detailedMovedCount'),
+            modified: document.getElementById('detailedModifiedCount'),
+            total: document.getElementById('totalChangesCount')
+        };
+        
+        // Update counter values
+        if (detailedElements.added) detailedElements.added.textContent = stats.added;
+        if (detailedElements.removed) detailedElements.removed.textContent = stats.removed;
+        if (detailedElements.moved) detailedElements.moved.textContent = stats.moved;
+        if (detailedElements.modified) detailedElements.modified.textContent = stats.modified;
+        if (detailedElements.total) detailedElements.total.textContent = stats.totalChanges;
+        
+        // Update percentage bar if it exists
+        const percentageBar = document.getElementById('percentageBar');
+        const percentageText = document.getElementById('percentageText');
+        
+        if (percentageBar && percentageText) {
+            const totalLines = Math.max(stats.oldLines, stats.newLines);
+            const percentChanged = totalLines > 0 ? Math.round((stats.totalChanges / totalLines) * 100) : 0;
+            
+            percentageBar.style.width = `${percentChanged}%`;
+            percentageText.textContent = `${percentChanged}% of file changed`;
+        }
+        
+        // Update stat bars
+        updateStatBar('addedBar', stats.added, stats.totalChanges);
+        updateStatBar('removedBar', stats.removed, stats.totalChanges);
+        updateStatBar('movedBar', stats.moved, stats.totalChanges);
+        updateStatBar('modifiedBar', stats.modified, stats.totalChanges);
+    }
+    
+    // Helper to update the visualization bars
+    function updateStatBar(barId, value, total) {
+        const bar = document.getElementById(barId);
+        if (bar) {
+            const percentage = total > 0 ? (value / total) * 100 : 0;
+            bar.style.width = `${percentage}%`;
+        }
+    }
+
     // Expose key functions to the window for use by other components
     window.loadFileComparison = loadFileComparison;
+    
+    // Initial setup
+    loadSidebarState();
+    setupToggleListeners();
+    setupKeyboardNavigation(); // Add keyboard navigation setup
+    fetchFileData(); // This is critical for loading the files on startup
     
     // Return public methods
     return {

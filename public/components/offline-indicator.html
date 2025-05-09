@@ -1,13 +1,178 @@
-<!-- Offline status indicator -->
-<div class="offline-indicator">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="1" y1="1" x2="23" y2="23"></line>
-        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
-        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-        <line x1="12" y1="20" x2="12.01" y2="20"></line>
-    </svg>
-    Offline Mode - Changes will sync when back online
+<!-- Enhanced offline status indicator with reconnection capabilities -->
+<div class="offline-indicator" id="offlineIndicator">
+    <div class="offline-content">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+            <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+        <span id="offlineMessage">Offline Mode - Changes will sync when back online</span>
+    </div>
+    <div class="offline-actions">
+        <button id="retryConnectionBtn" class="retry-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+            Retry Connection
+        </button>
+        <button id="offlineCloseBtn" class="close-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
 </div>
+
+<!-- Add offline indicator script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let reconnectionAttempts = 0;
+        let reconnectionTimer = null;
+        let suppressNotifications = false;
+        
+        const offlineIndicator = document.getElementById('offlineIndicator');
+        const offlineMessage = document.getElementById('offlineMessage');
+        const retryBtn = document.getElementById('retryConnectionBtn');
+        const closeBtn = document.getElementById('offlineCloseBtn');
+        
+        // Function to update offline status
+        function updateOfflineStatus() {
+            const isOffline = !navigator.onLine;
+            
+            if (isOffline && !suppressNotifications) {
+                offlineIndicator.classList.add('visible');
+                offlineMessage.textContent = 'Offline Mode - Changes will sync when back online';
+                scheduleReconnectionAttempt();
+                
+                // Backup current state to localStorage
+                backupCurrentState();
+            } else if (!isOffline) {
+                reconnectionAttempts = 0;
+                clearTimeout(reconnectionTimer);
+                offlineIndicator.classList.remove('visible');
+                
+                // If we were previously offline, refresh data
+                if (offlineIndicator.classList.contains('reconnected')) {
+                    offlineIndicator.classList.remove('reconnected');
+                    refreshData();
+                }
+            }
+        }
+        
+        // Schedule reconnection attempts
+        function scheduleReconnectionAttempt() {
+            clearTimeout(reconnectionTimer);
+            
+            // Exponential backoff for retry attempts (max 30 seconds)
+            const delay = Math.min(5000 * Math.pow(1.5, reconnectionAttempts), 30000);
+            
+            reconnectionTimer = setTimeout(() => {
+                attemptReconnection();
+            }, delay);
+            
+            reconnectionAttempts++;
+        }
+        
+        // Try to reconnect
+        function attemptReconnection() {
+            if (!navigator.onLine) {
+                // Update message to show reconnection attempt
+                offlineMessage.textContent = `Attempting to reconnect (try ${reconnectionAttempts})...`;
+                
+                // Ping the server to check connection
+                fetch('/api/ping', { method: 'GET', cache: 'no-store' })
+                    .then(response => {
+                        if (response.ok) {
+                            // Successfully reconnected
+                            offlineMessage.textContent = 'Connection restored! Refreshing data...';
+                            offlineIndicator.classList.add('reconnected');
+                            
+                            // Wait a moment before refreshing
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            throw new Error('Server error');
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Reconnection failed:', error);
+                        offlineMessage.textContent = 'Offline Mode - Reconnection failed';
+                        scheduleReconnectionAttempt();
+                    });
+            }
+        }
+        
+        // Backup current state to localStorage
+        function backupCurrentState() {
+            try {
+                // Get current file comparison if available
+                const diffViewer = document.getElementById('diffViewer');
+                if (diffViewer) {
+                    const currentState = {
+                        oldPath: diffViewer.dataset.oldPath,
+                        newPath: diffViewer.dataset.newPath,
+                        oldContent: diffViewer.dataset.oldContent,
+                        newContent: diffViewer.dataset.newContent,
+                        timestamp: new Date().getTime()
+                    };
+                    
+                    localStorage.setItem('deltavision_state_backup', JSON.stringify(currentState));
+                    console.log('Current state backed up to localStorage');
+                }
+            } catch (error) {
+                console.error('Error backing up state:', error);
+            }
+        }
+        
+        // Refresh data from server
+        function refreshData() {
+            if (window.loadFileComparison && window.fileManager && window.fileManager.refreshFiles) {
+                try {
+                    // Try to restore previous state
+                    const stateBackup = localStorage.getItem('deltavision_state_backup');
+                    if (stateBackup) {
+                        const state = JSON.parse(stateBackup);
+                        if (state.oldPath && state.newPath) {
+                            setTimeout(() => {
+                                window.loadFileComparison(state.oldPath, state.newPath);
+                            }, 500);
+                        }
+                    }
+                    
+                    // Refresh file list
+                    window.fileManager.refreshFiles();
+                } catch (error) {
+                    console.error('Error refreshing data:', error);
+                }
+            }
+        }
+        
+        // Event listeners
+        window.addEventListener('online', updateOfflineStatus);
+        window.addEventListener('offline', updateOfflineStatus);
+        
+        retryBtn.addEventListener('click', () => {
+            reconnectionAttempts = 0;
+            attemptReconnection();
+        });
+        
+        closeBtn.addEventListener('click', () => {
+            offlineIndicator.classList.remove('visible');
+            suppressNotifications = true;
+            
+            // Reset after some time
+            setTimeout(() => {
+                suppressNotifications = false;
+            }, 60000); // 1 minute
+        });
+        
+        // Initial status check
+        updateOfflineStatus();
+    });
+</script>
