@@ -13,6 +13,7 @@
     <link href="/css/filtered-entries.css" rel="stylesheet">
     <link href="/css/keyboard-shortcuts.css" rel="stylesheet">
     <link href="/css/search-bar.css" rel="stylesheet">
+    <link href="/css/toggle-switch.css" rel="stylesheet">
     
     <!-- Additional stylesheets specific to components -->
     <style>
@@ -418,9 +419,13 @@
         {{ offline-indicator }}
     </div>
 
+    <!-- Socket.IO Client -->
+    <script src="/socket.io/socket.io.js"></script>
+    
     <!-- Main JS -->
     <script type="module">
         import { initFileManager } from './js/modules/file-manager.js';
+        import { initSocketManager } from './js/modules/socket-manager.js';
         import { initThemeManager } from './js/modules/theme-manager.js';
         import { initUiComponents } from './js/modules/ui-components.js';
         import { initKeywordSystem } from './js/modules/keyword-system.js';
@@ -442,6 +447,10 @@
             
             // Initialize file manager
             const fileManager = initFileManager();
+            
+            // Initialize real-time updates via Socket.IO
+            const socketManager = initSocketManager(fileManager.refreshFiles);
+            socketManager.init();
             
             // Initialize keyword system
             initKeywordSystem(fileManager);

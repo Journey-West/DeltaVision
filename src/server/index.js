@@ -4,6 +4,8 @@ const path = require('path');
 const chokidar = require('chokidar');
 const { promisify } = require('util');
 const componentLoader = require('./component-loader');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const readFileAsync = promisify(fs.readFile);
 const readdirAsync = promisify(fs.readdir);
@@ -11,7 +13,21 @@ const statAsync = promisify(fs.stat);
 const writeFileAsync = promisify(fs.writeFile);
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
 const PORT = 3000;
+
+// Socket.IO connection handler
+io.on('connection', (socket) => {
+  console.log('Client connected to socket');
+  
+  // Send initial data to newly connected clients
+  socket.emit('server-status', { status: 'connected' });
+  
+  socket.on('disconnect', () => {
+    console.log('Client disconnected from socket');
+  });
+});
 
 // Default folder paths will be empty until user configures them
 let oldFolderPath = "";
@@ -91,9 +107,26 @@ function setupWatcher(folderPath) {
     });
 
     watcher
-      .on('add', path => console.log(`File ${path} has been added`))
-      .on('change', path => console.log(`File ${path} has been changed`))
-      .on('unlink', path => console.log(`File ${path} has been removed`));
+      .on('add', async path => {
+        console.log(`File ${path} has been added`);
+        // Emit socket event with a small delay to ensure file is fully written
+        setTimeout(async () => {
+          // Collect updated file list and emit to all connected clients
+          try {
+            io.emit('file-added', { path, timestamp: new Date().toISOString() });
+          } catch (err) {
+            console.error('Error emitting file-added event:', err);
+          }
+        }, 500); // Small delay to ensure file is fully written
+      })
+      .on('change', path => {
+        console.log(`File ${path} has been changed`);
+        io.emit('file-changed', { path, timestamp: new Date().toISOString() });
+      })
+      .on('unlink', path => {
+        console.log(`File ${path} has been removed`);
+        io.emit('file-removed', { path, timestamp: new Date().toISOString() });
+      });
       
     console.log(`Watching for file changes in ${folderPath}`);
   } else {
@@ -1305,9 +1338,10 @@ async function initApp() {
     setupWatcher(newFolderPath);
   }
   
-  // Start the server
-  app.listen(PORT, () => {
+  // Start the server with Socket.IO
+  server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Socket.IO service enabled for real-time updates`);
     if (newFolderPath) {
       console.log(`Watching for file changes in ${newFolderPath}`);
     } else {

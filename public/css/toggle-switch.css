@@ -1,0 +1,125 @@
+/**
+ * DeltaVision Toggle Switch Styles
+ * Custom styling for toggle switches used throughout the application
+ */
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 6px;
+    background-color: var(--container-bg);
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    margin-top: 24px; /* Add extra space above the auto-refresh section */
+}
+
+.setting-row:hover {
+    background-color: var(--file-entry-hover);
+}
+
+.setting-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+}
+
+.setting-label i {
+    margin-right: 8px;
+    color: var(--primary-color);
+}
+
+.setting-description {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Toggle Switch Component */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-tertiary);
+    transition: .3s;
+    border-radius: 34px;
+    border: 1px solid var(--border-color);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 2px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+input:focus + .toggle-slider {
+    box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+/* Special styling for auto-refresh toggle */
+.toggle-switch.auto-refresh .toggle-slider {
+    background-color: var(--bg-tertiary);
+}
+
+.toggle-switch.auto-refresh .toggle-slider:before {
+    background-color: white;
+}
+
+.toggle-switch.auto-refresh input:checked + .toggle-slider {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.toggle-switch.auto-refresh input:checked + .toggle-slider:before {
+    background-color: white;
+}
+
+/* Status indicators */
+.toggle-status {
+    font-size: 12px;
+    font-weight: 500;
+    margin-right: 8px;
+}
+
+.toggle-status.on {
+    color: var(--accent-color);
+}
+
+.toggle-status.off {
+    color: var(--text-muted);
+}

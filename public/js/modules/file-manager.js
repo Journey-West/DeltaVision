@@ -2048,8 +2048,8 @@ export function initFileManager() {
     
     // Return public methods
     return {
-        refreshFiles,
         toggleSidebar,
-        loadFileComparison
+        loadFileComparison,
+        refreshFiles // Export refreshFiles function for socket-manager to use
     };
 }
