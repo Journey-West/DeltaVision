@@ -844,7 +844,7 @@ export function initFileManager() {
             </thead>
             <tbody>`;
         
-        // Determine number of lines to show
+        // Determine number of lines to show - ensure we include all lines
         const maxLines = Math.max(oldLines.length, newLines.length);
         
         // Stats to be updated during rendering
@@ -880,7 +880,7 @@ export function initFileManager() {
                     const processedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ?
                         newLine : newLine;
                     
-                    // Then apply word/char diff 
+                    // Apply word/char diff only when both lines exist and are different
                     if (hasOldLine && hasNewLine && oldLine !== newLine) {
                         const [markedOldLine, markedNewLine] = diffLevel === 'word' ? 
                             computeWordDiff(processedOldLine, processedNewLine) : 
@@ -889,8 +889,45 @@ export function initFileManager() {
                         // Use the marked lines directly
                         highlightedOldLine = markedOldLine;
                         highlightedNewLine = markedNewLine;
+                    } else if (hasNewLine) {
+                        // For new-only lines, make them consistent with the current diff mode
+                        const escapedNewLine = escapeHtml(newLine);
+                        
+                        // First apply keyword highlighting if enabled
+                        let processedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ? 
+                            window.keywordHighlight.highlightLine(newLine) : escapedNewLine;
+                        
+                        if (diffLevel === 'char') {
+                            // For character diff mode, if the line has HTML (from keyword highlighting), 
+                            // use a special approach that preserves the HTML
+                            if (processedNewLine !== escapedNewLine) {
+                                highlightedNewLine = processedNewLine;
+                            } else {
+                                // No HTML, so we can apply character-level highlighting directly
+                                highlightedNewLine = '';
+                                for (let charIdx = 0; charIdx < newLine.length; charIdx++) {
+                                    const char = escapeHtml(newLine[charIdx]);
+                                    highlightedNewLine += `<span class="char-added">${char}</span>`;
+                                }
+                            }
+                        } else if (diffLevel === 'word') {
+                            // For word diff mode, if the line has HTML (from keyword highlighting),
+                            // use a special approach that preserves the HTML
+                            if (processedNewLine !== escapedNewLine) {
+                                highlightedNewLine = processedNewLine;
+                            } else {
+                                // No HTML, so we can apply word-level highlighting directly
+                                const words = escapedNewLine.split(/\b/);
+                                highlightedNewLine = words.map(word => {
+                                    return word.trim() ? `<span class="word-added">${word}</span>` : word;
+                                }).join('');
+                            }
+                        } else {
+                            // For line diff mode, just use the processed line
+                            highlightedNewLine = processedNewLine;
+                        }
                     } else {
-                        // No diff needed for identical lines
+                        // No diff needed, just escape HTML and apply keyword highlighting
                         highlightedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ? 
                             window.keywordHighlight.highlightLine(oldLine) : escapeHtml(oldLine);
                         highlightedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ? 
@@ -909,6 +946,33 @@ export function initFileManager() {
             let oldCellClass = "";
             let newCellClass = "";
             
+            // Only apply cell-level highlighting in Line Diff mode
+            // For other modes, we'll let the character/word highlighting handle it
+            if (diffLevel === 'line') {
+                if (hasOldLine && !hasNewLine) {
+                    oldCellClass = "removed";
+                    // Count for statistics if not processed as a move
+                    if (!movedOldLines.has(i)) {
+                        removedCount++;
+                    }
+                } else if (!hasOldLine && hasNewLine) {
+                    newCellClass = "added";
+                    // Count for statistics if not processed as a move
+                    if (!movedNewLines.has(i)) {
+                        addedCount++;
+                    }
+                }
+            } else {
+                // For word/char modes, we track statistics but don't apply cell-level classes
+                // This prevents the cell background from overriding the character/word highlighting
+                if (hasOldLine && !hasNewLine && !movedOldLines.has(i)) {
+                    removedCount++;
+                } else if (!hasOldLine && hasNewLine && !movedNewLines.has(i)) {
+                    addedCount++;
+                }
+            }
+            
+            // Apply additional diff level styling
             if (diffHighlightingEnabled && diffLevel === 'line') {
                 // First case: Both lines exist
                 if (hasOldLine && hasNewLine) {
