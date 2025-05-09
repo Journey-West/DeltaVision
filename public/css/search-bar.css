@@ -146,4 +146,44 @@
 .file-entry.search-match {
     background-color: var(--primary-transparent);
     border-left: 3px solid var(--primary-color);
+    margin: 4px 0;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.file-entry.search-match:hover {
+    background-color: var(--hover-color, rgba(77, 156, 227, 0.2));
+    transform: translateX(2px);
+}
+
+/* Improve the search match highlighting within file names */
+.file-entry.search-match .search-match {
+    background-color: rgba(255, 230, 0, 0.3);
+    border-radius: 3px;
+    padding: 1px 3px;
+    margin: 0 -1px;
+    font-weight: 500;
+    box-shadow: 0 0 0 1px rgba(255, 230, 0, 0.4);
+}
+
+/* Badge styling improvements */
+.match-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    padding: 0 6px;
+    margin-left: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.file-entry.search-match:hover .match-count {
+    transform: scale(1.1);
 }

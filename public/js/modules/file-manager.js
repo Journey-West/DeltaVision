@@ -633,16 +633,17 @@ export function initFileManager() {
         // Get UI elements
         const oldPathElement = document.getElementById('oldFilePath');
         const newPathElement = document.getElementById('newFilePath');
-        const oldLabel = document.getElementById('oldLabel');
-        const newLabel = document.getElementById('newLabel');
+        const oldLabel = document.querySelector('.old-label');
+        const newLabel = document.querySelector('.new-label');
         
         // Check for missing elements and log warnings
         if (!oldPathElement || !newPathElement) {
             console.warn('[updateFileMetadata] Missing path elements:', { oldPathElement, newPathElement });
         }
         
-        if (!oldLabel || !newLabel) {
-            console.warn('[updateFileMetadata] Missing label elements:', { oldLabel, newLabel });
+        // Only log warning if we really need to use these elements
+        if ((!oldLabel || !newLabel) && fileType !== 'new-only' && fileType !== 'old-only') {
+            console.debug('[updateFileMetadata] Note: Label elements using classes instead of IDs:', { oldLabel, newLabel });
         }
         
         // Continue with available elements to maximize functionality
