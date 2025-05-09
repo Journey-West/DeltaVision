@@ -1017,6 +1017,9 @@ export function initFileManager() {
         html += '</tbody></table>';
         container.innerHTML = html;
         
+        // Apply search term highlighting if there's an active search
+        highlightSearchTermsInDiffView(container);
+        
         // Update summary statistics in the header
         updateSummaryCounters(addedCount, removedCount, movedCount);
         
@@ -1698,6 +1701,108 @@ export function initFileManager() {
         }
     }
 
+    // Function to highlight search terms in the diff view after rendering
+    function highlightSearchTermsInDiffView(container) {
+        // Check if there's an active search query to highlight
+        if (!window.fileSearch || 
+            typeof window.fileSearch.getCurrentQuery !== 'function' || 
+            typeof window.fileSearch.isSearchActive !== 'function') {
+            return; // Search module not available
+        }
+        
+        const searchQuery = window.fileSearch.getCurrentQuery();
+        if (!searchQuery || !window.fileSearch.isSearchActive()) {
+            return; // No active search
+        }
+        
+        try {
+            console.log(`[highlightSearchTermsInDiffView] Highlighting search term: "${searchQuery}"`);
+            
+            // Get all text content from the diff view (the content cells)
+            const contentCells = container.querySelectorAll('td.content-cell');
+            if (!contentCells || contentCells.length === 0) {
+                return; // No content cells found
+            }
+            
+            // Create a text node walker to find text nodes containing our search term
+            const walker = document.createTreeWalker(
+                container,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode: function(node) {
+                        // Skip nodes that are empty or only whitespace
+                        if (!node.textContent.trim()) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        
+                        // Accept nodes containing the search term (case insensitive)
+                        if (node.textContent.toLowerCase().includes(searchQuery.toLowerCase())) {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        
+                        return NodeFilter.FILTER_SKIP;
+                    }
+                }
+            );
+            
+            // Create a document fragment to store the current node text
+            const parser = new DOMParser();
+            const replacements = [];
+            
+            // Walk through text nodes and collect those containing our search term
+            let currentNode;
+            while (currentNode = walker.nextNode()) {
+                // Skip nodes that are inside a .search-term-highlight span
+                let parent = currentNode.parentNode;
+                let isInsideHighlight = false;
+                
+                while (parent && parent !== container) {
+                    if (parent.classList && parent.classList.contains('search-term-highlight')) {
+                        isInsideHighlight = true;
+                        break;
+                    }
+                    parent = parent.parentNode;
+                }
+                
+                if (isInsideHighlight) {
+                    continue; // Skip nodes already inside a highlight
+                }
+                
+                // Replace the text with highlighted version
+                const text = currentNode.textContent;
+                const escapedTerm = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedTerm})`, 'gi');
+                const highlightedText = text.replace(regex, '<span class="search-term-highlight">$1</span>');
+                
+                if (text !== highlightedText) {
+                    // Store the node and its replacement for later processing
+                    replacements.push({
+                        node: currentNode,
+                        html: highlightedText
+                    });
+                }
+            }
+            
+            // Now replace all the identified nodes
+            replacements.forEach(replacement => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = replacement.html;
+                
+                const fragment = document.createDocumentFragment();
+                while (tempDiv.firstChild) {
+                    fragment.appendChild(tempDiv.firstChild);
+                }
+                
+                replacement.node.parentNode.replaceChild(fragment, replacement.node);
+            });
+            
+            console.log(`[highlightSearchTermsInDiffView] Highlighted ${replacements.length} occurrences of "${searchQuery}"`);
+            
+        } catch (error) {
+            console.error('Error highlighting search terms in diff view:', error);
+        }
+    }
+    
     // Expose key functions to the window for use by other components
     window.loadFileComparison = loadFileComparison;
     

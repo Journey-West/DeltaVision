@@ -12,6 +12,7 @@
     <link href="/css/main.css" rel="stylesheet">
     <link href="/css/filtered-entries.css" rel="stylesheet">
     <link href="/css/keyboard-shortcuts.css" rel="stylesheet">
+    <link href="/css/search-bar.css" rel="stylesheet">
     
     <!-- Additional stylesheets specific to components -->
     <style>
@@ -423,6 +424,7 @@
         import { initThemeManager } from './js/modules/theme-manager.js';
         import { initUiComponents } from './js/modules/ui-components.js';
         import { initKeywordSystem } from './js/modules/keyword-system.js';
+        import { initFileSearch } from './js/modules/file-search.js';
         import { initThemeLoader, createThemeEditor } from './js/theme-loader.js';
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -443,6 +445,9 @@
             
             // Initialize keyword system
             initKeywordSystem(fileManager);
+            
+            // Initialize file search system
+            initFileSearch(fileManager);
         });
     </script>
 </body>

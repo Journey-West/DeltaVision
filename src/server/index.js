@@ -1107,6 +1107,155 @@ app.get('/api/ping', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// Search files by content
+app.post('/api/search', async (req, res) => {
+  try {
+    const { query } = req.body;
+    
+    if (!query || query.trim() === '') {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+    
+    console.log(`[Search] Received search request for: "${query}"`);  
+    
+    // Check if the folders exist
+    if (!oldFolderPath || !newFolderPath) {
+      console.error('[Search] Folder paths not configured');
+      return res.status(500).json({ error: 'Folder paths not configured' });
+    }
+    
+    // Instead of using metadata, directly search files in old/new folders
+    const searchResults = [];
+    
+    // Function to search files in a directory
+    async function searchDirectory(directory, isOldDir) {
+      try {
+        if (!fs.existsSync(directory)) {
+          console.log(`[Search] Directory does not exist: ${directory}`);
+          return;
+        }
+
+        const files = await readdirAsync(directory);
+        console.log(`[Search] Found ${files.length} files in ${directory}`);
+        
+        // Process files sequentially to avoid overwhelming the system
+        for (const filename of files) {
+          try {
+            // Skip non-text files and hidden files
+            if (filename.startsWith('.')) continue;
+            
+            const filePath = path.join(directory, filename);
+            const stats = await statAsync(filePath);
+            
+            // Skip directories
+            if (stats.isDirectory()) continue;
+            
+            try {
+              // Read file content
+              const content = await fs.promises.readFile(filePath, 'utf8');
+              
+              // Simple string search (case insensitive)
+              if (content.toLowerCase().includes(query.toLowerCase())) {
+                // Count matches with regex for accuracy
+                const searchRegex = new RegExp(query, 'gi');
+                const matches = (content.match(searchRegex) || []).length;
+                
+                if (matches > 0) {
+                  console.log(`[Search] Found ${matches} matches in ${filename}`);
+                  
+                  // Create result object based on whether it's from old or new dir
+                  const resultObj = {
+                    command: '',
+                    commandRan: '',
+                    timestamp: stats.mtime.getTime(),
+                    matches: matches
+                  };
+                  
+                  if (isOldDir) {
+                    resultObj.fileType = 'old-only';
+                    resultObj.oldFile = {
+                      filename,
+                      path: filePath,
+                      mtime: stats.mtime
+                    };
+                  } else {
+                    resultObj.fileType = 'new-only';
+                    resultObj.newFile = {
+                      filename,
+                      path: filePath,
+                      mtime: stats.mtime
+                    };
+                  }
+                  
+                  // Check if this file also exists in the other directory
+                  const otherDir = isOldDir ? newFolderPath : oldFolderPath;
+                  const otherPath = path.join(otherDir, filename);
+                  
+                  if (fs.existsSync(otherPath)) {
+                    const otherStats = await statAsync(otherPath);
+                    
+                    // This is a comparison file (exists in both dirs)
+                    resultObj.fileType = 'comparison';
+                    
+                    if (isOldDir) {
+                      resultObj.newFile = {
+                        filename,
+                        path: otherPath,
+                        mtime: otherStats.mtime
+                      };
+                    } else {
+                      resultObj.oldFile = {
+                        filename,
+                        path: otherPath,
+                        mtime: otherStats.mtime
+                      };
+                    }
+                  }
+                  
+                  // Add to results
+                  searchResults.push(resultObj);
+                }
+              }
+            } catch (readErr) {
+              console.error(`[Search] Error reading ${filePath}: ${readErr.message}`);
+            }
+          } catch (fileErr) {
+            console.error(`[Search] Error processing ${filename}: ${fileErr.message}`);
+          }
+        }
+      } catch (dirErr) {
+        console.error(`[Search] Error searching directory ${directory}: ${dirErr.message}`);
+      }
+    }
+    
+    // Search both directories
+    await searchDirectory(oldFolderPath, true);
+    await searchDirectory(newFolderPath, false);
+    
+    // Deduplicate results based on filename
+    const uniqueResults = [];
+    const seen = new Set();
+    
+    for (const result of searchResults) {
+      const filename = result.oldFile?.filename || result.newFile?.filename;
+      if (!seen.has(filename)) {
+        seen.add(filename);
+        uniqueResults.push(result);
+      }
+    }
+    
+    // Sort results by number of matches (descending)
+    uniqueResults.sort((a, b) => b.matches - a.matches);
+    
+    console.log(`[Search] Found ${uniqueResults.length} unique files containing "${query}"`);
+    
+    res.json(uniqueResults);
+  } catch (error) {
+    console.error('[Search] Error in search endpoint:', error);
+    res.status(500).json({ error: 'An error occurred during search' });
+  }
+});
+
 // Helper function to format time difference in a human-readable way
 function formatTimeDifference(milliseconds) {
   const seconds = Math.floor(milliseconds / 1000);

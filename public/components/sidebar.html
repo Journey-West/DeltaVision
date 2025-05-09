@@ -8,6 +8,29 @@
         </button>
     </div>
     
+    <!-- Search bar for filtering files -->
+    <div class="search-container">
+        <div class="search-bar">
+            <input type="text" id="fileSearchInput" placeholder="Search in files..." autocomplete="off">
+            <button id="fileSearchButton" class="search-button" title="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+            <button id="clearSearchButton" class="clear-button" title="Clear search" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div id="searchStatus" class="search-status" style="display: none;">
+            <span id="searchResultsCount">0</span> results found
+            <button id="resetSearchButton" class="reset-search-button">Reset</button>
+        </div>
+    </div>
+    
     <!-- Unified file list container -->
     <div class="file-list-section">
         <div id="unifiedFileList" class="file-list">

@@ -1,0 +1,149 @@
+/* Search bar styles */
+.search-container {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--file-entry-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.search-bar:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-transparent);
+}
+
+#fileSearchInput {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 12px;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    width: 100%;
+    outline: none;
+}
+
+#fileSearchInput::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.search-button, 
+.clear-button {
+    background: none;
+    border: none;
+    padding: 8px 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.search-button:hover, 
+.clear-button:hover {
+    color: var(--primary-color);
+}
+
+.search-status {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reset-search-button {
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.reset-search-button:hover {
+    text-decoration: underline;
+    background-color: var(--primary-transparent);
+}
+
+/* Highlight search results in file content */
+.search-match {
+    background-color: rgba(255, 230, 0, 0.3);
+    border-radius: 2px;
+    padding: 0 2px;
+    margin: 0 -2px;
+}
+
+/* Highlight search terms in diff view */
+.search-term-highlight {
+    background-color: rgba(255, 165, 0, 0.4); /* Orange background */
+    border-radius: 2px;
+    padding: 0 2px;
+    margin: 0 -2px;
+    font-weight: bold;
+    box-shadow: 0 0 2px rgba(255, 165, 0, 0.8);
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    animation: pulse-highlight 2s infinite;
+}
+
+@keyframes pulse-highlight {
+    0% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.7); }
+    70% { box-shadow: 0 0 0 4px rgba(255, 165, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0); }
+}
+
+/* Match count badge for file entries */
+.match-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    padding: 0 6px;
+    margin-left: 8px;
+}
+
+/* Show loading animation during search */
+.search-loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(var(--primary-color-rgb), 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: search-spin 0.8s linear infinite;
+    margin-right: 6px;
+}
+
+@keyframes search-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Hide files that don't match search */
+.file-entry.search-hidden {
+    display: none;
+}
+
+/* Style for emphasizing search match in file list */
+.file-entry.search-match {
+    background-color: var(--primary-transparent);
+    border-left: 3px solid var(--primary-color);
+}
