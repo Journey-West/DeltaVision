@@ -847,6 +847,13 @@ export function initFileManager() {
         // Determine number of lines to show - ensure we include all lines
         const maxLines = Math.max(oldLines.length, newLines.length);
         
+        // Create sets to track which lines have already been counted
+        // This prevents double-counting in different parts of the code
+        const countedAddedLines = new Set();
+        const countedRemovedLines = new Set();
+        const countedMovedLines = new Set();
+        const countedModifiedLines = new Set();
+        
         // Stats to be updated during rendering
         let addedCount = 0;
         let removedCount = 0;
@@ -948,68 +955,83 @@ export function initFileManager() {
             
             // Only apply cell-level highlighting in Line Diff mode
             // For other modes, we'll let the character/word highlighting handle it
+            // Determine highlighting classes and update statistics
             if (diffLevel === 'line') {
                 if (hasOldLine && !hasNewLine) {
                     oldCellClass = "removed";
-                    // Count for statistics if not processed as a move
-                    if (!movedOldLines.has(i)) {
+                    // Count for statistics if not processed as a move and not already counted
+                    if (!movedOldLines.has(i) && !countedRemovedLines.has(i)) {
                         removedCount++;
+                        countedRemovedLines.add(i);
                     }
                 } else if (!hasOldLine && hasNewLine) {
                     newCellClass = "added";
-                    // Count for statistics if not processed as a move
-                    if (!movedNewLines.has(i)) {
+                    // Count for statistics if not processed as a move and not already counted
+                    if (!movedNewLines.has(i) && !countedAddedLines.has(i)) {
                         addedCount++;
+                        countedAddedLines.add(i);
                     }
                 }
             } else {
                 // For word/char modes, we track statistics but don't apply cell-level classes
                 // This prevents the cell background from overriding the character/word highlighting
-                if (hasOldLine && !hasNewLine && !movedOldLines.has(i)) {
-                    removedCount++;
-                } else if (!hasOldLine && hasNewLine && !movedNewLines.has(i)) {
-                    addedCount++;
+                if (hasOldLine && !hasNewLine) {
+                    // Count as removed if not processed as a move and not already counted
+                    if (!movedOldLines.has(i) && !countedRemovedLines.has(i)) {
+                        removedCount++;
+                        countedRemovedLines.add(i);
+                    }
+                } else if (!hasOldLine && hasNewLine) {
+                    // Count as added if not processed as a move and not already counted
+                    if (!movedNewLines.has(i) && !countedAddedLines.has(i)) {
+                        addedCount++;
+                        countedAddedLines.add(i);
+                    }
                 }
             }
             
-            // Apply additional diff level styling
+            // Apply additional diff level styling for Line diff mode
             if (diffHighlightingEnabled && diffLevel === 'line') {
-                // First case: Both lines exist
+                // First case: Both lines exist but are different
                 if (hasOldLine && hasNewLine) {
                     if (oldLine !== newLine) {
                         oldCellClass = "removed";
                         newCellClass = "added";
-                        // Count for statistics if not processed as a move
+                        // Count for statistics if not processed as a move and not already counted
                         if (!(movedOldLines.has(i) || movedNewLines.has(i))) {
-                            removedCount++;
-                            addedCount++;
+                            // Track modified line (changed but not moved)
+                            if (!countedModifiedLines.has(i)) {
+                                modifiedCount++;
+                                countedModifiedLines.add(i);
+                            }
+                            
+                            // Only count as added/removed if not already counted
+                            if (!countedRemovedLines.has(i)) {
+                                removedCount++;
+                                countedRemovedLines.add(i);
+                            }
+                            if (!countedAddedLines.has(i)) {
+                                addedCount++;
+                                countedAddedLines.add(i);
+                            }
                         }
                     }
-                } 
-                // Second case: Line only exists in old file
-                else if (hasOldLine) {
-                    oldCellClass = "removed";
-                    // Count for statistics if not processed as a move
-                    if (!movedOldLines.has(i)) {
-                        removedCount++;
-                    }
-                } 
-                // Third case: Line only exists in new file
-                else if (hasNewLine) {
-                    newCellClass = "added";
-                    // Count for statistics if not processed as a move
-                    if (!movedNewLines.has(i)) {
-                        addedCount++;
-                    }
                 }
+                // We don't need to handle old-only and new-only cases here
+                // as they were already handled in the previous code block
                 
                 // Special case for new lines at the end of the file
                 // Always mark lines beyond old file's length as additions
                 if (hasNewLine && i >= oldLines.length) {
-                    newCellClass = "added";
-                    // Only count if not already counted as moved
-                    if (!movedNewLines.has(i) && !newCellClass.includes("added")) {
+                    // In line diff mode, apply the proper CSS class
+                    if (diffLevel === 'line') {
+                        newCellClass = "added";
+                    }
+                    
+                    // Only count if not already counted as moved or added
+                    if (!movedNewLines.has(i) && !countedAddedLines.has(i)) {
                         addedCount++;
+                        countedAddedLines.add(i);
                     }
                 }
             } else {
@@ -1030,9 +1052,16 @@ export function initFileManager() {
             if (displayMoves) {
                 if (hasOldLine && movedOldLines.has(i)) {
                     oldCellClass = "moved";
+                    // Count moved lines only once
+                    if (!countedMovedLines.has(i)) {
+                        movedCount++;
+                        countedMovedLines.add(i);
+                    }
                 }
                 if (hasNewLine && movedNewLines.has(i)) {
                     newCellClass = "moved";
+                    // Don't double count moved lines
+                    // We only count them once on the old side
                 }
             }
             
@@ -1055,6 +1084,7 @@ export function initFileManager() {
                 }
             }
             
+            // Generate HTML with proper CSS classes
             html += `<tr class="${i % 2 === 0 ? 'even-row' : 'odd-row'}">
                 <td class="line-number">${oldLineDisplay}</td>
                 <td class="${oldCellClass} content-cell">${highlightedOldLine}</td>
@@ -1062,20 +1092,18 @@ export function initFileManager() {
                 <td class="${newCellClass} content-cell">${highlightedNewLine}</td>
             </tr>`;
             
-            // Handle CSS classes for the line
-            const oldLineClass = getLineClass(oldLine, newLine, i, diffLevel, movedOldLines, movedNewLines);
-            const newLineClass = getLineClass(newLine, oldLine, i, diffLevel, movedNewLines, movedOldLines);
+            // Statistics are now tracked separately with our counting sets
             
-            // Update counts
-            if (oldLineClass.includes('removed')) removedCount++;
-            if (newLineClass.includes('added')) addedCount++;
-            if (oldLineClass.includes('moved') || newLineClass.includes('moved')) movedCount++;
-            
-            // Calculate modified lines (changed but not purely added/removed)
-            if (oldLine && newLine && oldLine !== newLine && 
-                !oldLineClass.includes('removed') && !newLineClass.includes('added') && 
-                !oldLineClass.includes('moved') && !newLineClass.includes('moved')) {
+            // In case we missed something important in this loop iteration (unlikely but safe)
+            // These checks use the tracking sets to ensure we don't double-count
+            if (hasOldLine && hasNewLine && oldLine !== newLine && 
+                !countedModifiedLines.has(i) && 
+                !countedMovedLines.has(i) && 
+                !countedAddedLines.has(i) && 
+                !countedRemovedLines.has(i)) {
+                // This is an uncounted modified line
                 modifiedCount++;
+                countedModifiedLines.add(i);
             }
         }
         
@@ -1085,10 +1113,9 @@ export function initFileManager() {
         // Apply search term highlighting if there's an active search
         highlightSearchTermsInDiffView(container);
         
-        // Update summary statistics in the header
-        updateSummaryCounters(addedCount, removedCount, movedCount);
+        // Statistics counters removed as requested
         
-        // Also update detailed statistics panel if it exists
+        // Update detailed statistics panel if it exists
         updateDetailedStatistics({
             added: addedCount,
             removed: removedCount,
@@ -1708,17 +1735,7 @@ export function initFileManager() {
         refreshBtn.addEventListener('click', refreshFiles);
     }
     
-    // Helper function to update summary counters in the diff area header
-    function updateSummaryCounters(added, removed, moved) {
-        // Update the line count indicators in the file summary header
-        const addedCounter = document.getElementById('addedLines');
-        const removedCounter = document.getElementById('removedLines');
-        const movedCounter = document.getElementById('movedLines');
-        
-        if (addedCounter) addedCounter.textContent = added;
-        if (removedCounter) removedCounter.textContent = removed;
-        if (movedCounter) movedCounter.textContent = moved;
-    }
+    // Statistics counter functionality removed as requested
     
     // Helper function to update detailed statistics panel
     function updateDetailedStatistics(stats) {
