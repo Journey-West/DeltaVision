@@ -709,7 +709,7 @@ app.get('/api/filter-by-keyword', async (req, res) => {
     // If folders are not configured yet, return empty arrays
     if ((!oldFolderPath && !newFolderPath) || Object.keys(keywordHighlights).length === 0) {
       console.log('Folders not configured or no keywords loaded, returning empty arrays');
-      return res.json({ oldNewFiles: [], timeComparisons: [] });
+      return res.json({ oldNewFiles: [], timeComparisons: [], sameCommandDiffs: [] });
     }
     
     // Get all files
@@ -1294,6 +1294,81 @@ async function initApp() {
     }
   });
 }
+
+// API endpoint to detect and retrieve same commands run at different times
+app.get('/api/same-command-diffs', async (req, res) => {
+  try {
+    // Only check the new folder for same command diffs
+    if (!newFolderPath) {
+      return res.json({ sameCommandDiffs: [] });
+    }
+
+    const files = await readdirAsync(newFolderPath);
+    const commandGroups = {};
+
+    // Process each file to extract command information
+    for (const file of files) {
+      try {
+        const filePath = path.join(newFolderPath, file);
+        const stats = await statAsync(filePath);
+        
+        if (stats.isFile()) {
+          // Read the first line to extract timestamp and command
+          const data = await readFileAsync(filePath, 'utf8');
+          const firstLine = data.split('\n')[0] || '';
+          
+          // Extract timestamp (format: YYYY-MM-DD HH:MM:SS)
+          const timestampMatch = firstLine.match(/(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/);
+          const timestamp = timestampMatch ? new Date(timestampMatch[1]) : stats.mtime;
+          
+          // Extract command from quoted part or use filename
+          const commandMatch = firstLine.match(/"([^"]+)"/); 
+          const command = commandMatch ? commandMatch[1] : path.basename(file, path.extname(file));
+          
+          // Group by command
+          if (!commandGroups[command]) {
+            commandGroups[command] = [];
+          }
+          
+          commandGroups[command].push({
+            path: filePath,
+            filename: file,
+            timestamp: timestamp
+          });
+        }
+      } catch (error) {
+        console.error(`Error processing file ${file}:`, error);
+      }
+    }
+    
+    // Find commands with multiple runs
+    const sameCommandDiffs = [];
+    
+    for (const [command, runs] of Object.entries(commandGroups)) {
+      // Only include commands with multiple runs
+      if (runs.length > 1) {
+        // Sort by timestamp (newest first)
+        runs.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Find the time difference between newest and oldest run
+        const newestRun = runs[0];
+        const oldestRun = runs[runs.length - 1];
+        const timeDiff = newestRun.timestamp - oldestRun.timestamp;
+        
+        sameCommandDiffs.push({
+          command,
+          runs,
+          timeDiff: formatTimeDifference(timeDiff)
+        });
+      }
+    }
+    
+    res.json({ sameCommandDiffs });
+  } catch (error) {
+    console.error('Error detecting same command diffs:', error);
+    res.status(500).json({ error: 'Failed to detect same command diffs' });
+  }
+});
 
 // Start the application
 initApp();

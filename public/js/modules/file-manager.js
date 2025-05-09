@@ -4,6 +4,7 @@ export function initFileManager() {
     let oldFiles = [];
     let newFiles = [];
     let timeComparisons = [];
+    let sameCommandDiffs = []; // Track identical commands run at different times
     let selectedFile = null;
     let selectedFileIndex = -1; // Track the currently selected file index
     
@@ -11,45 +12,158 @@ export function initFileManager() {
     async function fetchFileData() {
         try {
             // Show loading state
-            document.getElementById('unifiedFileList').innerHTML = '<div class="loading"><div class="spinner"></div>Loading files...</div>';
+            const unifiedList = document.getElementById('unifiedFileList');
+            if (unifiedList) {
+                unifiedList.innerHTML = '<div class="loading"><div class="spinner"></div>Loading files...</div>';
+            }
             
-            // Fetch old-new comparison files
-            const oldNewResponse = await fetch('/api/files');
-            const matchedFiles = await oldNewResponse.json();
+            // Get current folder configuration
+            const folderResponse = await fetch('/api/folders');
+            const folderData = await folderResponse.json();
             
-            // Render the files
-            renderFileList(matchedFiles);
+            // Check if folders are configured
+            const foldersConfigured = !!(folderData.newFolderPath);
             
+            if (foldersConfigured) {
+                // Fetch files
+                const fileResponse = await fetch('/api/files');
+                const fileData = await fileResponse.json();
+                
+                // Also fetch same-command diffs
+                const sameCommandResponse = await fetch('/api/same-command-diffs');
+                const sameCommandData = await sameCommandResponse.json();
+                
+                // Cache the file data
+                updateFileData(fileData, sameCommandData.sameCommandDiffs || []);
+                
+                // Render the files in the UI
+                renderFileList();
+            } else {
+                // Show welcome/setup prompt
+                if (unifiedList) {
+                    unifiedList.innerHTML = '<div class="welcome-message">\n' +
+                        '<h2>Welcome to DeltaVision</h2>\n' +
+                        '<p>To get started, please configure your folders:</p>\n' +
+                        '<button id="configureButton" class="config-button">Configure Folders</button>\n' +
+                    '</div>';
+                    
+                    const configBtn = document.getElementById('configureButton');
+                    if (configBtn) {
+                        configBtn.addEventListener('click', showFolderConfigModal);
+                    }
+                }
+            }
         } catch (error) {
             console.error('Error fetching file data:', error);
-            document.getElementById('unifiedFileList').innerHTML = '<div class="error">Error loading files. Please try again.</div>';
+            const unifiedList = document.getElementById('unifiedFileList');
+            if (unifiedList) {
+                unifiedList.innerHTML = `<div class="error-message">Error loading files: ${error.message}</div>`;
+            }
         }
     }
     
+    // Update internal file data
+    function updateFileData(fileData, commandDiffs = []) {
+        // Store the file data
+        oldFiles = [];
+        newFiles = [];
+        timeComparisons = [];
+        sameCommandDiffs = commandDiffs;
+        
+        // Process the file data
+        fileData.forEach(file => {
+            if (file.fileType === 'old-only') {
+                oldFiles.push(file);
+            } else if (file.fileType === 'new-only') {
+                newFiles.push(file);
+            } else if (file.fileType === 'comparison') {
+                timeComparisons.push(file);
+            }
+        });
+        
+        console.log(`Updated file data: ${oldFiles.length} old, ${newFiles.length} new, ${timeComparisons.length} comparisons, ${sameCommandDiffs.length} same-command diffs`);
+    }
+    
     // Render a list of files from the API
-    function renderFileList(matchedFiles) {
+    function renderFileList() {
         const fileListElement = document.getElementById('unifiedFileList');
         if (!fileListElement) return;
         
-        if (matchedFiles.length === 0) {
+        // Combine all file types
+        const allFiles = [...newFiles, ...oldFiles, ...timeComparisons];
+        
+        if (allFiles.length === 0 && sameCommandDiffs.length === 0) {
             fileListElement.innerHTML = '<div class="empty-state">No files found. Please configure folder paths.</div>';
             return;
         }
         
         // Sort files by timestamp (newest first)
-        matchedFiles.sort((a, b) => b.timestamp - a.timestamp);
+        allFiles.sort((a, b) => b.timestamp - a.timestamp);
         
         let html = '';
         
-        // Create HTML for each file entry
-        matchedFiles.forEach(file => {
-            const { fileType, oldFile, newFile, command, commandRan } = file;
+        // Create a combined array of all files and same-command diffs
+        const combinedEntries = [];
+        
+        // Add regular files
+        allFiles.forEach(file => {
+            const { fileType, oldFile, newFile, command, commandRan, timestamp } = file;
+            combinedEntries.push({
+                type: 'regular',
+                fileType,
+                oldFile,
+                newFile,
+                command,
+                commandRan,
+                timestamp: timestamp || (newFile ? newFile.mtime : oldFile ? oldFile.mtime : new Date())
+            });
+        });
+        
+        // Add same-command diffs
+        sameCommandDiffs.forEach(diff => {
+            const { command, runs, timeDiff } = diff;
             
-            // Get the display name (prefer commandRan, fallback to command, then filename)
-            const displayText = commandRan || command || (newFile ? newFile.filename : oldFile ? oldFile.filename : 'Unknown');
-            
-            // Create appropriate entry based on file type
-            if (fileType === 'new-only') {
+            // Only process if there are at least 2 runs
+            if (runs.length >= 2) {
+                // Get the newest and oldest runs
+                const newestRun = runs[0];
+                const oldestRun = runs[runs.length - 1];
+                
+                combinedEntries.push({
+                    type: 'same-command-diff',
+                    command,
+                    timeDiff,
+                    oldFile: { path: oldestRun.path },
+                    newFile: { path: newestRun.path },
+                    timestamp: newestRun.timestamp || new Date() // Use newest run's timestamp
+                });
+            }
+        });
+        
+        // Sort all entries by timestamp (newest first)
+        combinedEntries.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Create HTML for each entry
+        combinedEntries.forEach(entry => {
+            if (entry.type === 'same-command-diff') {
+                // Render same-command diff entry
+                html += `
+                    <div class="file-entry same-command-diff" 
+                         data-old-path="${entry.oldFile.path}" 
+                         data-new-path="${entry.newFile.path}">
+                        <strong>${entry.command}</strong>
+                        <span class="time-diff-indicator">${entry.timeDiff}</span>
+                    </div>
+                `;
+            } else {
+                // Render regular file entry
+                const { fileType, oldFile, newFile, command, commandRan } = entry;
+                
+                // Get the display name (prefer commandRan, fallback to command, then filename)
+                const displayText = commandRan || command || (newFile ? newFile.filename : oldFile ? oldFile.filename : 'Unknown');
+                
+                // Create appropriate entry based on file type
+                if (fileType === 'new-only') {
                 html += `
                     <div class="file-entry new-only" data-new-path="${newFile.path}">
                         <strong>${displayText}</strong>
@@ -68,6 +182,7 @@ export function initFileManager() {
                         <strong>${displayText}</strong>
                     </div>
                 `;
+                }
             }
         });
         
