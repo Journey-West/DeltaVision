@@ -1,0 +1,13 @@
+2025-05-09 00:42:00 "find command"
+
+# Latest version of find command in new folder
+find . -name "*.js" -type f
+
+# Output:
+./src/main.js
+./src/utils/helpers.js
+./src/components/Button.js
+./src/components/Input.js
+./src/components/Form.js
+./src/components/Modal.js
+./src/hooks/useForm.js

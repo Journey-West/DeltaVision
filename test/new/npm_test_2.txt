@@ -1,0 +1,33 @@
+2025-05-09 00:20:18 "npm test"
+
+# Second run of npm test
+npm test
+
+# Output:
+> project@1.0.0 test
+> jest
+
+FAIL  src/components/__tests__/Button.test.js
+  Button Component
+    ✓ renders correctly (5ms)
+    ✓ handles click events (3ms)
+    ✕ applies correct styles when disabled (8ms)
+
+  ● Button Component › applies correct styles when disabled
+
+    expect(received).toHaveStyle(expected)
+
+    - Expected
+    + Received
+
+    - opacity: 0.5;
+    + opacity: 0.6;
+
+PASS  src/utils/__tests__/formatter.test.js
+PASS  src/components/__tests__/Input.test.js
+
+Test Suites: 1 failed, 2 passed, 3 total
+Tests:       1 failed, 11 passed, 12 total
+Snapshots:   0 total
+Time:        1.312s
+Ran all test suites.

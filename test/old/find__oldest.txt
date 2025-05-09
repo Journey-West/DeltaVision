@@ -1,0 +1,9 @@
+2025-05-07 10:15:00 "find command"
+
+# First (oldest) version of find command in old folder
+find . -name "*.js" -type f
+
+# Output:
+./src/main.js
+./src/utils/helpers.js
+./src/components/Button.js

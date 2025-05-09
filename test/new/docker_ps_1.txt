@@ -1,0 +1,9 @@
+2025-05-09 00:02:10 "docker ps"
+
+# First run of docker ps
+docker ps
+
+# Output:
+CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS                    NAMES
+e45a62f8d1a3   postgres:14     "docker-entrypoint.s…"   23 minutes ago   Up 23 minutes   0.0.0.0:5432->5432/tcp   db
+a12bc34de56f   redis:alpine    "docker-entrypoint.s…"   23 minutes ago   Up 23 minutes   0.0.0.0:6379->6379/tcp   cache

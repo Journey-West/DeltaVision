@@ -328,7 +328,27 @@ app.get('/api/files', async (req, res) => {
       // Normal case: match files between old and new directories
       const oldFiles = await getFilesWithMetadata(oldFolderPath);
       
+      // Group old files by command and commandRan
+      const oldFileGroups = {};
       oldFiles.forEach(oldFile => {
+        const key = `${oldFile.command}|${oldFile.commandRan}`;
+        if (!oldFileGroups[key]) {
+          oldFileGroups[key] = [];
+        }
+        oldFileGroups[key].push(oldFile);
+      });
+      
+      // For each group, select only the most recent old file
+      const uniqueOldFiles = [];
+      Object.values(oldFileGroups).forEach(group => {
+        // Sort by modification time (newest first)
+        group.sort((a, b) => b.mtime - a.mtime);
+        // Take only the most recent file from each group
+        uniqueOldFiles.push(group[0]);
+      });
+      
+      // Process the unique old files (most recent from each group)
+      uniqueOldFiles.forEach(oldFile => {
         const matchingNewFiles = newFiles.filter(newFile => 
           newFile.command === oldFile.command && 
           newFile.commandRan === oldFile.commandRan
@@ -356,8 +376,9 @@ app.get('/api/files', async (req, res) => {
       });
       
       // Also include new files that don't have a matching old file
+      // Only check against the unique (most recent) old files we selected
       const unmatchedNewFiles = newFiles.filter(newFile => 
-        !oldFiles.some(oldFile => 
+        !uniqueOldFiles.some(oldFile => 
           oldFile.command === newFile.command && 
           oldFile.commandRan === newFile.commandRan
         )
@@ -1319,7 +1340,23 @@ app.get('/api/same-command-diffs', async (req, res) => {
           
           // Extract timestamp (format: YYYY-MM-DD HH:MM:SS)
           const timestampMatch = firstLine.match(/(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/);
-          const timestamp = timestampMatch ? new Date(timestampMatch[1]) : stats.mtime;
+          // Create a proper Date object from the extracted timestamp
+          let timestamp;
+          if (timestampMatch) {
+            try {
+              timestamp = new Date(timestampMatch[1]);
+              // Validate if the date is valid
+              if (isNaN(timestamp.getTime())) {
+                console.warn(`Invalid date format in file ${file}: ${timestampMatch[1]}`);
+                timestamp = stats.mtime;
+              }
+            } catch (e) {
+              console.warn(`Error parsing date in file ${file}: ${e.message}`);
+              timestamp = stats.mtime;
+            }
+          } else {
+            timestamp = stats.mtime;
+          }
           
           // Extract command from quoted part or use filename
           const commandMatch = firstLine.match(/"([^"]+)"/); 

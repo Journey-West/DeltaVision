@@ -1,0 +1,18 @@
+2025-05-09 00:05:12 "npm test"
+
+# First run of npm test
+npm test
+
+# Output:
+> project@1.0.0 test
+> jest
+
+PASS  src/utils/__tests__/formatter.test.js
+PASS  src/components/__tests__/Button.test.js
+PASS  src/components/__tests__/Input.test.js
+
+Test Suites: 3 passed, 3 total
+Tests:       12 passed, 12 total
+Snapshots:   0 total
+Time:        1.245s
+Ran all test suites.

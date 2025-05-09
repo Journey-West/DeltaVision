@@ -1,0 +1,13 @@
+2025-05-09 00:43:45 "grep search"
+
+# Latest version of grep command in new folder
+grep -r "function" src/
+
+# Output:
+src/main.js:function initApp() {
+src/utils/helpers.js:function formatDate(date) {
+src/utils/helpers.js:function parseConfig(config) {
+src/components/Button.js:function Button({ onClick, children }) {
+src/components/Input.js:function Input({ onChange, value, type = 'text' }) {
+src/components/Form.js:function Form({ onSubmit, children }) {
+src/hooks/useForm.js:function useForm(initialValues = {}) {

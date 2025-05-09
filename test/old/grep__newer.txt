@@ -1,0 +1,11 @@
+2025-05-08 18:45:00 "grep search"
+
+# Second (newer) version of grep command in old folder
+grep -r "function" src/
+
+# Output:
+src/main.js:function initApp() {
+src/utils/helpers.js:function formatDate(date) {
+src/utils/helpers.js:function parseConfig(config) {
+src/components/Button.js:function Button({ onClick, children }) {
+src/components/Input.js:function Input({ onChange, value, type = 'text' }) {

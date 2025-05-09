@@ -108,6 +108,26 @@ export function initFileManager() {
         // Add regular files
         allFiles.forEach(file => {
             const { fileType, oldFile, newFile, command, commandRan, timestamp } = file;
+            
+            // Ensure we have a valid timestamp for sorting
+            let fileTimestamp;
+            if (timestamp) {
+                // If timestamp is a string (like an ISO date), convert it to Date object
+                fileTimestamp = timestamp instanceof Date ? timestamp : new Date(timestamp);
+            } else if (newFile && newFile.mtime) {
+                fileTimestamp = newFile.mtime instanceof Date ? newFile.mtime : new Date(newFile.mtime);
+            } else if (oldFile && oldFile.mtime) {
+                fileTimestamp = oldFile.mtime instanceof Date ? oldFile.mtime : new Date(oldFile.mtime);
+            } else {
+                fileTimestamp = new Date();
+            }
+            
+            // If the conversion failed, use current time as fallback
+            if (isNaN(fileTimestamp.getTime())) {
+                console.warn('Invalid timestamp detected, using current time as fallback');
+                fileTimestamp = new Date();
+            }
+            
             combinedEntries.push({
                 type: 'regular',
                 fileType,
@@ -115,7 +135,7 @@ export function initFileManager() {
                 newFile,
                 command,
                 commandRan,
-                timestamp: timestamp || (newFile ? newFile.mtime : oldFile ? oldFile.mtime : new Date())
+                timestamp: fileTimestamp
             });
         });
         
@@ -129,13 +149,30 @@ export function initFileManager() {
                 const newestRun = runs[0];
                 const oldestRun = runs[runs.length - 1];
                 
+                // Ensure we have a valid timestamp for sorting
+                let diffTimestamp;
+                if (newestRun.timestamp) {
+                    // If timestamp is a string (like an ISO date), convert it to Date object
+                    diffTimestamp = newestRun.timestamp instanceof Date ? 
+                        newestRun.timestamp : new Date(newestRun.timestamp);
+                } else {
+                    // Fallback to current time
+                    diffTimestamp = new Date();
+                }
+                
+                // If the conversion failed, use current time as fallback
+                if (isNaN(diffTimestamp.getTime())) {
+                    console.warn('Invalid timestamp detected in same-command diff, using current time as fallback');
+                    diffTimestamp = new Date();
+                }
+                
                 combinedEntries.push({
                     type: 'same-command-diff',
                     command,
                     timeDiff,
                     oldFile: { path: oldestRun.path },
                     newFile: { path: newestRun.path },
-                    timestamp: newestRun.timestamp || new Date() // Use newest run's timestamp
+                    timestamp: diffTimestamp // Use properly processed timestamp
                 });
             }
         });
