@@ -558,12 +558,12 @@ input:checked + .slider:before {
 
 /* Special styling for old-only files */
 .old-file-view {
-    border-left: 3px solid var(--removed-color);
+    border-left: 3px solid #4CAF50; /* Green for old-only files - matches sidebar */
 }
 
 /* Special styling for new-only files */
 .new-file-view {
-    border-left: 3px solid var(--added-color);
+    border-left: 3px solid #42A5F5; /* Blue for new-only files - matches sidebar */
 }
 
 /* Zebra striping with direct row classes */
