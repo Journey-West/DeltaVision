@@ -315,6 +315,50 @@ export function initFileManager() {
                 return;
             }
             
+            // Clear the "No file selected" text at the top
+            document.getElementById('fileType').textContent = 'Type: Loading...';
+            document.getElementById('fileSize').textContent = 'Size: Loading...';
+            document.getElementById('modifiedTime').textContent = 'Modified: Loading...';
+            
+            // Update the file path display elements
+            const oldPathElement = document.getElementById('oldFilePath');
+            const newPathElement = document.getElementById('newFilePath');
+            const oldPathRow = document.querySelector('.file-path-row:first-child');
+            const newPathRow = document.querySelector('.file-path-row:last-child');
+            
+            // Handle old path display
+            if (oldPath) {
+                if (oldPathElement) {
+                    oldPathElement.textContent = oldPath.split('/').pop();
+                    oldPathElement.classList.remove('empty');
+                }
+                if (oldPathRow) oldPathRow.style.display = 'flex';
+            } else {
+                if (oldPathElement) {
+                    oldPathElement.textContent = 'No file selected';
+                    oldPathElement.classList.add('empty');
+                }
+                if (oldPathRow) oldPathRow.style.display = 'none';
+            }
+            
+            // Handle new path display
+            if (newPath) {
+                if (newPathElement) {
+                    newPathElement.textContent = newPath.split('/').pop();
+                    newPathElement.classList.remove('empty');
+                }
+                if (newPathRow) newPathRow.style.display = 'flex';
+            } else {
+                if (newPathElement) {
+                    newPathElement.textContent = 'No file selected';
+                    newPathElement.classList.add('empty');
+                }
+                if (newPathRow) newPathRow.style.display = 'none';
+            }
+            
+            // Update file metadata immediately to show loading state
+            updateFileMetadata(oldPath, newPath);
+            
             // Show loading state
             diffViewer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading comparison...</div>';
             comparisonSection.classList.remove('hidden');
@@ -637,6 +681,24 @@ export function initFileManager() {
         
         // Statistics functionality has been removed
         
+        // Make sure both file paths are visible for comparison files
+        const oldPathRow = document.querySelector('.file-path-row:first-child');
+        const newPathRow = document.querySelector('.file-path-row:last-child');
+        
+        if (comparisonData.fileType === 'comparison') {
+            // For comparison files, show both old and new file paths
+            if (oldPathRow) oldPathRow.style.display = 'flex';
+            if (newPathRow) newPathRow.style.display = 'flex';
+        } else if (comparisonData.fileType === 'old-only') {
+            // For old-only files, show only the old file path
+            if (oldPathRow) oldPathRow.style.display = 'flex';
+            if (newPathRow) newPathRow.style.display = 'none';
+        } else if (comparisonData.fileType === 'new-only') {
+            // For new-only files, show only the new file path
+            if (oldPathRow) oldPathRow.style.display = 'none';
+            if (newPathRow) newPathRow.style.display = 'flex';
+        }
+        
         // Update file metadata in the UI
         updateFileMetadata(oldPath, newPath, comparisonData.fileType);
         
@@ -659,26 +721,22 @@ export function initFileManager() {
             // Normal comparison mode with both files
             if (diffViewButton) diffViewButton.style.display = 'block';
             
-            // Render the appropriate view based on which button is active
-            if (newViewButton && newViewButton.classList.contains('active')) {
-                renderNewFileView(diffViewer, comparisonData.newContent);
-            } else {
-                renderDiff(diffViewer, comparisonData);
-                
-                // Set diff view as active by default for comparisons
-                if (diffViewButton) {
-                    diffViewButton.classList.add('active');
-                }
-                if (newViewButton) {
-                    newViewButton.classList.remove('active');
-                }
+            // Always default to diff view for comparison files
+            renderDiff(diffViewer, comparisonData);
+            
+            // Set diff view as active
+            if (diffViewButton) {
+                diffViewButton.classList.add('active');
+            }
+            if (newViewButton) {
+                newViewButton.classList.remove('active');
             }
         }
     }
     
     // Helper to update file type and size information
-    function updateFileTypeAndSize(oldPath, newPath) {
-    console.log('[updateFileTypeAndSize] Called with:', { oldPath, newPath });
+    function updateFileTypeAndSize(filePath) {
+        console.log('[updateFileTypeAndSize] Called with filePath:', filePath);
         const typeElement = document.getElementById('fileType');
         const sizeElement = document.getElementById('fileSize');
         const modifiedElement = document.getElementById('modifiedTime');
@@ -690,12 +748,9 @@ export function initFileManager() {
         sizeElement.textContent = 'Size: Loading...';
         modifiedElement.textContent = 'Modified: Loading...';
         
-        // Check if we have a path to get metadata from
-        const pathToCheck = newPath || oldPath;
-        
-        if (pathToCheck) {
+        if (filePath) {
             // Fetch and update metadata
-            fetchFileMetadata(pathToCheck);
+            fetchFileMetadata(filePath);
         } else {
             // Clear metadata if no path is available
             typeElement.textContent = 'Type: -';
@@ -706,7 +761,7 @@ export function initFileManager() {
     
     // Fetch file metadata from the server
     async function fetchFileMetadata(filePath) {
-    console.log('[fetchFileMetadata] Requesting metadata for path:', filePath);
+        console.log('[fetchFileMetadata] Requesting metadata for path:', filePath);
         if (!filePath) {
             console.warn('No file path provided to fetchFileMetadata');
             updateMetadataUI(null, filePath);
@@ -900,7 +955,13 @@ export function initFileManager() {
         }
         
         // Update file type and size information if available
-        updateFileTypeAndSize(oldPath, newPath);
+        // Determine which path to use for metadata based on file type
+        const pathForMetadata = (fileType === 'new-only') ? newPath : 
+                              (fileType === 'old-only') ? oldPath : 
+                              (newPath || oldPath);
+        
+        // Always update metadata with the appropriate path
+        updateFileTypeAndSize(pathForMetadata);
     }
 
     // Render only the new file content
@@ -916,8 +977,14 @@ export function initFileManager() {
             oldPathRow.style.display = 'none';
         }
         
+        // Make sure the new file path row is visible
+        const newPathRow = document.querySelector('.file-path-row:last-child');
+        if (newPathRow) {
+            newPathRow.style.display = 'flex';
+        }
+        
         // Update the New file path to show the actual file path
-        const newPathElement = document.getElementById('newPath');
+        const newPathElement = document.getElementById('newFilePath');
         if (newPathElement && newPath) {
             // Extract just the filename from the path
             const filename = newPath.split('/').pop();
@@ -926,10 +993,20 @@ export function initFileManager() {
             newPathElement.title = newPath; // Full path as tooltip
         }
         
+        // Show loading state for metadata while we fetch it
+        document.getElementById('fileType').textContent = 'Type: Loading...';
+        document.getElementById('fileSize').textContent = 'Size: Loading...';
+        document.getElementById('modifiedTime').textContent = 'Modified: Loading...';
+        
         // Ensure file metadata is updated even in new file view
         if (newPath) {
-            // Ensure file metadata is up to date
-            updateFileTypeAndSize(null, newPath);
+            // Fetch and update file metadata specifically for the new file view
+            fetchFileMetadata(newPath);
+        } else {
+            // If no path is available, clear metadata
+            document.getElementById('fileType').textContent = 'Type: -';
+            document.getElementById('fileSize').textContent = 'Size: -';
+            document.getElementById('modifiedTime').textContent = 'Modified: -';
         }
         
         const lines = content.split('\n');
@@ -1722,16 +1799,17 @@ export function initFileManager() {
     
     // Set up view toggle functionality
     function setupViewToggle(diffViewer) {
+        if (!diffViewer || diffViewer.dataset.toggleInitialized === 'true') return;
+        
+        diffViewer.dataset.toggleInitialized = 'true';
+        
         const diffViewButton = document.getElementById('diffViewButton');
         const newViewButton = document.getElementById('newViewButton');
         
         if (!diffViewButton || !newViewButton) return;
         
-        // Check if we have a stored preference for view mode
-        const savedViewMode = localStorage.getItem('viewMode');
-        
-        // Apply the saved view mode if we have one
-        if (savedViewMode === 'new' && diffViewer.dataset.newPath) {
+        // Always default to diff view unless it's a new-only file
+        if (!diffViewer.dataset.oldPath || diffViewer.dataset.fileType === 'new-only') {
             newViewButton.classList.add('active');
             diffViewButton.classList.remove('active');
             renderNewFileView(diffViewer, diffViewer.dataset.newContent);
@@ -1748,13 +1826,23 @@ export function initFileManager() {
             this.classList.add('active');
             newViewButton.classList.remove('active');
             
-            // Store view mode preference
-            localStorage.setItem('viewMode', 'diff');
+            // No longer storing view mode preference
             
             // Show both file path rows in diff view
             const oldPathRow = document.querySelector('.file-path-row:first-child');
             if (oldPathRow) {
                 oldPathRow.style.display = 'flex';
+            }
+            
+            // Update metadata based on the comparison type
+            const fileType = diffViewer.dataset.fileType;
+            const oldPath = diffViewer.dataset.oldPath;
+            const newPath = diffViewer.dataset.newPath;
+            
+            // Update file metadata for the appropriate file
+            if (fileType === 'comparison' && (oldPath || newPath)) {
+                // For comparison files in diff view, prefer new path for metadata if available
+                fetchFileMetadata(newPath || oldPath);
             }
             
             // Show diff view
@@ -1772,8 +1860,7 @@ export function initFileManager() {
             this.classList.add('active');
             diffViewButton.classList.remove('active');
             
-            // Store view mode preference
-            localStorage.setItem('viewMode', 'new');
+            // No longer storing view mode preference
             
             // Show new file view with metadata
             renderNewFileView(diffViewer, diffViewer.dataset.newContent);
