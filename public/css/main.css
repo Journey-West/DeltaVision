@@ -493,11 +493,16 @@ input:checked + .slider:before {
 /* Diff table with fixed column layout */
 .diff-table {
     width: 100%;
-    border-collapse: collapse;
-    font-family: 'Courier New', Courier, monospace;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: 'Fira Code', 'Courier New', Courier, monospace;
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
     table-layout: fixed;
+    overflow: hidden;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background-color: var(--bg-secondary);
 }
 
 /* Professional styling for file views */
@@ -575,10 +580,22 @@ input:checked + .slider:before {
     background-color: var(--even-row-bg);
 }
 
+.diff-table tr:hover {
+    background-color: var(--hover-color);
+}
+
 /* Keep line numbers with consistent background */
 .diff-table .line-number {
-    background-color: var(--table-header-bg) !important;
-    border-right: 1px solid var(--border-color) !important;
+    text-align: right;
+    color: var(--text-muted);
+    user-select: none;
+    padding: 4px 8px !important;
+    font-size: 12px;
+    background-color: var(--bg-tertiary);
+    border-right: 1px solid var(--border-color);
+    min-width: 50px;
+    position: sticky;
+    left: 0;
 }
 
 /* Column sizing */
@@ -596,7 +613,7 @@ input:checked + .slider:before {
 
 /* Cell styling */
 .diff-table th, .diff-table td {
-    padding: 2px 4px;
+    padding: 4px 8px;
     vertical-align: top;
     white-space: pre-wrap;
     word-break: break-all;
@@ -605,42 +622,56 @@ input:checked + .slider:before {
 
 .diff-table .line-number-header {
     text-align: right;
-    padding: 2px 4px !important;
+    padding: 8px !important;
     font-size: 12px;
     background-color: var(--table-header-bg) !important;
+    border-right: 1px solid var(--border-color);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .diff-table .content-header {
     text-align: left;
     background-color: var(--table-header-bg) !important;
-    font-weight: bold;
+    font-weight: 600;
+    padding: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .diff-table .line-number {
     text-align: right;
     color: var(--text-muted);
     user-select: none;
-    padding: 2px 4px !important;
+    padding: 4px 8px !important;
     font-size: 12px;
 }
 
 .diff-table .content-cell {
-    padding-left: 8px;
+    padding: 4px 12px;
     white-space: pre-wrap;
     word-break: break-all;
+    transition: background-color 0.15s ease;
+    border-radius: 0 3px 3px 0;
 }
 
 /* Diff highlight styles - make them stand out from the row background */
 .diff-table td.added {
     background-color: var(--added-bg) !important;
+    border-left: 3px solid var(--added-color);
 }
 
 .diff-table td.removed {
     background-color: var(--removed-bg) !important;
+    border-left: 3px solid var(--removed-color);
 }
 
 .diff-table td.moved {
     background-color: var(--moved-bg) !important;
+    border-left: 3px solid var(--moved-color);
 }
 
 /* Fine-grained diff highlights with stronger colors */
@@ -665,9 +696,10 @@ input:checked + .slider:before {
 }
 
 .char-removed {
-    background-color: var(--removed-highlight) !important;
+    background-color: var(--removed-highlight);
+    color: var(--text-color) !important;
     border-radius: 2px;
-    display: inline-block;
+    box-shadow: 0 0 0 1px var(--removed-color);
 }
 
 /* Styling for moved lines */
@@ -682,11 +714,23 @@ input:checked + .slider:before {
     white-space: nowrap;
     color: var(--text-color);
     font-weight: bold;
+    background-color: rgba(100, 181, 246, 0.2);
+    border-radius: 3px;
+    padding: 1px 3px;
 }
 
 .diff-table .moved-arrow {
     color: #0277bd; /* Darker blue to match our moved background */
     font-weight: bold;
+    display: inline-block;
+    padding: 0 3px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
 }
 
 /* File details */
