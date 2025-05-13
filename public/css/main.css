@@ -500,6 +500,72 @@ input:checked + .slider:before {
     table-layout: fixed;
 }
 
+/* Professional styling for file views */
+.old-file-view, .new-file-view {
+    width: 100%;
+    font-family: 'Fira Code', 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    counter-reset: line;
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.old-file-view .line, .new-file-view .line {
+    display: flex;
+    padding: 0;
+    position: relative;
+    min-height: 22px;
+}
+
+.old-file-view .line:before, .new-file-view .line:before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block;
+    width: 50px;
+    padding-right: 8px;
+    text-align: right;
+    color: var(--text-muted);
+    background-color: var(--bg-tertiary);
+    user-select: none;
+    border-right: 1px solid var(--border-color);
+    font-size: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.old-file-view .line:nth-child(odd), .new-file-view .line:nth-child(odd) {
+    background-color: var(--odd-row-bg);
+}
+
+.old-file-view .line:nth-child(even), .new-file-view .line:nth-child(even) {
+    background-color: var(--even-row-bg);
+}
+
+.old-file-view .line:hover, .new-file-view .line:hover {
+    background-color: var(--hover-color);
+}
+
+/* Line content styling */
+.old-file-view .line-content, .new-file-view .line-content {
+    padding: 4px 8px;
+    white-space: pre;
+    overflow-x: auto;
+    flex: 1;
+}
+
+/* Special styling for old-only files */
+.old-file-view {
+    border-left: 3px solid var(--removed-color);
+}
+
+/* Special styling for new-only files */
+.new-file-view {
+    border-left: 3px solid var(--added-color);
+}
+
 /* Zebra striping with direct row classes */
 .diff-table tr.odd-row {
     background-color: var(--odd-row-bg);
