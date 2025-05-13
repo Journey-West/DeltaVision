@@ -85,15 +85,45 @@ export function initFileManager() {
     }
     
     // Render a list of files from the API
-    function renderFileList() {
+    function renderFileList(filterType = 'all') {
         const fileListElement = document.getElementById('unifiedFileList');
         if (!fileListElement) return;
         
         // Combine all file types
-        const allFiles = [...newFiles, ...oldFiles, ...timeComparisons];
+        let allFiles = [...newFiles, ...oldFiles, ...timeComparisons];
+        let filteredCommandDiffs = [...sameCommandDiffs];
         
-        if (allFiles.length === 0 && sameCommandDiffs.length === 0) {
-            fileListElement.innerHTML = '<div class="empty-state">No files found. Please configure folder paths.</div>';
+        // Apply filtering based on the selected filter types
+        // filterType can now be either a string 'all' or an array of filter types
+        if (Array.isArray(filterType) && filterType.length > 0) {
+            // Filter files based on the selected types
+            allFiles = allFiles.filter(file => {
+                return filterType.includes(file.fileType);
+            });
+            
+            // Only include same-command diffs if that filter is selected
+            if (!filterType.includes('same-command')) {
+                filteredCommandDiffs = [];
+            }
+        } else if (filterType !== 'all') {
+            // Handle legacy single filter type for backward compatibility
+            if (filterType === 'new-only') {
+                allFiles = allFiles.filter(file => file.fileType === 'new-only');
+                filteredCommandDiffs = [];
+            } else if (filterType === 'old-only') {
+                allFiles = allFiles.filter(file => file.fileType === 'old-only');
+                filteredCommandDiffs = [];
+            } else if (filterType === 'comparison') {
+                allFiles = allFiles.filter(file => file.fileType === 'comparison');
+                filteredCommandDiffs = [];
+            } else if (filterType === 'same-command') {
+                allFiles = [];
+                // Keep filteredCommandDiffs as is
+            }
+        }
+        
+        if (allFiles.length === 0 && filteredCommandDiffs.length === 0) {
+            fileListElement.innerHTML = '<div class="empty-state">No files found matching the selected filter.</div>';
             return;
         }
         
@@ -140,7 +170,7 @@ export function initFileManager() {
         });
         
         // Add same-command diffs
-        sameCommandDiffs.forEach(diff => {
+        filteredCommandDiffs.forEach(diff => {
             const { command, runs, timeDiff } = diff;
             
             // Only process if there are at least 2 runs
@@ -1854,7 +1884,7 @@ export function initFileManager() {
         renderDiff(diffViewer, comparisonData);
     }
 
-    // Refreshes the file list and clears any active filters
+    // Refreshes the file list and preserves file type filter
     async function refreshFiles() {
         // Clear any active keyword filter directly in the UI
         // This avoids circular references with the keyword system
@@ -1865,7 +1895,6 @@ export function initFileManager() {
         
         // Also reset the active filter in the keyword system if it's initialized
         if (window.keywordHighlight) {
-            // Call clearActiveFilter directly without the circular reference
             if (window.keywordHighlight.clearActiveFilter) {
                 window.keywordHighlight.clearActiveFilter();
             }
@@ -1877,8 +1906,21 @@ export function initFileManager() {
             unifiedList.innerHTML = '<div class="loading"><div class="spinner"></div>Loading files...</div>';
         }
         
+        // Get the current file type filter value if it exists
+        const fileTypeFilter = document.getElementById('fileTypeFilter');
+        const filterType = fileTypeFilter ? fileTypeFilter.value : 'all';
+        
         // Fetch fresh data
         await fetchFileData();
+        
+        // Apply the file type filter after refreshing data
+        if (filterType !== 'all') {
+            renderFileList(filterType);
+        } else {
+            renderFileList('all');
+        }
+        
+        // No need to update the dropdown display, the native select element maintains its own state
     } // End of refreshFiles function
     
     // Set up refresh button
@@ -2040,10 +2082,71 @@ export function initFileManager() {
     // Expose key functions to the window for use by other components
     window.loadFileComparison = loadFileComparison;
     
+    // Setup file type filter
+    function setupFileTypeFilter() {
+        const fileTypeFilter = document.getElementById('fileTypeFilter');
+        if (!fileTypeFilter) return;
+        
+        // Get all filter checkboxes
+        const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+        
+        // Function to apply filters based on checked checkboxes
+        function applyFilters() {
+            // Get all checked filter types
+            const selectedFilters = [];
+            filterCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedFilters.push(checkbox.value);
+                }
+            });
+            
+            // Apply the filters
+            renderFileList(selectedFilters);
+            
+            // Store the selected filters in localStorage for persistence
+            localStorage.setItem('fileTypeFilters', JSON.stringify(selectedFilters));
+        }
+        
+        // Add change event listeners to all checkboxes
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', applyFilters);
+        });
+        
+        // Set initial values from localStorage if available
+        const savedFilters = localStorage.getItem('fileTypeFilters');
+        if (savedFilters) {
+            try {
+                const filterArray = JSON.parse(savedFilters);
+                
+                // Update checkbox states based on saved filters
+                filterCheckboxes.forEach(checkbox => {
+                    checkbox.checked = filterArray.includes(checkbox.value);
+                });
+                
+                // Apply the filters
+                renderFileList(filterArray);
+            } catch (e) {
+                console.error('Error parsing saved filters:', e);
+                // If error, check all checkboxes (default state)
+                filterCheckboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                applyFilters();
+            }
+        } else {
+            // If no saved filters, check all checkboxes (default state)
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            applyFilters();
+        }
+    }
+    
     // Initial setup
     loadSidebarState();
     setupToggleListeners();
     setupKeyboardNavigation(); // Add keyboard navigation setup
+    setupFileTypeFilter(); // Setup file type filter
     fetchFileData(); // This is critical for loading the files on startup
     
     // Return public methods

@@ -1,0 +1,18 @@
+# 2023-05-13 00:00:00 "old only test"
+
+# This file is created to test the old-only file filtering feature
+echo "Testing old-only file filtering"
+
+# Expected behavior:
+# 1. This file should appear in the file list automatically
+# 2. This file should be highlighted with an orange left border
+# 3. This file should only appear when filtering for "All Files" or "Old Only"
+# 4. This file should NOT appear when filtering for "New Only" or "Comparisons"
+
+# This file demonstrates content that exists only in the old directory
+# and has no corresponding file in the new directory.
+
+# When viewing this file in DeltaVision:
+# - It should be displayed in the "Old File View" mode
+# - The file metadata should show it as an "old-only" file type
+# - The orange left border should indicate it's an old-only file

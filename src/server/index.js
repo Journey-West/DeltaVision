@@ -431,6 +431,30 @@ app.get('/api/files', async (req, res) => {
           fileType: 'new-only'
         });
       });
+      
+      // Add old-only files (files that exist only in the old directory)
+      // Only check against the unique (most recent) old files we selected
+      const unmatchedOldFiles = uniqueOldFiles.filter(oldFile => 
+        !newFiles.some(newFile => 
+          newFile.command === oldFile.command && 
+          newFile.commandRan === oldFile.commandRan
+        )
+      );
+      
+      unmatchedOldFiles.forEach(oldFile => {
+        matchedFiles.push({
+          oldFile: {
+            filename: oldFile.filename,
+            path: oldFile.path,
+            mtime: oldFile.mtime
+          },
+          newFile: null,
+          command: oldFile.command,
+          commandRan: oldFile.commandRan,
+          timestamp: oldFile.mtime,
+          fileType: 'old-only'
+        });
+      });
     }
     
     // Sort files by timestamp (newest first)
