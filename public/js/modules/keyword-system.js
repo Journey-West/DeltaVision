@@ -3,6 +3,7 @@ export function initKeywordSystem() {
     // Keywords state
     let keywords = {};
     let activeKeywordFilter = null;
+    let highlightingStyle = 'style-underline'; // Default style
     
     // Initialize the keyword highlighting system
     window.keywordHighlight = {
@@ -73,8 +74,21 @@ export function initKeywordSystem() {
                 const keywordData = keywords[keywordMatch];
                 const color = typeof keywordData === 'string' ? keywordData : keywordData.color;
                 
-                // Highlight the word - only border-bottom, no background
-                return `<span class="highlighted-keyword" style="border-bottom: 1px solid ${color}; padding: 0 2px;">${escapeHtml(word)}</span>`;
+                // Apply the selected highlighting style
+                switch (highlightingStyle) {
+                    case 'style-background':
+                        return `<span class="highlighted-keyword ${highlightingStyle}" style="background-color: ${color}; color: var(--bg-color);">${escapeHtml(word)}</span>`;
+                    case 'style-bold':
+                        return `<span class="highlighted-keyword ${highlightingStyle}" style="color: ${color};">${escapeHtml(word)}</span>`;
+                    case 'style-glow':
+                        return `<span class="highlighted-keyword ${highlightingStyle}" style="color: ${color};">${escapeHtml(word)}</span>`;
+                    case 'style-dotted':
+                    case 'style-wavy':
+                        return `<span class="highlighted-keyword ${highlightingStyle}" style="border-bottom-color: ${color};">${escapeHtml(word)}</span>`;
+                    case 'style-underline':
+                    default:
+                        return `<span class="highlighted-keyword ${highlightingStyle}" style="border-bottom-color: ${color};">${escapeHtml(word)}</span>`;
+                }
             }
             
             return escapeHtml(word);
@@ -563,10 +577,190 @@ export function initKeywordSystem() {
     // Initial setup
     fetchKeywords();
     
+        // Create the style selector UI
+    function createStyleSelector() {
+        // Find the keyword panel first
+        const keywordPanel = document.getElementById('keywordPanel');
+        if (!keywordPanel) {
+            console.log('Waiting for keyword panel to be available...');
+            // Try again later when the panel might be available
+            setTimeout(createStyleSelector, 1000);
+            return;
+        }
+        
+        // Find or create the content area
+        let panel = keywordPanel.querySelector('.keyword-panel-content');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.className = 'keyword-panel-content';
+            keywordPanel.appendChild(panel);
+        }
+        
+        // Check if style selector already exists
+        if (document.querySelector('.keyword-style-selector')) return;
+        
+        // Create style selector container
+        const container = document.createElement('div');
+        container.className = 'keyword-style-selector';
+        container.innerHTML = `
+            <div class="keyword-help-title">
+                Highlight Style
+                <div class="tooltip">
+                    <span class="tooltip-icon">?</span>
+                    <span class="tooltip-text">Choose how keywords are highlighted in text. Different styles can make certain keywords more prominent.</span>
+                </div>
+            </div>
+        `;
+        
+        // Available styles with their icons
+        const styles = [
+            { id: 'style-underline', icon: '&#9588;', name: 'Underline' },
+            { id: 'style-background', icon: '&#9646;', name: 'Background' },
+            { id: 'style-bold', icon: '<b>B</b>', name: 'Bold' },
+            { id: 'style-dotted', icon: '&#8230;', name: 'Dotted' },
+            { id: 'style-wavy', icon: '&#8767;', name: 'Wavy' },
+            { id: 'style-glow', icon: '&#10022;', name: 'Glow' }
+        ];
+        
+        // Create the style options
+        const styleOptions = document.createElement('div');
+        styleOptions.className = 'style-options';
+        styleOptions.style.display = 'flex';
+        styleOptions.style.flexWrap = 'wrap';
+        styleOptions.style.gap = '8px';
+        
+        styles.forEach(style => {
+            const option = document.createElement('div');
+            option.className = `style-option ${style.id === highlightingStyle ? 'active' : ''}`;
+            option.setAttribute('data-style', style.id);
+            option.innerHTML = style.icon;
+            option.title = style.name;
+            
+            // Add click event
+            option.addEventListener('click', () => {
+                // Update active style
+                document.querySelectorAll('.style-option').forEach(el => {
+                    el.classList.remove('active');
+                });
+                option.classList.add('active');
+                
+                // Update highlighting style
+                highlightingStyle = style.id;
+                
+                // Re-render file content if a file is selected
+                if (window.loadFileComparison && window.currentComparison) {
+                    const { oldPath, newPath } = window.currentComparison;
+                    window.loadFileComparison(oldPath, newPath);
+                }
+            });
+            
+            styleOptions.appendChild(option);
+        });
+        
+        // Add the style options to the container
+        container.appendChild(styleOptions);
+        
+        // Insert at the top of the panel, right after the header
+        panel.insertBefore(container, panel.firstChild);
+        
+        // Make sure the styles are visible
+        container.style.display = 'block';
+        container.style.marginBottom = '15px';
+    }
+    
+    // Add contextual help to the keyword panel
+    function addKeywordHelp() {
+        // Find the keyword panel first
+        const keywordPanel = document.getElementById('keywordPanel');
+        if (!keywordPanel) {
+            console.log('Waiting for keyword panel to be available...');
+            // Try again later when the panel might be available
+            setTimeout(addKeywordHelp, 1000);
+            return;
+        }
+        
+        // Check if help section already exists
+        if (keywordPanel.querySelector('.keyword-help')) return;
+        
+        // Create help section
+        const helpSection = document.createElement('div');
+        helpSection.className = 'keyword-help';
+        helpSection.innerHTML = `
+            <div class="keyword-help-title">
+                Using Keywords
+                <div class="tooltip">
+                    <span class="tooltip-icon">?</span>
+                    <span class="tooltip-text">The keyword system lets you track important terms across files. Click on any keyword to filter the file list.</span>
+                </div>
+            </div>
+            <div class="keyword-help-content">
+                • <strong>Keyword counts</strong> show occurrences in old vs. new files<br>
+                • <strong>Click a keyword</strong> to filter the file list<br>
+                • <strong>Different styles</strong> help distinguish keyword types<br>
+                • <strong>Clear filter</strong> to see all files again
+            </div>
+        `;
+        
+        // Add to the bottom of the panel
+        keywordPanel.appendChild(helpSection);
+    }
+    
+    // Add tooltip to keyword panel header
+    function addPanelHeaderTooltip() {
+        const panelHeader = document.querySelector('.keyword-panel-header');
+        if (!panelHeader) return;
+        
+        // Check if tooltip already exists
+        if (panelHeader.querySelector('.tooltip')) return;
+        
+        // Create tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.innerHTML = `
+            <span class="tooltip-icon">?</span>
+            <span class="tooltip-text">This panel shows all keywords found in your files. The numbers indicate how many times each keyword appears in old and new files.</span>
+        `;
+        
+        // Add to header
+        panelHeader.appendChild(tooltip);
+    }
+    
+    // Enhanced update function that also updates UI components
+    function updateKeywordUI() {
+        updateKeywordTally();
+        createStyleSelector();
+        addKeywordHelp();
+        addPanelHeaderTooltip();
+    }
+    
+    // Initialize keyword highlighting and UI
+    function init() {
+        fetchKeywords();
+        
+        // Set up style selector at startup
+        setTimeout(() => {
+            createStyleSelector();
+            addKeywordHelp();
+            addPanelHeaderTooltip();
+        }, 500); // Small delay to ensure DOM is ready
+    }
+    
+    // Initialize on load
+    init();
+    
     // Return public methods
     return {
         updateKeywordTally,
         setKeywordFilter,
-        clearKeywordFilter
+        clearKeywordFilter,
+        updateKeywordUI,
+        setHighlightingStyle: function(style) { 
+            highlightingStyle = style; 
+            // Update UI
+            document.querySelectorAll('.style-option').forEach(el => {
+                el.classList.toggle('active', el.getAttribute('data-style') === style);
+            });
+        },
+        getHighlightingStyle: function() { return highlightingStyle; }
     };
 }

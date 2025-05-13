@@ -14,6 +14,7 @@
     <link href="/css/keyboard-shortcuts.css" rel="stylesheet">
     <link href="/css/search-bar.css" rel="stylesheet">
     <link href="/css/toggle-switch.css" rel="stylesheet">
+    <link href="/css/keyword-styles.css" rel="stylesheet">
     
     <!-- Additional stylesheets specific to components -->
     <style>
@@ -430,6 +431,7 @@
         import { initUiComponents } from './js/modules/ui-components.js';
         import { initKeywordSystem } from './js/modules/keyword-system.js';
         import { initFileSearch } from './js/modules/file-search.js';
+        import { initStyleManager } from './js/modules/style-manager.js';
         import { initThemeLoader, createThemeEditor } from './js/theme-loader.js';
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -457,6 +459,9 @@
             
             // Initialize file search system
             initFileSearch(fileManager);
+            
+            // Initialize the keyword style manager
+            initStyleManager();
         });
     </script>
 </body>

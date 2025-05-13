@@ -1,0 +1,167 @@
+/**
+ * DeltaVision Keyword Highlighting Styles
+ * Provides multiple highlighting styles for keywords
+ */
+
+/* Base keyword highlight class */
+.highlighted-keyword {
+    border-radius: 2px;
+    transition: all 0.15s ease;
+}
+
+/* Style 1: Border bottom (default) */
+.highlighted-keyword.style-underline {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    padding: 0 2px;
+}
+
+/* Style 2: Background color */
+.highlighted-keyword.style-background {
+    border-bottom: none;
+    padding: 0 2px;
+    opacity: 0.85;
+}
+
+/* Style 3: Bold text */
+.highlighted-keyword.style-bold {
+    border-bottom: none;
+    font-weight: bold;
+    padding: 0 2px;
+    text-shadow: 0 0 0.5px currentColor;
+}
+
+/* Style 4: Dotted underline */
+.highlighted-keyword.style-dotted {
+    border-bottom-width: 1px;
+    border-bottom-style: dotted;
+    padding: 0 2px;
+}
+
+/* Style 5: Wavy underline */
+.highlighted-keyword.style-wavy {
+    border-bottom-width: 1px;
+    border-bottom-style: wavy;
+    padding: 0 2px;
+}
+
+/* Style 6: Glow effect */
+.highlighted-keyword.style-glow {
+    border-bottom: none;
+    text-shadow: 0 0 3px currentColor;
+    padding: 0 2px;
+}
+
+/* Keyword style selector UI */
+.keyword-style-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: var(--keyword-panel-bg);
+    border-radius: 4px;
+}
+
+.style-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--container-bg);
+    border: 1px solid var(--border-color);
+}
+
+.style-option:hover {
+    background: var(--keyword-item-hover-bg);
+}
+
+.style-option.active {
+    border-color: var(--primary-color);
+    background: var(--primary-transparent);
+}
+
+/* Tooltip styles for keyword system */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: help;
+    margin-left: 6px;
+}
+
+.tooltip .tooltip-text {
+    visibility: hidden;
+    width: 250px;
+    background-color: var(--container-bg);
+    color: var(--text-color);
+    text-align: left;
+    border-radius: 4px;
+    padding: 8px 12px;
+    position: absolute;
+    z-index: 5000;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s, visibility 0.2s;
+    font-weight: normal;
+    font-size: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+}
+
+.tooltip .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--border-color) transparent transparent transparent;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Keyword help section */
+.keyword-help {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: var(--keyword-panel-header-bg);
+    border: 1px solid var(--keyword-panel-border);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.keyword-help-title {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+}
+
+.keyword-help-content {
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
