@@ -379,7 +379,7 @@ input:checked + .slider:before {
 .header-with-filter {
     display: flex;
     align-items: center;
-    gap: 10px;
+    width: 100%;
 }
 
 /* File Type Filter Dropdown */
@@ -395,6 +395,12 @@ input:checked + .slider:before {
     margin-top: 3px;
     width: 100%;
     transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.file-type-filter-container.full-width {
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .filter-row {

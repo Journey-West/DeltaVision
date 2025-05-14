@@ -1,7 +1,6 @@
 /* Search bar styles */
 .search-container {
     padding: 10px 15px;
-    border-bottom: 1px solid var(--border-color);
 }
 
 .search-bar {
