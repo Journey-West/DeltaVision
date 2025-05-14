@@ -481,10 +481,6 @@ export function initFileManager() {
                     e.preventDefault();
                     setDiffLevel('word');
                     break;
-                case '3':
-                    e.preventDefault();
-                    setDiffLevel('char');
-                    break;
                 
                 // Theme toggle
                 case 't':
@@ -627,7 +623,6 @@ export function initFileManager() {
                     <div class="shortcut-group">
                         <div class="shortcut-item"><span class="key">1</span> <span class="description">Line diff</span></div>
                         <div class="shortcut-item"><span class="key">2</span> <span class="description">Word diff</span></div>
-                        <div class="shortcut-item"><span class="key">3</span> <span class="description">Character diff</span></div>
                     </div>
                     
                     <h3>Interface</h3>
@@ -1261,7 +1256,7 @@ export function initFileManager() {
                         window.keywordHighlight.highlightLine(oldLine) : escapeHtml(oldLine);
                     highlightedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ? 
                         window.keywordHighlight.highlightLine(newLine) : escapeHtml(newLine);
-                } else if (diffLevel === 'word' || diffLevel === 'char') {
+                } else if (diffLevel === 'word') {
                     // For word/char diff, apply keyword highlighting first if enabled
                     const processedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ?
                         oldLine : oldLine;
@@ -1270,9 +1265,7 @@ export function initFileManager() {
                     
                     // Apply word/char diff only when both lines exist and are different
                     if (hasOldLine && hasNewLine && oldLine !== newLine) {
-                        const [markedOldLine, markedNewLine] = diffLevel === 'word' ? 
-                            computeWordDiff(processedOldLine, processedNewLine) : 
-                            computeCharDiff(processedOldLine, processedNewLine);
+                        const [markedOldLine, markedNewLine] = computeWordDiff(processedOldLine, processedNewLine);
                         
                         // Use the marked lines directly
                         highlightedOldLine = markedOldLine;
@@ -1285,20 +1278,7 @@ export function initFileManager() {
                         let processedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ? 
                             window.keywordHighlight.highlightLine(newLine) : escapedNewLine;
                         
-                        if (diffLevel === 'char') {
-                            // For character diff mode, if the line has HTML (from keyword highlighting), 
-                            // use a special approach that preserves the HTML
-                            if (processedNewLine !== escapedNewLine) {
-                                highlightedNewLine = processedNewLine;
-                            } else {
-                                // No HTML, so we can apply character-level highlighting directly
-                                highlightedNewLine = '';
-                                for (let charIdx = 0; charIdx < newLine.length; charIdx++) {
-                                    const char = escapeHtml(newLine[charIdx]);
-                                    highlightedNewLine += `<span class="char-added">${char}</span>`;
-                                }
-                            }
-                        } else if (diffLevel === 'word') {
+                        if (diffLevel === 'word') {
                             // For word diff mode, if the line has HTML (from keyword highlighting),
                             // use a special approach that preserves the HTML
                             if (processedNewLine !== escapedNewLine) {
@@ -1705,110 +1685,6 @@ export function initFileManager() {
         }
     }
     
-    // Compute character-level diff
-    function computeCharDiff(oldLine, newLine) {
-        // Check keyword highlighting directly
-        const keywordToggle = document.getElementById('keywordHighlighting');
-        const keywordHighlightingOn = keywordToggle && keywordToggle.checked;
-        
-        // Simple character-by-character comparison
-        const oldChars = escapeHtml(oldLine).split('');
-        const newChars = escapeHtml(newLine).split('');
-        
-        let oldResult = '';
-        let newResult = '';
-        
-        // Simple longest common subsequence algorithm for characters
-        const table = Array(oldChars.length + 1).fill().map(() => Array(newChars.length + 1).fill(0));
-        
-        // Build LCS table
-        for (let i = 1; i <= oldChars.length; i++) {
-            for (let j = 1; j <= newChars.length; j++) {
-                if (oldChars[i - 1] === newChars[j - 1]) {
-                    table[i][j] = table[i - 1][j - 1] + 1;
-                } else {
-                    table[i][j] = Math.max(table[i - 1][j], table[i][j - 1]);
-                }
-            }
-        }
-        
-        // Backtrace to find differences
-        let i = oldChars.length;
-        let j = newChars.length;
-        
-        const oldDiff = new Array(oldChars.length).fill(true);
-        const newDiff = new Array(newChars.length).fill(true);
-        
-        while (i > 0 && j > 0) {
-            if (oldChars[i - 1] === newChars[j - 1]) {
-                oldDiff[i - 1] = false; // Not different
-                newDiff[j - 1] = false; // Not different
-                i--;
-                j--;
-            } else if (table[i - 1][j] >= table[i][j - 1]) {
-                i--;
-            } else {
-                j--;
-            }
-        }
-        
-        // Build output with spans for different characters
-        let inRemovedSpan = false;
-        let inAddedSpan = false;
-        
-        for (let i = 0; i < oldChars.length; i++) {
-            if (oldDiff[i] && !inRemovedSpan) {
-                oldResult += '<span class="char-removed">';
-                inRemovedSpan = true;
-            } else if (!oldDiff[i] && inRemovedSpan) {
-                oldResult += '</span>';
-                inRemovedSpan = false;
-            }
-            if (keywordHighlightingOn && window.keywordHighlight && oldChars[i]) {
-                const charToCheck = oldChars[i].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-                if (window.keywordHighlight.shouldHighlight(charToCheck)) {
-                    const highlighted = window.keywordHighlight.highlightChar(charToCheck);
-                    oldResult += highlighted;
-                } else {
-                    oldResult += oldChars[i];
-                }
-            } else {
-                oldResult += oldChars[i];
-            }
-        }
-        
-        if (inRemovedSpan) {
-            oldResult += '</span>';
-        }
-        
-        for (let j = 0; j < newChars.length; j++) {
-            if (newDiff[j] && !inAddedSpan) {
-                newResult += '<span class="char-added">';
-                inAddedSpan = true;
-            } else if (!newDiff[j] && inAddedSpan) {
-                newResult += '</span>';
-                inAddedSpan = false;
-            }
-            if (keywordHighlightingOn && window.keywordHighlight && newChars[j]) {
-                const charToCheck = newChars[j].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-                if (window.keywordHighlight.shouldHighlight(charToCheck)) {
-                    const highlighted = window.keywordHighlight.highlightChar(charToCheck);
-                    newResult += highlighted;
-                } else {
-                    newResult += newChars[j];
-                }
-            } else {
-                newResult += newChars[j];
-            }
-        }
-        
-        if (inAddedSpan) {
-            newResult += '</span>';
-        }
-        
-        return [oldResult, newResult];
-    }
-    
     // Compute word-level diff that preserves existing HTML tags
     function computeHtmlPreservingWordDiff(processedOldLine, processedNewLine, originalOldLine, originalNewLine) {
         // Use original lines for diff detection
@@ -1863,12 +1739,6 @@ export function initFileManager() {
         let newResult = rebuildHtmlWithDiff(newTextNodes.nodes, newTextNodes.html, newDiff, "word-added");
         
         return [oldResult, newResult];
-    }
-    
-    // Compute character-level diff that preserves existing HTML tags
-    function computeHtmlPreservingCharDiff(processedOldLine, processedNewLine, originalOldLine, originalNewLine) {
-        // Simple fallback for now - actual character diff with HTML preservation would be more complex
-        return computeWordDiff(originalOldLine, originalNewLine);
     }
     
     // Extract text nodes from HTML string

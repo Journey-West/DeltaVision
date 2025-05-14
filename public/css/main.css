@@ -541,6 +541,17 @@ input:checked + .slider:before {
     padding-bottom: 4px;
 }
 
+.old-file-view .line, .new-file-view .line {
+    border-bottom: 1px solid var(--border-color);
+    padding: 4px 0;
+    line-height: 1.5;
+}
+
+.old-file-view .line-content, .new-file-view .line-content {
+    padding: 0 8px;
+    display: inline-block;
+}
+
 .old-file-view .line:nth-child(odd), .new-file-view .line:nth-child(odd) {
     background-color: var(--odd-row-bg);
 }
