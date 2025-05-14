@@ -1,9 +1,17 @@
-                ? true
-                : localStorage.getItem('diffHighlightingEnabled') === 'true',
-            moveDetectionEnabled: localStorage.getItem('moveDetectionEnabled') === null
-                ? true
-                : localStorage.getItem('moveDetectionEnabled') === 'true'
-        };
+(() => {
+    'use strict';
+
+    window.appState = {
+        highlightingEnabled: localStorage.getItem('highlightingEnabled') === null
+            ? true
+            : localStorage.getItem('highlightingEnabled') === 'true',
+        diffHighlightingEnabled: localStorage.getItem('diffHighlightingEnabled') === null
+            ? true
+            : localStorage.getItem('diffHighlightingEnabled') === 'true',
+        moveDetectionEnabled: localStorage.getItem('moveDetectionEnabled') === null
+            ? true
+            : localStorage.getItem('moveDetectionEnabled') === 'true'
+    };
 
         // Combined FileList component to display all comparison types
         const FileList = ({ files, timeFiles, onSelectFile, onSelectTimeFile, selectedFile, selectedTimeFile, searchQuery, fileContents }) => {
@@ -1348,11 +1356,13 @@
             );
         };
 
-        // Render the App component
-        ReactDOM.render(<App />, document.getElementById('app'));
+    // Initialize React components after DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        const root = ReactDOM.createRoot(document.getElementById('app'));
+        root.render(React.createElement(App, null));
 
-        // Connect the global highlight toggle to the React state
-        (() => {
+        // Add event listeners
+            // Connect the global highlight toggle to the React state
             const globalHighlightToggle = document.getElementById('global-highlight-toggle');
             if (globalHighlightToggle) {
                 // Apply the initial state from the global app state
@@ -1700,7 +1710,7 @@
             }
         }
     </script>
-    <script>
+    <script type="text/javascript">
         // Consolidated keyboard shortcuts handler for all application functions
         document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('keydown', function(e) {
@@ -1801,3 +1811,7 @@
             document.querySelectorAll('.hotkey-tooltip').forEach(tooltip => {
                 tooltip.parentElement.classList.add('has-hotkey');
             });
+        });
+    })();
+    </script>
+
