@@ -1466,6 +1466,24 @@ body.offline-mode .offline-indicator {
     margin-bottom: 0;
 }
 
+/* Time difference indicator styling */
+.time-diff-indicator {
+    background-color: #4CAF50; /* Green background */
+    color: #000000; /* Black text for better contrast */
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-left: 8px;
+    display: inline-block;
+}
+
+.dark-theme .time-diff-indicator {
+    background-color: #4CAF50; /* Keep green background */
+    color: #000000; /* Black text for contrast */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border in dark mode */
+}
+
 /* Firefox-specific optimizations */
 @-moz-document url-prefix() {
     /* Optimize scrollbars for Firefox */
