@@ -1,0 +1,48 @@
+{
+  "id": "improved-light",
+  "theme": {
+    "name": "Improved Light",
+    "author": "DeltaVision",
+    "description": "An enhanced light theme with improved contrast and readability",
+    "category": "light",
+    "variables": {
+      "--background-color": "#f8f9fa",
+      "--container-bg": "#ffffff",
+      "--header-bg": "#f0f2f5",
+      "--header-text": "#4a5568",
+      "--text-color": "#2d3748",
+      "--text-muted": "#718096",
+      "--accent-color": "#ff9940",
+      "--primary-color": "#3182ce",
+      "--primary-darker": "#2c5282",
+      "--primary-rgb": "49, 130, 206",
+      "--primary-transparent": "rgba(49, 130, 206, 0.1)",
+      "--secondary-color": "#38a169",
+      "--border-color": "#e2e8f0",
+      "--sidebar-bg": "#edf2f7",
+      "--file-entry-bg": "#ffffff",
+      "--file-entry-hover": "#ebf8ff",
+      "--card-shadow": "0 2px 10px rgba(0, 0, 0, 0.05)",
+      "--tooltip-bg": "#ffffff",
+      "--tooltip-text": "#2d3748",
+      "--transition-speed": "0.3s",
+      "--added-color": "#38a169",
+      "--removed-color": "#e53e3e",
+      "--bg-secondary": "#edf2f7",
+      "--bg-tertiary": "#e2e8f0",
+      "--hover-color": "rgba(49, 130, 206, 0.1)",
+      
+      "--keyword-panel-bg": "linear-gradient(to bottom, #f8fafc 0%, #f0f5fa 100%)",
+      "--keyword-panel-header-bg": "#edf2f7",
+      "--keyword-panel-border": "#cbd5e0",
+      "--keyword-panel-shadow": "0 4px 20px rgba(0, 0, 0, 0.1)",
+      "--keyword-item-bg": "rgba(0, 0, 0, 0.04)",
+      "--keyword-item-hover-bg": "#ebf8ff",
+      "--keyword-item-active-bg": "rgba(49, 130, 206, 0.15)",
+      "--keyword-count-bg": "rgba(0, 0, 0, 0.08)",
+      "--keyword-count-old": "#c53030",
+      "--keyword-count-new": "#2f855a",
+      "--keyword-count-separator": "#718096"
+    }
+  }
+}
