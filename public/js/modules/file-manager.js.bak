@@ -4,6 +4,7 @@ export function initFileManager() {
     let oldFiles = [];
     let newFiles = [];
     let timeComparisons = [];
+    let sameCommandDiffs = []; // Track identical commands run at different times
     let selectedFile = null;
     let selectedFileIndex = -1; // Track the currently selected file index
     
@@ -11,45 +12,225 @@ export function initFileManager() {
     async function fetchFileData() {
         try {
             // Show loading state
-            document.getElementById('unifiedFileList').innerHTML = '<div class="loading"><div class="spinner"></div>Loading files...</div>';
+            const unifiedList = document.getElementById('unifiedFileList');
+            if (unifiedList) {
+                unifiedList.innerHTML = '<div class="loading"><div class="spinner"></div>Loading files...</div>';
+            }
             
-            // Fetch old-new comparison files
-            const oldNewResponse = await fetch('/api/files');
-            const matchedFiles = await oldNewResponse.json();
+            // Get current folder configuration
+            const folderResponse = await fetch('/api/folders');
+            const folderData = await folderResponse.json();
             
-            // Render the files
-            renderFileList(matchedFiles);
+            // Check if folders are configured
+            const foldersConfigured = !!(folderData.newFolderPath);
             
+            if (foldersConfigured) {
+                // Fetch files
+                const fileResponse = await fetch('/api/files');
+                const fileData = await fileResponse.json();
+                
+                // Also fetch same-command diffs
+                const sameCommandResponse = await fetch('/api/same-command-diffs');
+                const sameCommandData = await sameCommandResponse.json();
+                
+                // Cache the file data
+                updateFileData(fileData, sameCommandData.sameCommandDiffs || []);
+                
+                // Render the files in the UI
+                renderFileList();
+            } else {
+                // Show welcome/setup prompt
+                if (unifiedList) {
+                    unifiedList.innerHTML = '<div class="welcome-message">\n' +
+                        '<h2>Welcome to DeltaVision</h2>\n' +
+                        '<p>To get started, please configure your folders:</p>\n' +
+                        '<button id="configureButton" class="config-button">Configure Folders</button>\n' +
+                    '</div>';
+                    
+                    const configBtn = document.getElementById('configureButton');
+                    if (configBtn) {
+                        configBtn.addEventListener('click', showFolderConfigModal);
+                    }
+                }
+            }
         } catch (error) {
             console.error('Error fetching file data:', error);
-            document.getElementById('unifiedFileList').innerHTML = '<div class="error">Error loading files. Please try again.</div>';
+            const unifiedList = document.getElementById('unifiedFileList');
+            if (unifiedList) {
+                unifiedList.innerHTML = `<div class="error-message">Error loading files: ${error.message}</div>`;
+            }
         }
     }
     
+    // Update internal file data
+    function updateFileData(fileData, commandDiffs = []) {
+        // Store the file data
+        oldFiles = [];
+        newFiles = [];
+        timeComparisons = [];
+        sameCommandDiffs = commandDiffs;
+        
+        // Process the file data
+        fileData.forEach(file => {
+            if (file.fileType === 'old-only') {
+                oldFiles.push(file);
+            } else if (file.fileType === 'new-only') {
+                newFiles.push(file);
+            } else if (file.fileType === 'comparison') {
+                timeComparisons.push(file);
+            }
+        });
+        
+        console.log(`Updated file data: ${oldFiles.length} old, ${newFiles.length} new, ${timeComparisons.length} comparisons, ${sameCommandDiffs.length} same-command diffs`);
+    }
+    
     // Render a list of files from the API
-    function renderFileList(matchedFiles) {
+    function renderFileList(filterType = 'all') {
         const fileListElement = document.getElementById('unifiedFileList');
         if (!fileListElement) return;
         
-        if (matchedFiles.length === 0) {
-            fileListElement.innerHTML = '<div class="empty-state">No files found. Please configure folder paths.</div>';
+        // Combine all file types
+        let allFiles = [...newFiles, ...oldFiles, ...timeComparisons];
+        let filteredCommandDiffs = [...sameCommandDiffs];
+        
+        // Apply filtering based on the selected filter types
+        // filterType can now be either a string 'all' or an array of filter types
+        if (Array.isArray(filterType) && filterType.length > 0) {
+            // Filter files based on the selected types
+            allFiles = allFiles.filter(file => {
+                return filterType.includes(file.fileType);
+            });
+            
+            // Only include same-command diffs if that filter is selected
+            if (!filterType.includes('same-command')) {
+                filteredCommandDiffs = [];
+            }
+        } else if (filterType !== 'all') {
+            // Handle legacy single filter type for backward compatibility
+            if (filterType === 'new-only') {
+                allFiles = allFiles.filter(file => file.fileType === 'new-only');
+                filteredCommandDiffs = [];
+            } else if (filterType === 'old-only') {
+                allFiles = allFiles.filter(file => file.fileType === 'old-only');
+                filteredCommandDiffs = [];
+            } else if (filterType === 'comparison') {
+                allFiles = allFiles.filter(file => file.fileType === 'comparison');
+                filteredCommandDiffs = [];
+            } else if (filterType === 'same-command') {
+                allFiles = [];
+                // Keep filteredCommandDiffs as is
+            }
+        }
+        
+        if (allFiles.length === 0 && filteredCommandDiffs.length === 0) {
+            fileListElement.innerHTML = '<div class="empty-state">No files found matching the selected filter.</div>';
             return;
         }
         
         // Sort files by timestamp (newest first)
-        matchedFiles.sort((a, b) => b.timestamp - a.timestamp);
+        allFiles.sort((a, b) => b.timestamp - a.timestamp);
         
         let html = '';
         
-        // Create HTML for each file entry
-        matchedFiles.forEach(file => {
-            const { fileType, oldFile, newFile, command, commandRan } = file;
+        // Create a combined array of all files and same-command diffs
+        const combinedEntries = [];
+        
+        // Add regular files
+        allFiles.forEach(file => {
+            const { fileType, oldFile, newFile, command, commandRan, timestamp } = file;
             
-            // Get the display name (prefer commandRan, fallback to command, then filename)
-            const displayText = commandRan || command || (newFile ? newFile.filename : oldFile ? oldFile.filename : 'Unknown');
+            // Ensure we have a valid timestamp for sorting
+            let fileTimestamp;
+            if (timestamp) {
+                // If timestamp is a string (like an ISO date), convert it to Date object
+                fileTimestamp = timestamp instanceof Date ? timestamp : new Date(timestamp);
+            } else if (newFile && newFile.mtime) {
+                fileTimestamp = newFile.mtime instanceof Date ? newFile.mtime : new Date(newFile.mtime);
+            } else if (oldFile && oldFile.mtime) {
+                fileTimestamp = oldFile.mtime instanceof Date ? oldFile.mtime : new Date(oldFile.mtime);
+            } else {
+                fileTimestamp = new Date();
+            }
             
-            // Create appropriate entry based on file type
-            if (fileType === 'new-only') {
+            // If the conversion failed, use current time as fallback
+            if (isNaN(fileTimestamp.getTime())) {
+                console.warn('Invalid timestamp detected, using current time as fallback');
+                fileTimestamp = new Date();
+            }
+            
+            combinedEntries.push({
+                type: 'regular',
+                fileType,
+                oldFile,
+                newFile,
+                command,
+                commandRan,
+                timestamp: fileTimestamp
+            });
+        });
+        
+        // Add same-command diffs
+        filteredCommandDiffs.forEach(diff => {
+            const { command, runs, timeDiff } = diff;
+            
+            // Only process if there are at least 2 runs
+            if (runs.length >= 2) {
+                // Get the newest and oldest runs
+                const newestRun = runs[0];
+                const oldestRun = runs[runs.length - 1];
+                
+                // Ensure we have a valid timestamp for sorting
+                let diffTimestamp;
+                if (newestRun.timestamp) {
+                    // If timestamp is a string (like an ISO date), convert it to Date object
+                    diffTimestamp = newestRun.timestamp instanceof Date ? 
+                        newestRun.timestamp : new Date(newestRun.timestamp);
+                } else {
+                    // Fallback to current time
+                    diffTimestamp = new Date();
+                }
+                
+                // If the conversion failed, use current time as fallback
+                if (isNaN(diffTimestamp.getTime())) {
+                    console.warn('Invalid timestamp detected in same-command diff, using current time as fallback');
+                    diffTimestamp = new Date();
+                }
+                
+                combinedEntries.push({
+                    type: 'same-command-diff',
+                    command,
+                    timeDiff,
+                    oldFile: { path: oldestRun.path },
+                    newFile: { path: newestRun.path },
+                    timestamp: diffTimestamp // Use properly processed timestamp
+                });
+            }
+        });
+        
+        // Sort all entries by timestamp (newest first)
+        combinedEntries.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Create HTML for each entry
+        combinedEntries.forEach(entry => {
+            if (entry.type === 'same-command-diff') {
+                // Render same-command diff entry
+                html += `
+                    <div class="file-entry same-command-diff" 
+                         data-old-path="${entry.oldFile.path}" 
+                         data-new-path="${entry.newFile.path}">
+                        <strong>${entry.command}</strong>
+                        <span class="time-diff-indicator">${entry.timeDiff}</span>
+                    </div>
+                `;
+            } else {
+                // Render regular file entry
+                const { fileType, oldFile, newFile, command, commandRan } = entry;
+                
+                // Get the display name (prefer commandRan, fallback to command, then filename)
+                const displayText = commandRan || command || (newFile ? newFile.filename : oldFile ? oldFile.filename : 'Unknown');
+                
+                // Create appropriate entry based on file type
+                if (fileType === 'new-only') {
                 html += `
                     <div class="file-entry new-only" data-new-path="${newFile.path}">
                         <strong>${displayText}</strong>
@@ -68,6 +249,7 @@ export function initFileManager() {
                         <strong>${displayText}</strong>
                     </div>
                 `;
+                }
             }
         });
         
@@ -132,6 +314,50 @@ export function initFileManager() {
                 console.error('Comparison elements not found');
                 return;
             }
+            
+            // Clear the "No file selected" text at the top
+            document.getElementById('fileType').textContent = 'Type: Loading...';
+            document.getElementById('fileSize').textContent = 'Size: Loading...';
+            document.getElementById('modifiedTime').textContent = 'Modified: Loading...';
+            
+            // Update the file path display elements
+            const oldPathElement = document.getElementById('oldFilePath');
+            const newPathElement = document.getElementById('newFilePath');
+            const oldPathRow = document.querySelector('.file-path-row:first-child');
+            const newPathRow = document.querySelector('.file-path-row:last-child');
+            
+            // Handle old path display
+            if (oldPath) {
+                if (oldPathElement) {
+                    oldPathElement.textContent = oldPath.split('/').pop();
+                    oldPathElement.classList.remove('empty');
+                }
+                if (oldPathRow) oldPathRow.style.display = 'flex';
+            } else {
+                if (oldPathElement) {
+                    oldPathElement.textContent = 'No file selected';
+                    oldPathElement.classList.add('empty');
+                }
+                if (oldPathRow) oldPathRow.style.display = 'none';
+            }
+            
+            // Handle new path display
+            if (newPath) {
+                if (newPathElement) {
+                    newPathElement.textContent = newPath.split('/').pop();
+                    newPathElement.classList.remove('empty');
+                }
+                if (newPathRow) newPathRow.style.display = 'flex';
+            } else {
+                if (newPathElement) {
+                    newPathElement.textContent = 'No file selected';
+                    newPathElement.classList.add('empty');
+                }
+                if (newPathRow) newPathRow.style.display = 'none';
+            }
+            
+            // Update file metadata immediately to show loading state
+            updateFileMetadata(oldPath, newPath);
             
             // Show loading state
             diffViewer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading comparison...</div>';
@@ -453,8 +679,25 @@ export function initFileManager() {
         const diffViewer = document.getElementById('diffViewer');
         if (!diffViewer) return;
         
-        // Update change statistics in the UI
-    updateChangeStatistics(oldPath, newPath)
+        // Statistics functionality has been removed
+        
+        // Make sure both file paths are visible for comparison files
+        const oldPathRow = document.querySelector('.file-path-row:first-child');
+        const newPathRow = document.querySelector('.file-path-row:last-child');
+        
+        if (comparisonData.fileType === 'comparison') {
+            // For comparison files, show both old and new file paths
+            if (oldPathRow) oldPathRow.style.display = 'flex';
+            if (newPathRow) newPathRow.style.display = 'flex';
+        } else if (comparisonData.fileType === 'old-only') {
+            // For old-only files, show only the old file path
+            if (oldPathRow) oldPathRow.style.display = 'flex';
+            if (newPathRow) newPathRow.style.display = 'none';
+        } else if (comparisonData.fileType === 'new-only') {
+            // For new-only files, show only the new file path
+            if (oldPathRow) oldPathRow.style.display = 'none';
+            if (newPathRow) newPathRow.style.display = 'flex';
+        }
         
         // Update file metadata in the UI
         updateFileMetadata(oldPath, newPath, comparisonData.fileType);
@@ -465,39 +708,54 @@ export function initFileManager() {
         // Get the view mode buttons
         const diffViewButton = document.getElementById('diffViewButton');
         const newViewButton = document.getElementById('newViewButton');
+        const oldViewButton = document.getElementById('oldViewButton');
         
-        // If new-only mode, hide diff view button and force new file view
+        // Handle different file types
         if (comparisonData.fileType === 'new-only') {
+            // For new-only files, hide diff and old view buttons, force new file view
             if (diffViewButton) diffViewButton.style.display = 'none';
+            if (oldViewButton) oldViewButton.style.display = 'none';
             if (newViewButton) {
+                newViewButton.style.display = 'block';
                 newViewButton.classList.add('active');
                 // No need to check if it's already active, always show new file view in new-only mode
                 renderNewFileView(diffViewer, comparisonData.newContent);
             }
+        } else if (comparisonData.fileType === 'old-only') {
+            // For old-only files, hide diff and new view buttons, force old file view
+            if (diffViewButton) diffViewButton.style.display = 'none';
+            if (newViewButton) newViewButton.style.display = 'none';
+            if (oldViewButton) {
+                oldViewButton.style.display = 'block';
+                oldViewButton.classList.add('active');
+                // Always show old file view in old-only mode
+                renderOldFileView(diffViewer, comparisonData.oldContent);
+            }
         } else {
             // Normal comparison mode with both files
             if (diffViewButton) diffViewButton.style.display = 'block';
+            if (newViewButton) newViewButton.style.display = 'block';
+            if (oldViewButton) oldViewButton.style.display = 'block';
             
-            // Render the appropriate view based on which button is active
-            if (newViewButton && newViewButton.classList.contains('active')) {
-                renderNewFileView(diffViewer, comparisonData.newContent);
-            } else {
-                renderDiff(diffViewer, comparisonData);
-                
-                // Set diff view as active by default for comparisons
-                if (diffViewButton) {
-                    diffViewButton.classList.add('active');
-                }
-                if (newViewButton) {
-                    newViewButton.classList.remove('active');
-                }
+            // Always default to diff view for comparison files
+            renderDiff(diffViewer, comparisonData);
+            
+            // Set diff view as active
+            if (diffViewButton) {
+                diffViewButton.classList.add('active');
+            }
+            if (newViewButton) {
+                newViewButton.classList.remove('active');
+            }
+            if (oldViewButton) {
+                oldViewButton.classList.remove('active');
             }
         }
     }
     
     // Helper to update file type and size information
-    function updateFileTypeAndSize(oldPath, newPath) {
-    console.log('[updateFileTypeAndSize] Called with:', { oldPath, newPath });
+    function updateFileTypeAndSize(filePath) {
+        console.log('[updateFileTypeAndSize] Called with filePath:', filePath);
         const typeElement = document.getElementById('fileType');
         const sizeElement = document.getElementById('fileSize');
         const modifiedElement = document.getElementById('modifiedTime');
@@ -509,12 +767,9 @@ export function initFileManager() {
         sizeElement.textContent = 'Size: Loading...';
         modifiedElement.textContent = 'Modified: Loading...';
         
-        // Check if we have a path to get metadata from
-        const pathToCheck = newPath || oldPath;
-        
-        if (pathToCheck) {
+        if (filePath) {
             // Fetch and update metadata
-            fetchFileMetadata(pathToCheck);
+            fetchFileMetadata(filePath);
         } else {
             // Clear metadata if no path is available
             typeElement.textContent = 'Type: -';
@@ -525,7 +780,7 @@ export function initFileManager() {
     
     // Fetch file metadata from the server
     async function fetchFileMetadata(filePath) {
-    console.log('[fetchFileMetadata] Requesting metadata for path:', filePath);
+        console.log('[fetchFileMetadata] Requesting metadata for path:', filePath);
         if (!filePath) {
             console.warn('No file path provided to fetchFileMetadata');
             updateMetadataUI(null, filePath);
@@ -630,53 +885,76 @@ export function initFileManager() {
     
     // Update file metadata in the comparison header
     function updateFileMetadata(oldPath, newPath, fileType = 'comparison') {
-    console.log('[updateFileMetadata] Called with:', { oldPath, newPath, fileType });
+        console.log('[updateFileMetadata] Called with:', { oldPath, newPath, fileType });
+        // Get UI elements
         const oldPathElement = document.getElementById('oldFilePath');
         const newPathElement = document.getElementById('newFilePath');
-        const oldLabel = document.getElementById('oldLabel');
-        const newLabel = document.getElementById('newLabel');
+        const oldLabel = document.querySelector('.old-label');
+        const newLabel = document.querySelector('.new-label');
+        const oldPathRow = document.querySelector('.file-path-row:first-child');
+        const newPathRow = document.querySelector('.file-path-row:last-child');
         
+        // Check for missing elements and log warnings
         if (!oldPathElement || !newPathElement) {
-        console.warn('[updateFileMetadata] Missing oldPathElement or newPathElement:', { oldPathElement, newPathElement });
-        // Do not return early; allow metadata update to proceed
-    }
+            console.warn('[updateFileMetadata] Missing path elements:', { oldPathElement, newPathElement });
+        }
         
-        // File type specific handling
+        // Only log warning if we really need to use these elements
+        if ((!oldLabel || !newLabel) && fileType !== 'new-only' && fileType !== 'old-only') {
+            console.debug('[updateFileMetadata] Note: Label elements using classes instead of IDs:', { oldLabel, newLabel });
+        }
+        
+        // Get view toggle buttons
+        const diffViewButton = document.getElementById('diffViewButton');
+        const newViewButton = document.getElementById('newViewButton');
+        const oldViewButton = document.getElementById('oldViewButton');
+        
+        // Handle different file types
         if (fileType === 'new-only') {
             // Only new file is available (no old file)
+            if (oldPathRow) oldPathRow.style.display = 'none';
+            if (newPathRow) newPathRow.style.display = 'flex';
+            
             if (oldLabel) oldLabel.style.display = 'none';
             if (oldPathElement) {
                 oldPathElement.textContent = 'No file selected';
                 oldPathElement.classList.add('empty');
             }
             
-            if (newPath) newLabel.style.display = 'block';
+            if (newLabel) {
+                newLabel.style.display = 'block';
+                newLabel.textContent = 'File:';
+            }
             if (newPathElement) {
                 newPathElement.textContent = newPath ? newPath.split('/').pop() : 'No file selected';
-                newPathElement.classList.remove('empty');
+                newPathElement.classList.toggle('empty', !newPath);
+                if (newPath) newPathElement.title = newPath;
             }
             
-            // Update view toggle to only show new file view
-            const diffViewButton = document.getElementById('diffViewButton');
-            const newViewButton = document.getElementById('newViewButton');
-            
-            if (diffViewButton) {
-                diffViewButton.style.display = 'none';
-            }
+            // Update view toggle buttons
+            if (diffViewButton) diffViewButton.style.display = 'none';
+            if (oldViewButton) oldViewButton.style.display = 'none';
             if (newViewButton) {
+                newViewButton.style.display = 'block';
                 newViewButton.classList.add('active');
-                // Force new file view since diff doesn't make sense
-                const diffViewer = document.getElementById('diffViewer');
-                if (diffViewer && diffViewer.dataset.newContent) {
-                    renderNewFileView(diffViewer, diffViewer.dataset.newContent);
-                }
             }
+            
+            // Update file type display
+            document.getElementById('fileType').textContent = 'Type: New Only';
+            
         } else if (fileType === 'old-only') {
             // Only old file is available (no new file)
-            if (oldPath) oldLabel.style.display = 'block';
+            if (oldPathRow) oldPathRow.style.display = 'flex';
+            if (newPathRow) newPathRow.style.display = 'none';
+            
+            if (oldLabel) {
+                oldLabel.style.display = 'block';
+                oldLabel.textContent = 'File:';
+            }
             if (oldPathElement) {
                 oldPathElement.textContent = oldPath ? oldPath.split('/').pop() : 'No file selected';
-                oldPathElement.classList.remove('empty');
+                oldPathElement.classList.toggle('empty', !oldPath);
+                if (oldPath) oldPathElement.title = oldPath;
             }
             
             if (newLabel) newLabel.style.display = 'none';
@@ -684,73 +962,114 @@ export function initFileManager() {
                 newPathElement.textContent = 'No file selected';
                 newPathElement.classList.add('empty');
             }
+            
+            // Update view toggle buttons
+            if (diffViewButton) diffViewButton.style.display = 'none';
+            if (newViewButton) newViewButton.style.display = 'none';
+            if (oldViewButton) {
+                oldViewButton.style.display = 'block';
+                oldViewButton.classList.add('active');
+            }
+            
+            // Update file type display
+            document.getElementById('fileType').textContent = 'Type: Old Only';
+            
         } else {
             // Normal comparison (both files available)
-            if (oldLabel) oldLabel.style.display = 'block';
+            if (oldPathRow) oldPathRow.style.display = 'flex';
+            if (newPathRow) newPathRow.style.display = 'flex';
+            
+            if (oldLabel) {
+                oldLabel.style.display = 'block';
+                oldLabel.textContent = 'Old:';
+            }
             if (oldPathElement) {
                 oldPathElement.textContent = oldPath ? oldPath.split('/').pop() : 'No file selected';
                 oldPathElement.classList.toggle('empty', !oldPath);
+                if (oldPath) oldPathElement.title = oldPath;
             }
             
-            if (newLabel) newLabel.style.display = 'block';
+            if (newLabel) {
+                newLabel.style.display = 'block';
+                newLabel.textContent = 'New:';
+            }
             if (newPathElement) {
                 newPathElement.textContent = newPath ? newPath.split('/').pop() : 'No file selected';
                 newPathElement.classList.toggle('empty', !newPath);
+                if (newPath) newPathElement.title = newPath;
             }
             
-            // Show both view toggle options
-            const diffViewButton = document.getElementById('diffViewButton');
-            const newViewButton = document.getElementById('newViewButton');
-            
-            if (diffViewButton) {
-                diffViewButton.style.display = 'block';
-            }
-            if (newViewButton) {
-                newViewButton.style.display = 'block';
-            }
+            // Show all view toggle options
+            if (diffViewButton) diffViewButton.style.display = 'block';
+            if (newViewButton) newViewButton.style.display = 'block';
+            if (oldViewButton) oldViewButton.style.display = 'block';
         }
         
         // Update file type and size information if available
-        updateFileTypeAndSize(oldPath, newPath);
+        // Determine which path to use for metadata based on file type
+        const pathForMetadata = (fileType === 'new-only') ? newPath : 
+                              (fileType === 'old-only') ? oldPath : 
+                              (newPath || oldPath);
+        
     }
-
-    // Render only the new file content
-    function renderNewFileView(container, content) {
-        if (!container || !content) return;
-        
+} else {
+    // Fallback values when metadata is not available
+    if (filePath) {
+        // Extract extension from filename
+        const extension = filePath.split('.').pop().toUpperCase() || 'TXT';
+        typeElement.textContent = `Type: ${extension}`;
+    } else {
+        typeElement.textContent = 'Type: -';
+    }
         // Get current file path from container dataset
-        const newPath = container.dataset.newPath;
+        const oldPath = container.dataset.oldPath;
         
-        // Hide the old file path section completely
+        // Hide the new file path section completely
+        const newPathRow = document.querySelector('.file-path-row:last-child');
+        if (newPathRow) {
+            newPathRow.style.display = 'none';
+        }
+        
+        // Make sure the old file path row is visible
         const oldPathRow = document.querySelector('.file-path-row:first-child');
         if (oldPathRow) {
-            oldPathRow.style.display = 'none';
+            oldPathRow.style.display = 'flex';
         }
         
-        // Update the New file path to show the actual file path
-        const newPathElement = document.getElementById('newPath');
-        if (newPathElement && newPath) {
+        // Update the Old file path to show the actual file path
+        const oldPathElement = document.getElementById('oldFilePath');
+        if (oldPathElement && oldPath) {
             // Extract just the filename from the path
-            const filename = newPath.split('/').pop();
-            newPathElement.textContent = filename;
-            newPathElement.classList.remove('empty');
-            newPathElement.title = newPath; // Full path as tooltip
+            const filename = oldPath.split('/').pop();
+            oldPathElement.textContent = filename;
+            oldPathElement.classList.remove('empty');
+            oldPathElement.title = oldPath; // Full path as tooltip
         }
         
-        // Ensure file metadata is updated even in new file view
-        if (newPath) {
-            // Ensure file metadata is up to date
-            updateFileTypeAndSize(null, newPath);
+        // Show loading state for metadata while we fetch it
+        document.getElementById('fileType').textContent = 'Type: Loading...';
+        document.getElementById('fileSize').textContent = 'Size: Loading...';
+        document.getElementById('modifiedTime').textContent = 'Modified: Loading...';
+        
+        // Ensure file metadata is updated even in old file view
+        if (oldPath) {
+            // Fetch and update file metadata specifically for the old file view
+            fetchFileMetadata(oldPath);
+        } else {
+            // If no path is available, clear metadata
+            document.getElementById('fileType').textContent = 'Type: -';
+            document.getElementById('fileSize').textContent = 'Size: -';
+            document.getElementById('modifiedTime').textContent = 'Modified: -';
         }
         
         const lines = content.split('\n');
-        let html = '<div class="new-file-view">';
+        let html = '<div class="old-file-view">';
         
         // Check if keyword highlighting is enabled
         const keywordToggle = document.getElementById('keywordHighlighting');
         const keywordHighlightingEnabled = keywordToggle && keywordToggle.checked;
         
-        // Render each line without adding internal line numbers (the UI already shows them in the gutter)
+        // Render each line with proper styling
         lines.forEach((line, index) => {
             let processedLine;
             
@@ -760,264 +1079,364 @@ export function initFileManager() {
             } else {
                 processedLine = escapeHtml(line);
             }
-        }
-    } else if (fileType === 'old-only') {
-        // Only old file is available (no new file)
-        if (oldPath) oldLabel.style.display = 'block';
-        if (oldPathElement) {
-            oldPathElement.textContent = oldPath ? oldPath.split('/').pop() : 'No file selected';
-            oldPathElement.classList.remove('empty');
-        }
-
-        if (newLabel) newLabel.style.display = 'none';
-        if (newPathElement) {
-            newPathElement.textContent = 'No file selected';
-            newPathElement.classList.add('empty');
-        }
-    } else {
-        // Normal comparison (both files available)
-        if (oldLabel) oldLabel.style.display = 'block';
-        if (oldPathElement) {
-            oldPathElement.textContent = oldPath ? oldPath.split('/').pop() : 'No file selected';
-            oldPathElement.classList.toggle('empty', !oldPath);
-        }
-
-        if (newLabel) newLabel.style.display = 'block';
-        if (newPathElement) {
-            newPathElement.textContent = newPath ? newPath.split('/').pop() : 'No file selected';
-            newPathElement.classList.toggle('empty', !newPath);
-        }
-
-        // Show both view toggle options
-        const diffViewButton = document.getElementById('diffViewButton');
-        const newViewButton = document.getElementById('newViewButton');
-
-        if (diffViewButton) {
-            diffViewButton.style.display = 'block';
-        }
-        if (newViewButton) {
-            newViewButton.style.display = 'block';
-        }
+            
+            // Add line div with line content in a separate span for better styling
+            html += `<div class="line"><span class="line-content">${processedLine}</span></div>`;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
     }
-
-    // Update file type and size information if available
-    updateFileTypeAndSize(oldPath, newPath);
-}
-
-// Render only the new file content
-function renderNewFileView(container, content) {
-    if (!container || !content) return;
-
-    // Get current file path from container dataset
-    const newPath = container.dataset.newPath;
-
-    // Hide the old file path section completely
-    const oldPathRow = document.querySelector('.file-path-row:first-child');
-    if (oldPathRow) {
-        oldPathRow.style.display = 'none';
-    }
-
-    // Update the New file path to show the actual file path
-    const newPathElement = document.getElementById('newPath');
-    if (newPathElement && newPath) {
-        // Extract just the filename from the path
-        const filename = newPath.split('/').pop();
-        newPathElement.textContent = filename;
-        newPathElement.classList.remove('empty');
-        newPathElement.title = newPath; // Full path as tooltip
-    }
-
-    // Ensure file metadata is updated even in new file view
-    if (newPath) {
-        // Ensure file metadata is up to date
-        updateFileTypeAndSize(null, newPath);
-    }
-
-    const lines = content.split('\n');
-    let html = '<div class="new-file-view>';
-
-    // Check if keyword highlighting is enabled
-    const keywordToggle = document.getElementById('keywordHighlighting');
-    const keywordHighlightingEnabled = keywordToggle && keywordToggle.checked;
-
-    // Render each line without adding internal line numbers (the UI already shows them in the gutter)
-    lines.forEach((line, index) => {
-        let processedLine;
-
-        // Apply keyword highlighting if enabled
-        if (keywordHighlightingEnabled && window.keywordHighlight) {
-            processedLine = window.keywordHighlight.highlightLine(line);
-        } else {
-            processedLine = escapeHtml(line);
+    
+    // Helper function to determine the CSS class for a line in the diff view
+    function getLineClass(currentLine, otherLine, lineIndex, diffLevel, movedLines, otherMovedLines) {
+        let lineClass = '';
+        
+        // Check if this is an empty line
+        if (!currentLine && otherLine) {
+            // This line doesn't exist in this version but exists in the other
+            lineClass = 'removed';
+        } else if (currentLine && !otherLine) {
+            // This line exists in this version but not in the other
+            lineClass = 'added';
+        } else if (currentLine && otherLine && currentLine !== otherLine) {
+            // This line is different in both versions
+            lineClass = 'modified';
         }
-
-    // Check if this is an empty line
-    if (!currentLine && otherLine) {
-        // This line doesn't exist in this version but exists in the other
-        lineClass = 'removed';
-    } else if (currentLine && !otherLine) {
-        // This line exists in this version but not in the other
-        lineClass = 'added';
-    } else if (currentLine && otherLine && currentLine !== otherLine) {
-        // This line is different in both versions
-        lineClass = 'modified';
+        
+        // Check if this line has been moved
+        if (movedLines && movedLines.has(lineIndex)) {
+            lineClass = 'moved';
+        }
+        
+        return lineClass;
     }
-
-    // Check if this line has been moved
-    if (movedLines && movedLines.has(lineIndex)) {
-        lineClass = 'moved';
-    }
-
-    return lineClass;
-}
-
-// Render diff content
-function renderDiff(container, comparisonData) {
-    if (!container || !comparisonData) return;
-
-    const oldContent = comparisonData.oldContent || container.dataset.oldContent || '';
-    const newContent = comparisonData.newContent || container.dataset.newContent || '';
-
-    // Check settings
-    const diffHighlightingEnabled = document.getElementById('diffHighlighting').checked;
-    const moveDetectionEnabled = document.getElementById('moveDetection').checked;
-    const keywordHighlightingEnabled = document.getElementById('keywordHighlighting').checked;
-    const diffLevel = document.getElementById('diffLevel').value;
-
-    // Initialize counters for change statistics
-    let addedCount = 0;
-    let removedCount = 0;
-    let movedCount = 0;
-
-    // Split content into lines
-    const oldLines = oldContent.split('\n');
-    const newLines = newContent.split('\n');
-
-    // Always detect moved lines for statistics, even if toggle is off
-    const { movedOldLines, movedNewLines } = detectMovedLines(oldLines, newLines);
-
-    // Only use moves for display if the toggle is enabled
-    const displayMoves = moveDetectionEnabled;
-
-    // Check if there are any moved lines
-    const hasMoves = displayMoves && (movedOldLines.size > 0 || movedNewLines.size > 0);
-
-    // Create diff table
-    let html = `<table class="diff-table${hasMoves ? ' has-moved-lines' : ''}">
-        <colgroup>
-            <col class="line-num-col" />
-            <col class="content-col" />
-            <col class="line-num-col" />
-            <col class="content-col" />
-        </colgroup>
-        <thead>
-            <tr>
-                <th class="line-number-header">#</th>
-                <th class="content-header">Old</th>
-                <th class="line-number-header">#</th>
-                <th class="content-header">New</th>
-            </tr>
-        </thead>
-        <tbody>`;
-
-    // Determine number of lines to show
-    const maxLines = Math.max(oldLines.length, newLines.length);
-
-    // Then render remaining lines
-    for (let i = 0; i < maxLines; i++) {
-        const hasOldLine = i < oldLines.length;
-        const hasNewLine = i < newLines.length;
-
-        const oldLine = hasOldLine ? oldLines[i] : '';
-        const newLine = hasNewLine ? newLines[i] : '';
-
-        let highlightedOldLine = '';
-        let highlightedNewLine = '';
-
-        // Apply highlighting based on diffLevel
-        if (diffHighlightingEnabled) {
-            if (diffLevel === 'line') {
-                // Line level diff (original behavior)
-                highlightedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ?
-                    window.keywordHighlight.highlightLine(oldLine) : escapeHtml(oldLine);
-                highlightedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ?
-                    window.keywordHighlight.highlightLine(newLine) : escapeHtml(newLine);
-            } else if (diffLevel === 'word' || diffLevel === 'char') {
-                // For word/char diff, apply keyword highlighting first if enabled
-                const processedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ?
-                    oldLine : oldLine;
-                const processedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ?
-                    newLine : newLine;
-
-                // Then apply word/char diff 
-                if (hasOldLine && hasNewLine && oldLine !== newLine) {
-                    const [markedOldLine, markedNewLine] = diffLevel === 'word' ?
-                        computeWordDiff(processedOldLine, processedNewLine) :
-                        computeCharDiff(processedOldLine, processedNewLine);
-
-                    // Use the marked lines directly
-                    highlightedOldLine = markedOldLine;
-                    highlightedNewLine = markedNewLine;
-                } else {
-                    // No diff needed for identical lines
-                    highlightedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ?
+    
+    // Render diff content
+    function renderDiff(container, comparisonData) {
+        if (!container || !comparisonData) return;
+        
+        const oldContent = comparisonData.oldContent || container.dataset.oldContent || '';
+        const newContent = comparisonData.newContent || container.dataset.newContent || '';
+        
+        // Check settings
+        const diffHighlightingEnabled = document.getElementById('diffHighlighting').checked;
+        const moveDetectionEnabled = document.getElementById('moveDetection').checked;
+        const keywordHighlightingEnabled = document.getElementById('keywordHighlighting').checked;
+        const diffLevel = document.getElementById('diffLevel').value;
+        
+        // Split content into lines
+        const oldLines = oldContent.split('\n');
+        const newLines = newContent.split('\n');
+        
+        // Always detect moved lines for statistics, even if toggle is off
+        const { movedOldLines, movedNewLines } = detectMovedLines(oldLines, newLines);
+        
+        // Only use moves for display if the toggle is enabled
+        const displayMoves = moveDetectionEnabled;
+        
+        // Check if there are any moved lines
+        const hasMoves = displayMoves && (movedOldLines.size > 0 || movedNewLines.size > 0);
+        
+        // Create diff table
+        let html = `<table class="diff-table${hasMoves ? ' has-moved-lines' : ''}">
+            <colgroup>
+                <col class="line-num-col" />
+                <col class="content-col" />
+                <col class="line-num-col" />
+                <col class="content-col" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th class="line-number-header">#</th>
+                    <th class="content-header">Old</th>
+                    <th class="line-number-header">#</th>
+                    <th class="content-header">New</th>
+                </tr>
+            </thead>
+            <tbody>`;
+        
+        // Determine number of lines to show - ensure we include all lines
+        const maxLines = Math.max(oldLines.length, newLines.length);
+        
+        // Create sets to track which lines have already been counted
+        // This prevents double-counting in different parts of the code
+        const countedAddedLines = new Set();
+        const countedRemovedLines = new Set();
+        const countedMovedLines = new Set();
+        const countedModifiedLines = new Set();
+        
+        // Stats to be updated during rendering
+        let addedCount = 0;
+        let removedCount = 0;
+        let movedCount = 0;
+        let modifiedCount = 0;
+        let charChangesCount = 0;
+        
+        // Then render remaining lines
+        for (let i = 0; i < maxLines; i++) {
+            const hasOldLine = i < oldLines.length;
+            const hasNewLine = i < newLines.length;
+            
+            const oldLine = hasOldLine ? oldLines[i] : '';
+            const newLine = hasNewLine ? newLines[i] : '';
+            
+            let highlightedOldLine = '';
+            let highlightedNewLine = '';
+            
+            // Apply highlighting based on diffLevel
+            if (diffHighlightingEnabled) {
+                if (diffLevel === 'line') {
+                    // Line level diff (original behavior)
+                    highlightedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ? 
                         window.keywordHighlight.highlightLine(oldLine) : escapeHtml(oldLine);
-                    highlightedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ?
+                    highlightedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ? 
                         window.keywordHighlight.highlightLine(newLine) : escapeHtml(newLine);
+                } else if (diffLevel === 'word' || diffLevel === 'char') {
+                    // For word/char diff, apply keyword highlighting first if enabled
+                    const processedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ?
+                        oldLine : oldLine;
+                    const processedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ?
+                        newLine : newLine;
+                    
+                    // Apply word/char diff only when both lines exist and are different
+                    if (hasOldLine && hasNewLine && oldLine !== newLine) {
+                        const [markedOldLine, markedNewLine] = diffLevel === 'word' ? 
+                            computeWordDiff(processedOldLine, processedNewLine) : 
+                            computeCharDiff(processedOldLine, processedNewLine);
+                        
+                        // Use the marked lines directly
+                        highlightedOldLine = markedOldLine;
+                        highlightedNewLine = markedNewLine;
+                    } else if (hasNewLine) {
+                        // For new-only lines, make them consistent with the current diff mode
+                        const escapedNewLine = escapeHtml(newLine);
+                        
+                        // First apply keyword highlighting if enabled
+                        let processedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ? 
+                            window.keywordHighlight.highlightLine(newLine) : escapedNewLine;
+                        
+                        if (diffLevel === 'char') {
+                            // For character diff mode, if the line has HTML (from keyword highlighting), 
+                            // use a special approach that preserves the HTML
+                            if (processedNewLine !== escapedNewLine) {
+                                highlightedNewLine = processedNewLine;
+                            } else {
+                                // No HTML, so we can apply character-level highlighting directly
+                                highlightedNewLine = '';
+                                for (let charIdx = 0; charIdx < newLine.length; charIdx++) {
+                                    const char = escapeHtml(newLine[charIdx]);
+                                    highlightedNewLine += `<span class="char-added">${char}</span>`;
+                                }
+                            }
+                        } else if (diffLevel === 'word') {
+                            // For word diff mode, if the line has HTML (from keyword highlighting),
+                            // use a special approach that preserves the HTML
+                            if (processedNewLine !== escapedNewLine) {
+                                highlightedNewLine = processedNewLine;
+                            } else {
+                                // No HTML, so we can apply word-level highlighting directly
+                                const words = escapedNewLine.split(/\b/);
+                                highlightedNewLine = words.map(word => {
+                                    return word.trim() ? `<span class="word-added">${word}</span>` : word;
+                                }).join('');
+                            }
+                        } else {
+                            // For line diff mode, just use the processed line
+                            highlightedNewLine = processedNewLine;
+                        }
+                    } else {
+                        // No diff needed, just escape HTML and apply keyword highlighting
+                        highlightedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ? 
+                            window.keywordHighlight.highlightLine(oldLine) : escapeHtml(oldLine);
+                        highlightedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ? 
+                            window.keywordHighlight.highlightLine(newLine) : escapeHtml(newLine);
+                    }
                 }
+            } else {
+                // No diff highlighting, just apply keyword highlighting if enabled
+                highlightedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ? 
+                    window.keywordHighlight.highlightLine(oldLine) : escapeHtml(oldLine);
+                highlightedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ? 
+                    window.keywordHighlight.highlightLine(newLine) : escapeHtml(newLine);
             }
-        } else {
-            // No diff highlighting, just apply keyword highlighting if enabled
-            highlightedOldLine = keywordHighlightingEnabled && window.keywordHighlight && oldLine ?
-                window.keywordHighlight.highlightLine(oldLine) : escapeHtml(oldLine);
-            highlightedNewLine = keywordHighlightingEnabled && window.keywordHighlight && newLine ?
-                window.keywordHighlight.highlightLine(newLine) : escapeHtml(newLine);
-        }
-
-        // Determine CSS classes based on content
-        let oldCellClass = "";
-        let newCellClass = "";
-
-        if (diffHighlightingEnabled && diffLevel === 'line') {
-            // First case: Both lines exist
-            if (hasOldLine && hasNewLine) {
-                if (oldLine !== newLine) {
+            
+            // Determine CSS classes based on content
+            let oldCellClass = "";
+            let newCellClass = "";
+            
+            // Only apply cell-level highlighting in Line Diff mode
+            // For other modes, we'll let the character/word highlighting handle it
+            // Determine highlighting classes and update statistics
+            if (diffLevel === 'line') {
+                if (hasOldLine && !hasNewLine) {
                     oldCellClass = "removed";
-                    newCellClass = "added";
-                    // Count for statistics if not processed as a move
-                    if (!(movedOldLines.has(i) || movedNewLines.has(i))) {
+                    // Count for statistics if not processed as a move and not already counted
+                    if (!movedOldLines.has(i) && !countedRemovedLines.has(i)) {
                         removedCount++;
+                        countedRemovedLines.add(i);
+                    }
+                } else if (!hasOldLine && hasNewLine) {
+                    newCellClass = "added";
+                    // Count for statistics if not processed as a move and not already counted
+                    if (!movedNewLines.has(i) && !countedAddedLines.has(i)) {
                         addedCount++;
+                        countedAddedLines.add(i);
+                    }
+                }
+            } else {
+                // For word/char modes, we track statistics but don't apply cell-level classes
+                // This prevents the cell background from overriding the character/word highlighting
+                if (hasOldLine && !hasNewLine) {
+                    // Count as removed if not processed as a move and not already counted
+                    if (!movedOldLines.has(i) && !countedRemovedLines.has(i)) {
+                        removedCount++;
+                        countedRemovedLines.add(i);
+                    }
+                } else if (!hasOldLine && hasNewLine) {
+                    // Count as added if not processed as a move and not already counted
+                    if (!movedNewLines.has(i) && !countedAddedLines.has(i)) {
+                        addedCount++;
+                        countedAddedLines.add(i);
                     }
                 }
             }
-            // Second case: Line only exists in old file
-            else if (hasOldLine) {
-                oldCellClass = "removed";
-                // Count for statistics if not processed as a move
-                if (!movedOldLines.has(i)) {
-                    removedCount++;
+            
+            // Apply additional diff level styling for Line diff mode
+            if (diffHighlightingEnabled && diffLevel === 'line') {
+                // First case: Both lines exist but are different
+                if (hasOldLine && hasNewLine) {
+                    if (oldLine !== newLine) {
+                        oldCellClass = "removed";
+                        newCellClass = "added";
+                        // Count for statistics if not processed as a move and not already counted
+                        if (!(movedOldLines.has(i) || movedNewLines.has(i))) {
+                            // Track modified line (changed but not moved)
+                            if (!countedModifiedLines.has(i)) {
+                                modifiedCount++;
+                                countedModifiedLines.add(i);
+                            }
+                            
+                            // Only count as added/removed if not already counted
+                            if (!countedRemovedLines.has(i)) {
+                                removedCount++;
+                                countedRemovedLines.add(i);
+                            }
+                            if (!countedAddedLines.has(i)) {
+                                addedCount++;
+                                countedAddedLines.add(i);
+                            }
+                        }
+                    }
                 }
-            }
-            // Third case: Line only exists in new file
-            else if (hasNewLine) {
-                newCellClass = "added";
-                // Count for statistics if not processed as a move
-                if (!movedNewLines.has(i)) {
+                // We don't need to handle old-only and new-only cases here
+                // as they were already handled in the previous code block
+                
+                // Special case for new lines at the end of the file
+                // Always mark lines beyond old file's length as additions
+                if (hasNewLine && i >= oldLines.length) {
+                    // In line diff mode, apply the proper CSS class
+                    if (diffLevel === 'line') {
+                        newCellClass = "added";
+                    }
+                    
+                    // Only count if not already counted as moved or added
+                    if (!movedNewLines.has(i) && !countedAddedLines.has(i)) {
+                        addedCount++;
+                        countedAddedLines.add(i);
+                    }
+                }
+            } else {
+                // Even when diff highlighting is off, we still need to count for statistics
+                if (hasOldLine && hasNewLine) {
+                    if (oldLine !== newLine && !(movedOldLines.has(i) || movedNewLines.has(i))) {
+                        removedCount++;
+                        addedCount++;
+                    }
+                } else if (hasOldLine && !movedOldLines.has(i)) {
+                    removedCount++;
+                } else if (hasNewLine && !movedNewLines.has(i)) {
                     addedCount++;
                 }
             }
             
-            // Calculate modified lines (changed but not purely added/removed)
-            if (oldLine && newLine && oldLine !== newLine && 
-                !oldLineClass.includes('removed') && !newLineClass.includes('added') && 
-                !oldLineClass.includes('moved') && !newLineClass.includes('moved')) {
+            // Apply moved class if this line has been moved
+            if (displayMoves) {
+                if (hasOldLine && movedOldLines.has(i)) {
+                    oldCellClass = "moved";
+                    // Count moved lines only once
+                    if (!countedMovedLines.has(i)) {
+                        movedCount++;
+                        countedMovedLines.add(i);
+                    }
+                }
+                if (hasNewLine && movedNewLines.has(i)) {
+                    newCellClass = "moved";
+                    // Don't double count moved lines
+                    // We only count them once on the old side
+                }
+            }
+            
+            const oldLineNum = hasOldLine ? (i + 1) : '';
+            const newLineNum = hasNewLine ? (i + 1) : '';
+            
+            // Enhance line numbers for moved lines
+            let oldLineDisplay = oldLineNum;
+            let newLineDisplay = newLineNum;
+            
+            if (moveDetectionEnabled) {
+                if (hasOldLine && movedOldLines.has(i)) {
+                    const movedToLine = movedOldLines.get(i) + 1; // +1 for 1-based display
+                    oldLineDisplay = `<span class="line-number-moved">${oldLineNum} <span class="moved-arrow">→</span> ${movedToLine}</span>`;
+                }
+                
+                if (hasNewLine && movedNewLines.has(i)) {
+                    const movedFromLine = movedNewLines.get(i) + 1; // +1 for 1-based display
+                    newLineDisplay = `<span class="line-number-moved">${newLineNum} <span class="moved-arrow">←</span> ${movedFromLine}</span>`;
+                }
+            }
+            
+            // Generate HTML with proper CSS classes
+            html += `<tr class="${i % 2 === 0 ? 'even-row' : 'odd-row'}">
+                <td class="line-number">${oldLineDisplay}</td>
+                <td class="${oldCellClass} content-cell">${highlightedOldLine}</td>
+                <td class="line-number">${newLineDisplay}</td>
+                <td class="${newCellClass} content-cell">${highlightedNewLine}</td>
+            </tr>`;
+            
+            // Statistics are now tracked separately with our counting sets
+            
+            // In case we missed something important in this loop iteration (unlikely but safe)
+            // These checks use the tracking sets to ensure we don't double-count
+            if (hasOldLine && hasNewLine && oldLine !== newLine && 
+                !countedModifiedLines.has(i) && 
+                !countedMovedLines.has(i) && 
+                !countedAddedLines.has(i) && 
+                !countedRemovedLines.has(i)) {
+                // This is an uncounted modified line
                 modifiedCount++;
+                countedModifiedLines.add(i);
             }
         }
         
         html += '</tbody></table>';
         container.innerHTML = html;
+        
+        // Apply search term highlighting if there's an active search
+        highlightSearchTermsInDiffView(container);
+        
+        // Statistics counters removed as requested
+        
+        // Update detailed statistics panel if it exists
+        updateDetailedStatistics({
+            added: addedCount,
+            removed: removedCount,
+            moved: movedCount,
+            modified: modifiedCount,
+            totalChanges: addedCount + removedCount + movedCount + modifiedCount,
+            oldLines: oldLines.length,
+            newLines: newLines.length
+        });
     }
     
     // Detect moved lines between old and new content
@@ -1433,22 +1852,55 @@ function renderDiff(container, comparisonData) {
     
     // Set up view toggle functionality
     function setupViewToggle(diffViewer) {
+        if (!diffViewer || diffViewer.dataset.toggleInitialized === 'true') return;
+        
+        diffViewer.dataset.toggleInitialized = 'true';
+        
         const diffViewButton = document.getElementById('diffViewButton');
         const newViewButton = document.getElementById('newViewButton');
+        const oldViewButton = document.getElementById('oldViewButton');
         
-        if (!diffViewButton || !newViewButton) return;
+        if (!diffViewButton || !newViewButton || !oldViewButton) return;
         
-        // Check if we have a stored preference for view mode
-        const savedViewMode = localStorage.getItem('viewMode');
+        // Set initial view based on file type
+        const fileType = diffViewer.dataset.fileType;
         
-        // Apply the saved view mode if we have one
-        if (savedViewMode === 'new' && diffViewer.dataset.newPath) {
+        if (fileType === 'new-only') {
+            // For new-only files, hide diff and old view buttons, show only new view
+            diffViewButton.style.display = 'none';
+            oldViewButton.style.display = 'none';
+            newViewButton.style.display = 'block';
+            
+            // Set new view as active
             newViewButton.classList.add('active');
             diffViewButton.classList.remove('active');
+            oldViewButton.classList.remove('active');
+            
+            // Render new file view
             renderNewFileView(diffViewer, diffViewer.dataset.newContent);
+        } else if (fileType === 'old-only') {
+            // For old-only files, hide diff and new view buttons, show only old view
+            diffViewButton.style.display = 'none';
+            newViewButton.style.display = 'none';
+            oldViewButton.style.display = 'block';
+            
+            // Set old view as active
+            oldViewButton.classList.add('active');
+            diffViewButton.classList.remove('active');
+            newViewButton.classList.remove('active');
+            
+            // Render old file view
+            renderOldFileView(diffViewer, diffViewer.dataset.oldContent);
         } else {
+            // For comparison files, show all view buttons
+            diffViewButton.style.display = 'block';
+            newViewButton.style.display = 'block';
+            oldViewButton.style.display = 'block';
+            
+            // Default to diff view for comparison files
             diffViewButton.classList.add('active');
             newViewButton.classList.remove('active');
+            oldViewButton.classList.remove('active');
         }
         
         // Set up event listeners
@@ -1458,14 +1910,23 @@ function renderDiff(container, comparisonData) {
             // Update button states
             this.classList.add('active');
             newViewButton.classList.remove('active');
-            
-            // Store view mode preference
-            localStorage.setItem('viewMode', 'diff');
+            oldViewButton.classList.remove('active');
             
             // Show both file path rows in diff view
             const oldPathRow = document.querySelector('.file-path-row:first-child');
-            if (oldPathRow) {
-                oldPathRow.style.display = 'flex';
+            const newPathRow = document.querySelector('.file-path-row:last-child');
+            if (oldPathRow) oldPathRow.style.display = 'flex';
+            if (newPathRow) newPathRow.style.display = 'flex';
+            
+            // Update metadata based on the comparison type
+            const fileType = diffViewer.dataset.fileType;
+            const oldPath = diffViewer.dataset.oldPath;
+            const newPath = diffViewer.dataset.newPath;
+            
+            // Update file metadata for the appropriate file
+            if (fileType === 'comparison' && (oldPath || newPath)) {
+                // For comparison files in diff view, prefer new path for metadata if available
+                fetchFileMetadata(newPath || oldPath);
             }
             
             // Show diff view
@@ -1482,12 +1943,22 @@ function renderDiff(container, comparisonData) {
             // Update button states
             this.classList.add('active');
             diffViewButton.classList.remove('active');
-            
-            // Store view mode preference
-            localStorage.setItem('viewMode', 'new');
+            oldViewButton.classList.remove('active');
             
             // Show new file view with metadata
             renderNewFileView(diffViewer, diffViewer.dataset.newContent);
+        });
+        
+        oldViewButton.addEventListener('click', function() {
+            if (this.classList.contains('active')) return;
+            
+            // Update button states
+            this.classList.add('active');
+            diffViewButton.classList.remove('active');
+            newViewButton.classList.remove('active');
+            
+            // Show old file view with metadata
+            renderOldFileView(diffViewer, diffViewer.dataset.oldContent);
         });
     }
     
@@ -1595,7 +2066,7 @@ function renderDiff(container, comparisonData) {
         renderDiff(diffViewer, comparisonData);
     }
 
-    // Refreshes the file list and clears any active filters
+    // Refreshes the file list and preserves file type filter
     async function refreshFiles() {
         // Clear any active keyword filter directly in the UI
         // This avoids circular references with the keyword system
@@ -1606,7 +2077,6 @@ function renderDiff(container, comparisonData) {
         
         // Also reset the active filter in the keyword system if it's initialized
         if (window.keywordHighlight) {
-            // Call clearActiveFilter directly without the circular reference
             if (window.keywordHighlight.clearActiveFilter) {
                 window.keywordHighlight.clearActiveFilter();
             }
@@ -1618,15 +2088,22 @@ function renderDiff(container, comparisonData) {
             unifiedList.innerHTML = '<div class="loading"><div class="spinner"></div>Loading files...</div>';
         }
         
+        // Get the current file type filter value if it exists
+        const fileTypeFilter = document.getElementById('fileTypeFilter');
+        const filterType = fileTypeFilter ? fileTypeFilter.value : 'all';
+        
         // Fetch fresh data
         await fetchFileData();
-    }
-
-    // Initial setup
-    loadSidebarState();
-    setupToggleListeners();
-    setupKeyboardNavigation(); // Add keyboard navigation setup
-    fetchFileData();
+        
+        // Apply the file type filter after refreshing data
+        if (filterType !== 'all') {
+            renderFileList(filterType);
+        } else {
+            renderFileList('all');
+        }
+        
+        // No need to update the dropdown display, the native select element maintains its own state
+    } // End of refreshFiles function
     
     // Set up refresh button
     const refreshBtn = document.getElementById('refreshButton');
@@ -1634,24 +2111,230 @@ function renderDiff(container, comparisonData) {
         refreshBtn.addEventListener('click', refreshFiles);
     }
     
+    // Statistics counter functionality removed as requested
+    
+    // Helper function to update detailed statistics panel
+    function updateDetailedStatistics(stats) {
+        // Update the detailed stats in the change statistics panel
+        const detailedElements = {
+            added: document.getElementById('detailedAddedCount'),
+            removed: document.getElementById('detailedRemovedCount'),
+            moved: document.getElementById('detailedMovedCount'),
+            modified: document.getElementById('detailedModifiedCount'),
+            total: document.getElementById('totalChangesCount')
+        };
+        
+        // Update counter values
+        if (detailedElements.added) detailedElements.added.textContent = stats.added;
+        if (detailedElements.removed) detailedElements.removed.textContent = stats.removed;
+        if (detailedElements.moved) detailedElements.moved.textContent = stats.moved;
+        if (detailedElements.modified) detailedElements.modified.textContent = stats.modified;
+        if (detailedElements.total) detailedElements.total.textContent = stats.totalChanges;
+        
+        // Update percentage bar if it exists
+        const percentageBar = document.getElementById('percentageBar');
+        const percentageText = document.getElementById('percentageText');
+        
+        if (percentageBar && percentageText) {
+            const totalLines = Math.max(stats.oldLines, stats.newLines);
+            const percentChanged = totalLines > 0 ? Math.round((stats.totalChanges / totalLines) * 100) : 0;
+            
+            percentageBar.style.width = `${percentChanged}%`;
+            percentageText.textContent = `${percentChanged}% of file changed`;
+        }
+        
+        // Update stat bars
+        updateStatBar('addedBar', stats.added, stats.totalChanges);
+        updateStatBar('removedBar', stats.removed, stats.totalChanges);
+        updateStatBar('movedBar', stats.moved, stats.totalChanges);
+        updateStatBar('modifiedBar', stats.modified, stats.totalChanges);
+    }
+    
+    // Helper to update the visualization bars
+    function updateStatBar(barId, value, total) {
+        const bar = document.getElementById(barId);
+        if (bar) {
+            const percentage = total > 0 ? (value / total) * 100 : 0;
+            bar.style.width = `${percentage}%`;
+        }
+    }
+
+    // Function to highlight search terms in the diff view after rendering
+    function highlightSearchTermsInDiffView(container) {
+        // Check if there's an active search query to highlight
+        if (!window.fileSearch || 
+            typeof window.fileSearch.getCurrentQuery !== 'function' || 
+            typeof window.fileSearch.isSearchActive !== 'function') {
+            return; // Search module not available
+        }
+        
+        const searchQuery = window.fileSearch.getCurrentQuery();
+        if (!searchQuery || !window.fileSearch.isSearchActive()) {
+            return; // No active search
+        }
+        
+        try {
+            console.log(`[highlightSearchTermsInDiffView] Highlighting search term: "${searchQuery}"`);
+            
+            // Get all text content from the diff view (the content cells)
+            const contentCells = container.querySelectorAll('td.content-cell');
+            if (!contentCells || contentCells.length === 0) {
+                return; // No content cells found
+            }
+            
+            // Create a text node walker to find text nodes containing our search term
+            const walker = document.createTreeWalker(
+                container,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode: function(node) {
+                        // Skip nodes that are empty or only whitespace
+                        if (!node.textContent.trim()) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        
+                        // Accept nodes containing the search term (case insensitive)
+                        if (node.textContent.toLowerCase().includes(searchQuery.toLowerCase())) {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        
+                        return NodeFilter.FILTER_SKIP;
+                    }
+                }
+            );
+            
+            // Create a document fragment to store the current node text
+            const parser = new DOMParser();
+            const replacements = [];
+            
+            // Walk through text nodes and collect those containing our search term
+            let currentNode;
+            while (currentNode = walker.nextNode()) {
+                // Skip nodes that are inside a .search-term-highlight span
+                let parent = currentNode.parentNode;
+                let isInsideHighlight = false;
+                
+                while (parent && parent !== container) {
+                    if (parent.classList && parent.classList.contains('search-term-highlight')) {
+                        isInsideHighlight = true;
+                        break;
+                    }
+                    parent = parent.parentNode;
+                }
+                
+                if (isInsideHighlight) {
+                    continue; // Skip nodes already inside a highlight
+                }
+                
+                // Replace the text with highlighted version
+                const text = currentNode.textContent;
+                const escapedTerm = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedTerm})`, 'gi');
+                const highlightedText = text.replace(regex, '<span class="search-term-highlight">$1</span>');
+                
+                if (text !== highlightedText) {
+                    // Store the node and its replacement for later processing
+                    replacements.push({
+                        node: currentNode,
+                        html: highlightedText
+                    });
+                }
+            }
+            
+            // Now replace all the identified nodes
+            replacements.forEach(replacement => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = replacement.html;
+                
+                const fragment = document.createDocumentFragment();
+                while (tempDiv.firstChild) {
+                    fragment.appendChild(tempDiv.firstChild);
+                }
+                
+                replacement.node.parentNode.replaceChild(fragment, replacement.node);
+            });
+            
+            console.log(`[highlightSearchTermsInDiffView] Highlighted ${replacements.length} occurrences of "${searchQuery}"`);
+            
+        } catch (error) {
+            console.error('Error highlighting search terms in diff view:', error);
+        }
+    }
+    
     // Expose key functions to the window for use by other components
     window.loadFileComparison = loadFileComparison;
     
-    // Return public methods
-        // Function to update change statistics in the UI
-    function updateChangeStatisticsUI(added, removed, moved) {
-        const addedElement = document.getElementById('addedLines');
-        const removedElement = document.getElementById('removedLines');
-        const movedElement = document.getElementById('movedLines');
+    // Setup file type filter
+    function setupFileTypeFilter() {
+        const fileTypeFilter = document.getElementById('fileTypeFilter');
+        if (!fileTypeFilter) return;
         
-        if (addedElement) addedElement.textContent = added;
-        if (removedElement) removedElement.textContent = removed;
-        if (movedElement) movedElement.textContent = moved;
+        // Get all filter checkboxes
+        const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+        
+        // Function to apply filters based on checked checkboxes
+        function applyFilters() {
+            // Get all checked filter types
+            const selectedFilters = [];
+            filterCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedFilters.push(checkbox.value);
+                }
+            });
+            
+            // Apply the filters
+            renderFileList(selectedFilters);
+            
+            // Store the selected filters in localStorage for persistence
+            localStorage.setItem('fileTypeFilters', JSON.stringify(selectedFilters));
+        }
+        
+        // Add change event listeners to all checkboxes
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', applyFilters);
+        });
+        
+        // Set initial values from localStorage if available
+        const savedFilters = localStorage.getItem('fileTypeFilters');
+        if (savedFilters) {
+            try {
+                const filterArray = JSON.parse(savedFilters);
+                
+                // Update checkbox states based on saved filters
+                filterCheckboxes.forEach(checkbox => {
+                    checkbox.checked = filterArray.includes(checkbox.value);
+                });
+                
+                // Apply the filters
+                renderFileList(filterArray);
+            } catch (e) {
+                console.error('Error parsing saved filters:', e);
+                // If error, check all checkboxes (default state)
+                filterCheckboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                applyFilters();
+            }
+        } else {
+            // If no saved filters, check all checkboxes (default state)
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            applyFilters();
+        }
     }
     
+    // Initial setup
+    loadSidebarState();
+    setupToggleListeners();
+    setupKeyboardNavigation(); // Add keyboard navigation setup
+    setupFileTypeFilter(); // Setup file type filter
+    fetchFileData(); // This is critical for loading the files on startup
+    
+    // Return public methods
     return {
-        refreshFiles,
         toggleSidebar,
-        loadFileComparison
+        loadFileComparison,
+        refreshFiles // Export refreshFiles function for socket-manager to use
     };
 }

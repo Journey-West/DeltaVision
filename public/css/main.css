@@ -627,9 +627,6 @@ input:checked + .slider:before {
     background-color: var(--table-header-bg) !important;
     border-right: 1px solid var(--border-color);
     font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 10;
 }
 
 .diff-table .content-header {
@@ -637,9 +634,6 @@ input:checked + .slider:before {
     background-color: var(--table-header-bg) !important;
     font-weight: 600;
     padding: 8px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
 }
 
 .diff-table .line-number {
@@ -648,6 +642,15 @@ input:checked + .slider:before {
     user-select: none;
     padding: 4px 8px !important;
     font-size: 12px;
+}
+
+/* Add subtle background colors to line number columns */
+.diff-table tr td:nth-child(1) {
+    background-color: rgba(76, 175, 80, 0.05); /* Light green tint for old file line numbers */
+}
+
+.diff-table tr td:nth-child(3) {
+    background-color: rgba(66, 165, 245, 0.05); /* Light blue tint for new file line numbers */
 }
 
 .diff-table .content-cell {
@@ -1221,36 +1224,7 @@ body.offline-mode .offline-indicator {
     color: white;
 }
 
-/* Single file view */
-.new-file-view {
-    font-family: monospace;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    padding: 10px;
-    counter-reset: line;
-}
-
-.new-file-view .line {
-    position: relative;
-    padding-left: 60px;
-    min-height: 1.5em;
-}
-
-.new-file-view .line:before {
-    counter-increment: line;
-    content: counter(line);
-    position: absolute;
-    left: 0;
-    width: 50px;
-    text-align: right;
-    color: var(--text-muted);
-    padding-right: 10px;
-    user-select: none;
-}
-
-.new-file-view .line:nth-child(even) {
-    background: var(--file-entry-bg);
-}
+/* Enhanced Keywords Panel Styles */
 
 /* Enhanced professional styling for keywords panel */
 .keywords-panel {
