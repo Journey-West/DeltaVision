@@ -95,15 +95,21 @@ export function initFileManager() {
         
         // Apply filtering based on the selected filter types
         // filterType can now be either a string 'all' or an array of filter types
-        if (Array.isArray(filterType) && filterType.length > 0) {
-            // Filter files based on the selected types
-            allFiles = allFiles.filter(file => {
-                return filterType.includes(file.fileType);
-            });
-            
-            // Only include same-command diffs if that filter is selected
-            if (!filterType.includes('same-command')) {
+        if (Array.isArray(filterType)) {
+            if (filterType.length === 0) {
+                // If no filters are selected, show no files
+                allFiles = [];
                 filteredCommandDiffs = [];
+            } else {
+                // Filter files based on the selected types
+                allFiles = allFiles.filter(file => {
+                    return filterType.includes(file.fileType);
+                });
+                
+                // Only include same-command diffs if that filter is selected
+                if (!filterType.includes('same-command')) {
+                    filteredCommandDiffs = [];
+                }
             }
         } else if (filterType !== 'all') {
             // Handle legacy single filter type for backward compatibility
@@ -123,7 +129,12 @@ export function initFileManager() {
         }
         
         if (allFiles.length === 0 && filteredCommandDiffs.length === 0) {
-            fileListElement.innerHTML = '<div class="empty-state">No files found matching the selected filter.</div>';
+            // Check if this is due to no filters being selected
+            if (Array.isArray(filterType) && filterType.length === 0) {
+                fileListElement.innerHTML = '<div class="empty-state">No file types selected. Please select at least one file type filter.</div>';
+            } else {
+                fileListElement.innerHTML = '<div class="empty-state">No files found matching the selected filter.</div>';
+            }
             return;
         }
         

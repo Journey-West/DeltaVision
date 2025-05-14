@@ -86,6 +86,13 @@ export function initSocketManager(refreshCallback) {
         // Auto-hide after timeout
         setTimeout(() => {
             notification.classList.remove('visible');
+            
+            // Remove from DOM after animation completes
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
         }, 3000);
     }
     
