@@ -2126,6 +2126,38 @@ export function initFileManager() {
         try {
             console.log(`[highlightSearchTermsInDiffView] Highlighting search term: "${searchQuery}"`);
             
+            // First, remove any existing highlights to avoid duplicates
+            const existingHighlights = container.querySelectorAll('.search-term-highlight');
+            existingHighlights.forEach(highlight => {
+                // Replace the highlight span with its text content
+                const textNode = document.createTextNode(highlight.textContent);
+                highlight.parentNode.replaceChild(textNode, highlight);
+            });
+            
+            // Use the mark.js library if available (it's included in vendor/js/mark.min.js)
+            if (typeof Mark !== 'undefined') {
+                // Create a new instance of Mark targeting the container
+                const markInstance = new Mark(container);
+                
+                // Use mark.js to highlight the search term with proper options
+                markInstance.mark(searchQuery, {
+                    element: 'span',
+                    className: 'search-term-highlight',
+                    accuracy: 'exactly',
+                    separateWordSearch: false,
+                    caseSensitive: false,
+                    diacritics: true,
+                    acrossElements: true,
+                    exclude: ['.line-number', '.search-term-highlight'],
+                    done: function(count) {
+                        console.log(`[highlightSearchTermsInDiffView] Highlighted ${count} occurrences of "${searchQuery}" using mark.js`);
+                    }
+                });
+                
+                return; // Exit early since we're using mark.js
+            }
+            
+            // Fallback to manual highlighting if mark.js is not available
             // Get all text content from the diff view (the content cells)
             const contentCells = container.querySelectorAll('td.content-cell');
             if (!contentCells || contentCells.length === 0) {
@@ -2143,6 +2175,17 @@ export function initFileManager() {
                             return NodeFilter.FILTER_REJECT;
                         }
                         
+                        // Skip nodes that are in line number cells
+                        let parent = node.parentNode;
+                        while (parent && parent !== container) {
+                            if (parent.classList && 
+                                (parent.classList.contains('line-number') || 
+                                 parent.classList.contains('search-term-highlight'))) {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            parent = parent.parentNode;
+                        }
+                        
                         // Accept nodes containing the search term (case insensitive)
                         if (node.textContent.toLowerCase().includes(searchQuery.toLowerCase())) {
                             return NodeFilter.FILTER_ACCEPT;
@@ -2153,58 +2196,56 @@ export function initFileManager() {
                 }
             );
             
-            // Create a document fragment to store the current node text
-            const parser = new DOMParser();
-            const replacements = [];
-            
-            // Walk through text nodes and collect those containing our search term
+            // Process text nodes containing the search term
             let currentNode;
+            let highlightCount = 0;
+            
             while (currentNode = walker.nextNode()) {
-                // Skip nodes that are inside a .search-term-highlight span
-                let parent = currentNode.parentNode;
-                let isInsideHighlight = false;
-                
-                while (parent && parent !== container) {
-                    if (parent.classList && parent.classList.contains('search-term-highlight')) {
-                        isInsideHighlight = true;
-                        break;
-                    }
-                    parent = parent.parentNode;
-                }
-                
-                if (isInsideHighlight) {
-                    continue; // Skip nodes already inside a highlight
-                }
-                
-                // Replace the text with highlighted version
                 const text = currentNode.textContent;
-                const escapedTerm = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`(${escapedTerm})`, 'gi');
-                const highlightedText = text.replace(regex, '<span class="search-term-highlight">$1</span>');
+                const parent = currentNode.parentNode;
                 
-                if (text !== highlightedText) {
-                    // Store the node and its replacement for later processing
-                    replacements.push({
-                        node: currentNode,
-                        html: highlightedText
-                    });
+                // Create a case-insensitive regex to find all instances of the search term
+                const escapedTerm = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escapedTerm, 'gi');
+                
+                // Find all matches in the current text node
+                let match;
+                let lastIndex = 0;
+                let fragments = [];
+                
+                while ((match = regex.exec(text)) !== null) {
+                    // Add text before the match
+                    if (match.index > lastIndex) {
+                        fragments.push(document.createTextNode(text.substring(lastIndex, match.index)));
+                    }
+                    
+                    // Create a span for the matched text
+                    const highlightSpan = document.createElement('span');
+                    highlightSpan.className = 'search-term-highlight';
+                    highlightSpan.textContent = match[0]; // Use the actual matched text
+                    fragments.push(highlightSpan);
+                    
+                    lastIndex = regex.lastIndex;
+                    highlightCount++;
+                }
+                
+                // Add any remaining text after the last match
+                if (lastIndex < text.length) {
+                    fragments.push(document.createTextNode(text.substring(lastIndex)));
+                }
+                
+                // Only replace the node if we found matches
+                if (fragments.length > 0) {
+                    // Create a document fragment to hold all the new nodes
+                    const fragment = document.createDocumentFragment();
+                    fragments.forEach(node => fragment.appendChild(node));
+                    
+                    // Replace the original text node with our fragment
+                    parent.replaceChild(fragment, currentNode);
                 }
             }
             
-            // Now replace all the identified nodes
-            replacements.forEach(replacement => {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = replacement.html;
-                
-                const fragment = document.createDocumentFragment();
-                while (tempDiv.firstChild) {
-                    fragment.appendChild(tempDiv.firstChild);
-                }
-                
-                replacement.node.parentNode.replaceChild(fragment, replacement.node);
-            });
-            
-            console.log(`[highlightSearchTermsInDiffView] Highlighted ${replacements.length} occurrences of "${searchQuery}"`);
+            console.log(`[highlightSearchTermsInDiffView] Highlighted ${highlightCount} occurrences of "${searchQuery}"`);
             
         } catch (error) {
             console.error('Error highlighting search terms in diff view:', error);
@@ -2232,11 +2273,21 @@ export function initFileManager() {
                 }
             });
             
-            // Apply the filters
-            renderFileList(selectedFilters);
-            
             // Store the selected filters in localStorage for persistence
             localStorage.setItem('fileTypeFilters', JSON.stringify(selectedFilters));
+            
+            // Check if search is active - if so, reapply the search with new filters instead of refreshing
+            if (window.fileSearch && window.fileSearch.isSearchActive()) {
+                // Get current search query
+                const currentQuery = window.fileSearch.getCurrentQuery();
+                console.log(`[FileManager] Search is active with query "${currentQuery}", reapplying search with new filters`);
+                
+                // Re-run the search with current query to apply new filters
+                window.fileSearch.performSearch(currentQuery);
+            } else {
+                // No search active, just apply the file type filters
+                renderFileList(selectedFilters);
+            }
         }
         
         // Add change event listeners to all checkboxes

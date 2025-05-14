@@ -34,7 +34,53 @@ export function initFileSearch(fileManager) {
             }
         });
         
+        // Setup filter message buttons
+        setupFilterMessageButtons();
+        
         console.log('[FileSearch] Search functionality initialized');
+    }
+    
+    // Setup the filter message buttons
+    function setupFilterMessageButtons() {
+        const selectAllButton = document.getElementById('selectAllFilters');
+        const selectRecommendedButton = document.getElementById('selectRecommendedFilters');
+        const filterMessage = document.getElementById('filterMessage');
+        
+        if (!selectAllButton || !selectRecommendedButton || !filterMessage) {
+            console.warn('[FileSearch] Filter message elements not found');
+            return;
+        }
+        
+        // Select all file types
+        selectAllButton.addEventListener('click', () => {
+            const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            
+            // Hide the message
+            filterMessage.classList.remove('visible');
+            
+            // Trigger the filter change event on the first checkbox to apply filters
+            const event = new Event('change');
+            filterCheckboxes[0].dispatchEvent(event);
+        });
+        
+        // Select recommended file types (New and Comparison)
+        selectRecommendedButton.addEventListener('click', () => {
+            const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+            filterCheckboxes.forEach(checkbox => {
+                // Check New and Comparison, uncheck others
+                checkbox.checked = (checkbox.value === 'new-only' || checkbox.value === 'comparison');
+            });
+            
+            // Hide the message
+            filterMessage.classList.remove('visible');
+            
+            // Trigger the filter change event on the first checkbox to apply filters
+            const event = new Event('change');
+            filterCheckboxes[0].dispatchEvent(event);
+        });
     }
     
     // Handle input in search field (debounced)
@@ -138,6 +184,24 @@ export function initFileSearch(fileManager) {
             }
         });
         
+        // Get active file type filters
+        const activeFilters = getActiveFileTypeFilters();
+        
+        // Check if all file types are unchecked
+        const filterMessage = document.getElementById('filterMessage');
+        if (activeFilters.length === 0) {
+            // Show the filter message
+            if (filterMessage) {
+                filterMessage.classList.add('visible');
+            }
+            return; // Don't process any results if no file types are selected
+        } else {
+            // Hide the filter message
+            if (filterMessage) {
+                filterMessage.classList.remove('visible');
+            }
+        }
+        
         // If no files were found matching the query, we're done (all files remain hidden)
         if (resultCount === 0) {
             return;
@@ -153,21 +217,19 @@ export function initFileSearch(fileManager) {
             });
         });
         
-        // Debug: log search results
-        console.log('[FileSearch] Search results:', results);
+        // We already have activeFilters from earlier in the function
+        console.log(`[FileSearch] Active file type filters:`, activeFilters);
         
-        // Create a map to easily check if a file is in the search results
+        // Track files that have been matched
         const matchedFiles = new Map();
         
-        // For each search result, find the matching file entry
+        // Process each search result
         results.forEach(result => {
+            // Extract file paths and match count from the server response format
             const oldFilePath = result.oldFile?.path;
             const newFilePath = result.newFile?.path;
-            const displayName = result.commandRan || result.command || 
-                                (result.newFile?.filename || result.oldFile?.filename);
-            const matchCount = result.matches;
-            
-            console.log(`[FileSearch] Looking for entry with oldPath=${oldFilePath} or newPath=${newFilePath}`);
+            const matchCount = result.matches || 1;
+            console.log(`[FileSearch] Processing result: ${oldFilePath || newFilePath} (${matchCount} matches)`);
             
             // Find all entries matching this result
             fileEntries.forEach(entry => {
@@ -180,6 +242,13 @@ export function initFileSearch(fileManager) {
                 
                 if (oldPathMatches || newPathMatches) {
                     console.log(`[FileSearch] Found matching entry:`, entry.textContent.trim());
+                    
+                    // Check if this file type is being filtered
+                    const fileType = getFileTypeFromEntry(entry);
+                    if (!activeFilters.includes(fileType)) {
+                        console.log(`[FileSearch] Entry filtered out by file type filter: ${fileType}`);
+                        return; // Skip this entry if its type is not in active filters
+                    }
                     
                     // Show the entry with match styling
                     entry.classList.remove('search-hidden');
@@ -214,6 +283,36 @@ export function initFileSearch(fileManager) {
         });
         
         console.log(`[FileSearch] Updated UI with ${matchedFiles.size} visible entries`);
+    }
+    
+    // Helper function to get active file type filters
+    function getActiveFileTypeFilters() {
+        const filters = [];
+        document.querySelectorAll('.filter-checkbox').forEach(checkbox => {
+            if (checkbox.checked) {
+                filters.push(checkbox.value);
+            }
+        });
+        
+        // Return only the checked filters - if none are checked, the empty array will hide all files
+        return filters;
+    }
+    
+    // Helper function to determine the file type from a file entry
+    function getFileTypeFromEntry(entry) {
+        // Check classes to determine file type
+        if (entry.classList.contains('old-only')) {
+            return 'old-only';
+        } else if (entry.classList.contains('new-only')) {
+            return 'new-only';
+        } else if (entry.classList.contains('same-command-diff')) {
+            return 'same-command';
+        } else if (entry.classList.contains('time-comparison')) {
+            return 'time'; // This might need to be handled separately
+        } else if (entry.classList.contains('comparison')) {
+            return 'comparison';
+        }
+        return null;
     }
     
     // Clear search and restore original file list
