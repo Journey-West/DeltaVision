@@ -92,51 +92,7 @@ export function initThemeManager() {
                 '--keyword-count-separator': '#999999'
             }
         },
-        'ayu-light': {
-            name: 'Ayu Light',
-            author: 'DeltaVision',
-            description: 'A light theme inspired by the Ayu color scheme',
-            category: 'light',
-            variables: {
-                '--background-color': '#fcfcfc',
-                '--container-bg': '#ffffff',
-                '--header-bg': '#fafafa',
-                '--header-text': '#5c6773',
-                '--text-color': '#5c6773',
-                '--text-muted': '#8a9199',
-                '--accent-color': '#ff9940',
-                '--primary-color': '#55b4d4',
-                '--primary-darker': '#399cbf',
-                '--primary-rgb': '85, 180, 212',
-                '--primary-transparent': 'rgba(85, 180, 212, 0.1)',
-                '--secondary-color': '#86b300',
-                '--border-color': '#e2e4e7',
-                '--sidebar-bg': '#f0f0f0',
-                '--file-entry-bg': '#ffffff',
-                '--file-entry-hover': '#f5f5f5',
-                '--card-shadow': '0 2px 10px rgba(0, 0, 0, 0.05)',
-                '--tooltip-bg': '#ffffff',
-                '--tooltip-text': '#5c6773',
-                '--transition-speed': '0.3s',
-                '--added-color': '#86b300',
-                '--removed-color': '#ff3333',
-                '--bg-secondary': '#f0f0f0',
-                '--bg-tertiary': '#e8e8e8',
-                
-                /* Keywords panel specific variables */
-                '--keyword-panel-bg': 'linear-gradient(to bottom, #fafbff 0%, #f5f7fc 100%)',
-                '--keyword-panel-header-bg': '#f5f8ff',
-                '--keyword-panel-border': '#e0e4f0',
-                '--keyword-panel-shadow': '0 4px 20px rgba(0, 0, 0, 0.1)',
-                '--keyword-item-bg': 'rgba(0, 0, 0, 0.05)',
-                '--keyword-item-hover-bg': '#f0f0f0',
-                '--keyword-item-active-bg': 'rgba(85, 180, 212, 0.1)',
-                '--keyword-count-bg': 'rgba(0, 0, 0, 0.1)',
-                '--keyword-count-old': '#b71c1c',
-                '--keyword-count-new': '#1b5e20',
-                '--keyword-count-separator': '#8a9199'
-            }
-        }
+
     };
     
     // Store all available themes (default + loaded)

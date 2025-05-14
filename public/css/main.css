@@ -639,7 +639,7 @@ input:checked + .slider:before {
 }
 
 .diff-table .line-number-header {
-    text-align: right;
+    text-align: center;
     padding: 8px !important;
     font-size: 12px;
     background-color: var(--table-header-bg) !important;
@@ -648,7 +648,7 @@ input:checked + .slider:before {
 }
 
 .diff-table .content-header {
-    text-align: left;
+    text-align: center;
     background-color: var(--table-header-bg) !important;
     font-weight: 600;
     padding: 8px;
