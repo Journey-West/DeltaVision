@@ -93,9 +93,12 @@
     margin: 0 -2px;
     font-weight: bold;
     box-shadow: 0 0 2px rgba(255, 165, 0, 0.8);
-    display: inline;
-    vertical-align: baseline;
-    position: static;
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    animation: pulse-highlight 2s infinite;
+    vertical-align: baseline; /* Fix alignment issue */
+    line-height: inherit; /* Maintain consistent line height */
 }
 
 @keyframes pulse-highlight {

@@ -1709,8 +1709,7 @@
                 console.error('Error loading folder paths:', error);
             }
         }
-    </script>
-    <script type="text/javascript">
+
         // Consolidated keyboard shortcuts handler for all application functions
         document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('keydown', function(e) {
@@ -1813,5 +1812,3 @@
             });
         });
     })();
-    </script>
-
