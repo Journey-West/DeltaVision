@@ -146,7 +146,9 @@
 /* Style for emphasizing search match in file list */
 .file-entry.search-match {
     background-color: var(--primary-transparent);
-    border-left: 3px solid var(--primary-color);
+    /* Remove the fixed border-left, let the file type colors show through */
+    border-left-width: 4px !important;
+    border-left-style: solid !important;
     margin: 4px 0;
     border-radius: 4px;
     transition: all 0.2s ease;

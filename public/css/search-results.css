@@ -1,0 +1,131 @@
+/* Search Results Styling improvements to match normal view */
+
+/* Make search results match normal file list */
+.file-list .list-group {
+    margin-top: 10px;
+}
+
+/* Search header enhancements */
+.search-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--bg-secondary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.search-results-header .results-count {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.search-results-header .reset-button {
+    color: var(--primary-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+}
+
+.search-results-header .reset-button:hover {
+    background-color: var(--hover-color);
+}
+
+/* Match count badge styling */
+.file-entry .match-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-tertiary);
+    color: var(--text-color);
+    font-size: 12px;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+    font-weight: 500;
+}
+
+/* Consistent time indicator styling for both views */
+.time-indicator {
+    background-color: #00c853;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+/* Enhance search input styling */
+.search-container input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-color);
+    transition: border-color 0.2s;
+}
+
+.search-container input[type="text"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Make file entry styling consistent between views */
+.file-entry {
+    position: relative;
+    padding: 10px 15px 10px 12px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-left-width: 4px;
+    border-left-style: solid;
+}
+
+/* Make sure search results file entries use the same border styling */
+.search-container .file-entry {
+    border-left-width: 4px;
+    border-left-style: solid;
+}
+
+/* Ensure the border colors defined in main.css apply properly */
+.search-container .file-entry.old-only {
+    border-left-color: #4CAF50; /* Green for old files - matches main.css */
+}
+
+.search-container .file-entry.new-only {
+    border-left-color: #42A5F5; /* Blue for new files - matches main.css */
+}
+
+.search-container .file-entry.comparison {
+    border-left-color: #7E57C2; /* Purple for comparison files - matches main.css */
+}
+
+.search-container .file-entry.time-comparison {
+    border-left-color: #26A69A; /* Teal for time comparison files - matches main.css */
+}
+
+.search-container .file-entry.same-command-diff {
+    border-left-color: #FF9800; /* Orange for same command diffs - matches main.css */
+    background-color: rgba(255, 152, 0, 0.05); /* Light orange background */
+}
+
+/* Make file entry content consistent */
+.file-entry-content {
+    flex: 1;
+    margin-left: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

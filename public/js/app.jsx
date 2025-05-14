@@ -76,47 +76,108 @@
                   })
                 : combinedFiles;
 
+            // Determine if we're currently showing search results
+            const isSearching = lowerQuery !== '';
+            
             return (
                 <div className="file-list">
+                    {isSearching && (
+                        <div className="search-results-header">
+                            <span className="results-count">{displayedFiles.length} results found</span>
+                            <button className="reset-button" onClick={() => window.location.reload()}>Reset</button>
+                        </div>
+                    )}
                     <div className="list-group">
                         {displayedFiles.map((file, index) => {
                             const isOldNew = file.type === 'oldNew';
-                            const isSelected = isOldNew 
-                                ? selectedFile === files.findIndex(f => 
+                            const origIdx = isOldNew
+                                ? files.findIndex(f => 
                                     f.oldFile.path === file.oldFile.path && 
                                     f.newFile.path === file.newFile.path
                                 )
-                                : selectedTimeFile === timeFiles.findIndex(f => 
+                                : timeFiles.findIndex(f => 
                                     f.newerFile.path === file.newerFile.path && 
                                     f.olderFile.path === file.olderFile.path
                                 );
                             
+                            const isSelected = isOldNew 
+                                ? selectedFile === origIdx
+                                : selectedTimeFile === origIdx;
+                            
+                            // Determine file type class for styling
+                            let fileTypeClass = '';
+                            if (isOldNew) {
+                                if (file.oldFile && !file.newFile) {
+                                    fileTypeClass = 'old-only';
+                                } else if (!file.oldFile && file.newFile) {
+                                    fileTypeClass = 'new-only';
+                                } else {
+                                    fileTypeClass = 'comparison';
+                                }
+                            } else {
+                                fileTypeClass = 'time-comparison';
+                            }
+                            
+                            // Determine if this is a same-command diff (with orange color)
+                            const isSameCommand = file.isSameCommandDiff;
+                            if (isSameCommand) {
+                                fileTypeClass = 'same-command-diff';
+                            }
+                            
+                            // Get match count for search results (display in circle badge)
+                            let matchCount = null;
+                            if (isSearching) {
+                                const entry = fileContents[`${file.type}-${origIdx}`] || {};
+                                const hayArray = [file.commandRan || ''];
+                                if (isOldNew) {
+                                    hayArray.push(
+                                        (file.oldFile && file.oldFile.filename) || '',
+                                        (file.newFile && file.newFile.filename) || ''
+                                    );
+                                } else {
+                                    hayArray.push(
+                                        (file.olderFile && file.olderFile.filename) || '',
+                                        (file.newerFile && file.newerFile.filename) || ''
+                                    );
+                                }
+                                hayArray.push(entry.old || '', entry.new || '');
+                                const hay = hayArray.join(' ').toLowerCase();
+                                
+                                // Count occurrences of the search term
+                                let count = 0;
+                                let pos = hay.indexOf(lowerQuery);
+                                while (pos !== -1) {
+                                    count++;
+                                    pos = hay.indexOf(lowerQuery, pos + 1);
+                                }
+                                matchCount = count;
+                            }
+                            
                             return (
                                 <div 
                                     key={`${file.type}-${index}`} 
-                                    className={`file-entry ${isSelected ? 'selected' : ''}`}
+                                    className={`file-entry ${fileTypeClass} ${isSelected ? 'selected' : ''}`}
                                     onClick={() => {
                                         if (isOldNew) {
-                                            onSelectFile(files.findIndex(f => 
-                                                f.oldFile.path === file.oldFile.path && 
-                                                f.newFile.path === file.newFile.path
-                                            ));
+                                            onSelectFile(origIdx);
                                         } else {
-                                            onSelectTimeFile(timeFiles.findIndex(f => 
-                                                f.newerFile.path === file.newerFile.path && 
-                                                f.olderFile.path === file.olderFile.path
-                                            ));
+                                            onSelectTimeFile(origIdx);
                                         }
                                     }}
                                 >
-                                    <div className={`type-indicator ${isOldNew ? 'type-old-new' : 'type-time'}`}></div>
                                     <div className="file-entry-content">
                                         {isOldNew ? file.commandRan : file.commandRan}
+                                        {matchCount !== null && (
+                                            <span className="match-count">{matchCount}</span>
+                                        )}
                                         {!isOldNew && (
                                             <div>
                                                 <span className="comparison-type type-time-label">Time Comparison</span>
                                                 <span className="time-diff">{file.timeDiff}</span>
                                             </div>
+                                        )}
+                                        {isSameCommand && file.timeDiff && (
+                                            <span className="time-indicator">{file.timeDiff}</span>
                                         )}
                                     </div>
                                 </div>
