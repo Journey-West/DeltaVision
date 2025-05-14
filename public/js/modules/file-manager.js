@@ -1317,7 +1317,7 @@ export function initFileManager() {
             // Only apply cell-level highlighting in Line Diff mode
             // For other modes, we'll let the character/word highlighting handle it
             // Determine highlighting classes and update statistics
-            if (diffLevel === 'line') {
+            if (diffHighlightingEnabled && diffLevel === 'line') {
                 if (hasOldLine && !hasNewLine) {
                     oldCellClass = "removed";
                     // Count for statistics if not processed as a move and not already counted

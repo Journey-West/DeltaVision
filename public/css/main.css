@@ -490,117 +490,19 @@ input:checked + .slider:before {
     line-height: 1.5;
 }
 
-/* New div-based diff container - designed to match file views */
-.diff-container {
+/* Diff table with fixed column layout */
+.diff-table {
     width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
     font-family: 'Fira Code', 'Courier New', Courier, monospace;
     font-size: 14px;
     line-height: 1.5;
+    table-layout: fixed;
     overflow: hidden;
     border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    background-color: #24273A; /* Exact match from screenshots */
-    display: flex;
-    flex-direction: column;
-}
-
-.diff-header {
-    display: flex;
-    background-color: var(--bg-tertiary);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.diff-header .old-header,
-.diff-header .new-header {
-    flex: 1;
-    padding: 8px 12px;
-    font-weight: normal;
-    text-align: center;
-    position: relative;
-    color: var(--text-muted);
-}
-
-.diff-header .old-header {
-    border-right: 1px solid var(--border-color);
-}
-
-.diff-content {
-    display: flex;
-    height: 100%;
-}
-
-.old-content,
-.new-content {
-    flex: 1;
-    overflow: auto;
-    max-height: calc(100vh - 200px);
-}
-
-.old-content {
-    border-right: 1px solid rgba(0, 0, 0, 0.4);
-}
-
-.old-column {
-    width: 100%;
-    border-left: 3px solid #d04255; /* Red for old content, matches removed content */
-}
-
-.new-column {
-    width: 100%;
-    border-left: 3px solid #42A5F5; /* Blue for new content, matches sidebar */
-}
-
-/* Styling for line elements in diff view to exactly match file views */
-.diff-container .line {
-    display: flex;
-    border-bottom: 1px solid #363a4f; /* Exact match from screenshots */
-    background-color: #24273A; /* Exact match from screenshots */
-}
-
-/* All lines have the same background in the screenshots */
-.diff-container .line:nth-child(odd) {
-    background-color: var(--bg-tertiary);
-}
-
-.diff-container .line:hover {
-    background-color: var(--hover-color);
-}
-
-.diff-container .line-number {
-    display: inline-block;
-    width: 35px;
-    padding-right: 8px;
-    text-align: right;
-    color: #8a91b4; /* Exact text color from screenshots */
-    background-color: #1e2030; /* Exact dark blue from screenshots */
-    user-select: none;
-    border-right: 1px solid #363a4f; /* Exact border color from screenshots */
-    font-size: 12px;
-    padding-top: 4px;
-    padding-bottom: 4px;
-}
-
-.diff-container .line-content {
-    padding: 4px 12px;
-    flex: 1;
-    white-space: pre;
-    overflow-x: auto;
-}
-
-/* Special styling for added/removed/moved lines */
-.diff-container .line.added {
-    background-color: rgba(76, 175, 80, 0.1);
-    border-left: 3px solid #4CAF50;
-}
-
-.diff-container .line.removed {
-    background-color: rgba(208, 66, 85, 0.1);
-    border-left: 3px solid #d04255;
-}
-
-.diff-container .line.moved {
-    background-color: rgba(66, 165, 245, 0.1);
-    border-left: 3px solid #42A5F5;
+    background-color: var(--bg-secondary);
 }
 
 /* Professional styling for file views */
@@ -681,24 +583,30 @@ input:checked + .slider:before {
 }
 
 /* Zebra striping with direct row classes */
-.diff-table tbody tr {
-    background-color: #24273A; /* Exact match from screenshots */
+.diff-table tr.odd-row {
+    background-color: var(--odd-row-bg);
 }
 
-.diff-table tbody tr:hover {
-    background-color: #363a4f; /* Darker on hover - from screenshots */
+.diff-table tr.even-row {
+    background-color: var(--even-row-bg);
+}
+
+.diff-table tr:hover {
+    background-color: var(--hover-color);
 }
 
 /* Keep line numbers with consistent background */
 .diff-table .line-number {
     text-align: right;
-    color: #8a91b4; /* Exact color from screenshots */
-    background-color: #1e2030; /* Exact background from screenshots */
+    color: var(--text-muted);
     user-select: none;
-    width: 35px; /* Exact width from screenshots */
     padding: 4px 8px !important;
-    border-right: 1px solid #363a4f; /* Exact border color */
     font-size: 12px;
+    background-color: var(--bg-tertiary);
+    border-right: 1px solid var(--border-color);
+    min-width: 50px;
+    position: sticky;
+    left: 0;
 }
 
 /* Column sizing */
@@ -716,60 +624,27 @@ input:checked + .slider:before {
 
 /* Cell styling */
 .diff-table th, .diff-table td {
-    padding: 4px 12px; /* Match padding from screenshots */
-    vertical-align: top;
-    white-space: pre;
-    word-break: normal;
-    border-bottom: 1px solid #363a4f; /* Exact border color */
-}
-
-/* Make the diff table row height match the file views */
-.diff-table td {
-    padding-top: 4px;
-    padding-bottom: 4px;
-}
-
-/* Make the diff table borders more prominent like in file views */
-.diff-table tr td {
-    border-bottom: 1px solid var(--border-color);
-}
-
-/* Enhance the diff table to better match file views */
-.diff-table td.content-cell {
-    background-color: transparent;
-}
-
-/* Make the diff table rows have more distinct borders like file views */
-.diff-table tr {
-    border-bottom: 1px solid var(--border-color);
-}
-
-/* Ensure the content cells have consistent padding with file views */
-.diff-table td.content-cell {
     padding: 4px 8px;
-}
-
-/* Enhanced styling for diff table rows to match file views */
-.diff-table tr {
-    line-height: 1.5;
+    vertical-align: top;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .diff-table .line-number-header {
     text-align: right;
     padding: 8px !important;
     font-size: 12px;
-    background-color: #24273A !important; /* Exact dark background from screenshots */
-    border-right: 1px solid #363a4f; /* Exact border color from screenshots */
-    font-weight: normal;
-    color: #8a91b4; /* Muted text color from screenshots */
+    background-color: var(--table-header-bg) !important;
+    border-right: 1px solid var(--border-color);
+    font-weight: 600;
 }
 
 .diff-table .content-header {
-    text-align: center;
-    background-color: #24273A !important; /* Exact dark background from screenshots */
-    font-weight: normal;
-    color: #8a91b4; /* Muted text color from screenshots */
-    padding: 8px 12px;
+    text-align: left;
+    background-color: var(--table-header-bg) !important;
+    font-weight: 600;
+    padding: 8px;
 }
 
 .diff-table .line-number {
@@ -790,50 +665,27 @@ input:checked + .slider:before {
 }
 
 .diff-table .content-cell {
-    padding: 4px 8px;
+    padding: 4px 12px;
     white-space: pre-wrap;
     word-break: break-all;
     transition: background-color 0.15s ease;
-    line-height: 1.5;
-    font-family: 'Fira Code', 'Courier New', Courier, monospace;
-}
-
-/* Override background colors for content cells to match file views */
-.diff-table tr.odd-row td.content-cell {
-    background-color: var(--odd-row-bg);
-}
-
-.diff-table tr.even-row td.content-cell {
-    background-color: var(--even-row-bg);
-}
-
-/* Only apply special backgrounds for added/removed when diff highlighting is on */
-.diff-table tr td.added {
-    background-color: var(--added-bg);
-}
-
-.diff-table tr td.removed {
-    background-color: var(--removed-bg);
-}
-
-.diff-table tr td.moved {
-    background-color: var(--moved-bg);
+    border-radius: 0 3px 3px 0;
 }
 
 /* Diff highlight styles - make them stand out from the row background */
 .diff-table td.added {
-    background-color: rgba(76, 175, 80, 0.1) !important; /* Exact green background from screenshots */
-    border-left: 3px solid #4CAF50; /* Exact green color from screenshots */
+    background-color: var(--added-bg) !important;
+    border-left: 3px solid var(--added-color);
 }
 
 .diff-table td.removed {
-    background-color: rgba(208, 66, 85, 0.1) !important; /* Exact red background from screenshots */
-    border-left: 3px solid #d04255; /* Exact red color from screenshots */
+    background-color: var(--removed-bg) !important;
+    border-left: 3px solid var(--removed-color);
 }
 
 .diff-table td.moved {
-    background-color: rgba(66, 165, 245, 0.1) !important; /* Exact blue background from screenshots */
-    border-left: 3px solid #42A5F5; /* Exact blue color from screenshots */
+    background-color: var(--moved-bg) !important;
+    border-left: 3px solid var(--moved-color);
 }
 
 /* Fine-grained diff highlights with stronger colors */
