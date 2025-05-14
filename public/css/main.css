@@ -685,18 +685,52 @@ input:checked + .slider:before {
 }
 
 .diff-table td.removed {
-    background-color: var(--removed-bg) !important;
-    border-left: 3px solid var(--removed-color);
+background-color: var(--removed-bg) !important;
+border-left: 3px solid var(--removed-color);
 }
 
 .diff-table td.moved {
-    background-color: var(--moved-bg) !important;
-    border-left: 3px solid var(--moved-color);
+background-color: var(--moved-bg) !important;
+border-left: 3px solid var(--moved-color);
+}
+
+.diff-table td.moved-removed {
+background-color: var(--moved-bg);
+border-left: 3px solid var(--moved-border);
+}
+
+/* Word-level diff styling */
+.word-added, .word-removed {
+display: inline-block;
+padding: 0 2px;
+border-radius: 2px;
+vertical-align: baseline; /* Fix alignment issue */
+line-height: inherit; /* Maintain consistent line height */
+position: relative; /* Ensure proper positioning */
+}
+
+.word-added {
+background-color: var(--added-highlight);
+}
+
+.word-removed {
+background-color: var(--removed-highlight);
+}
+
+/* Fix for highlighted keywords */
+.highlighted-keyword {
+display: inline-block;
+vertical-align: baseline; /* Fix alignment issue */
+line-height: inherit; /* Maintain consistent line height */
+position: relative; /* Ensure proper positioning */
 }
 
 /* Fine-grained diff highlights with stronger colors */
 .word-added {
-    background-color: var(--added-highlight) !important;
+background-color: var(--added-highlight) !important;
+border-radius: 2px;
+padding: 0 1px;
+display: inline-block;
     border-radius: 2px;
     padding: 0 1px;
     display: inline-block;
@@ -1466,22 +1500,29 @@ body.offline-mode .offline-indicator {
     margin-bottom: 0;
 }
 
-/* Time difference indicator styling */
+/* Time difference indicator styling - Retro style */
 .time-diff-indicator {
-    background-color: #4CAF50; /* Green background */
-    color: #000000; /* Black text for better contrast */
-    font-weight: 500;
+    background-color: #00FF00; /* Bright retro green */
+    color: #000000; /* Black text for contrast */
+    font-family: 'Courier New', monospace; /* Retro terminal font */
+    font-weight: bold;
     padding: 2px 6px;
-    border-radius: 4px;
+    border: 2px solid #000000; /* Black border */
+    box-shadow: 2px 2px 0px #000000; /* Retro shadow effect */
     font-size: 0.8rem;
     margin-left: 8px;
     display: inline-block;
+    text-transform: uppercase; /* RETRO FEEL */
+    letter-spacing: 0.5px;
+    transform: rotate(-1deg); /* Slight tilt for character */
 }
 
 .dark-theme .time-diff-indicator {
-    background-color: #4CAF50; /* Keep green background */
-    color: #000000; /* Black text for contrast */
-    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border in dark mode */
+    background-color: #00FF00; /* Classic terminal green */
+    color: #000000; /* Black text */
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #333333; /* Adjusted shadow for dark mode */
+    text-shadow: 0px 0px 2px rgba(0, 255, 0, 0.5); /* Slight glow effect */
 }
 
 /* Firefox-specific optimizations */

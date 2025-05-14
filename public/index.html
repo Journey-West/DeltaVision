@@ -460,6 +460,30 @@
             background-color: var(--moved-bg);
             border-left: 3px solid var(--moved-border);
         }
+        
+        /* Word-level diff styling with proper alignment */
+        .word-added, .word-removed {
+            display: inline;
+            padding: 0 2px;
+            border-radius: 2px;
+            vertical-align: baseline;
+            position: static;
+        }
+        
+        .word-added {
+            background-color: var(--added-highlight);
+        }
+        
+        .word-removed {
+            background-color: var(--removed-highlight);
+        }
+        
+        /* Fix for highlighted keywords */
+        .highlighted-keyword {
+            display: inline;
+            vertical-align: baseline;
+            position: static;
+        }
     </style>
 </head>
 <body>
