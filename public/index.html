@@ -484,6 +484,40 @@
             vertical-align: baseline;
             position: static;
         }
+        
+        /* Styling for moved line indicators */
+        .line-number-moved {
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            background-color: transparent !important; /* Remove blue background */
+            font-weight: 600; /* Make numbers bolder */
+            width: 100%;
+            padding: 0;
+        }
+        
+        .moved-arrow {
+            color: #FF9800; /* Orange color for arrows - user preference from memory */
+            font-weight: bold;
+            font-size: 20px;
+            margin: 0 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(1.5);
+            text-shadow: 0 0 2px rgba(0,0,0,0.4);
+            line-height: 1;
+            position: relative;
+            top: -1px; /* Fine-tune vertical alignment */
+        }
+        
+        /* Ensure line numbers are consistently sized and aligned */
+        .diff-table td.line-number {
+            text-align: center !important;
+            padding: 4px 2px !important;
+        }
     </style>
 </head>
 <body>

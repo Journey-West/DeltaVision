@@ -621,7 +621,8 @@ input:checked + .slider:before {
 }
 
 .diff-table.has-moved-lines .line-num-col {
-    width: 70px !important;
+    width: 100px !important;
+    min-width: 100px !important;
 }
 
 .diff-table .content-col {
@@ -692,6 +693,11 @@ border-left: 3px solid var(--removed-color);
 .diff-table td.moved {
 background-color: var(--moved-bg) !important;
 border-left: 3px solid var(--moved-color);
+}
+
+/* Ensure line number cells for moved lines don't have blue background */
+.diff-table td.line-number.moved {
+background-color: var(--bg-tertiary) !important;
 }
 
 .diff-table td.moved-removed {
