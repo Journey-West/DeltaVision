@@ -326,12 +326,47 @@
             // Highlight search terms in diff view after each update
             React.useEffect(() => {
                 if (!window.Mark) return;
+                
+                // Create a global fileSearch object for the file-manager.js to use
+                window.fileSearch = {
+                    getCurrentQuery: () => searchQuery,
+                    isSearchActive: () => searchQuery && searchQuery.trim().length > 0
+                };
+                
+                // First, remove all existing highlights
                 document.querySelectorAll('.diff-container').forEach(container => {
                     const marker = new Mark(container);
-                    marker.unmark({ done: () => {
-                        if (searchQuery) marker.mark(searchQuery);
-                    }});
+                    marker.unmark();
                 });
+                
+                // Only proceed if we have a search query
+                if (!searchQuery || searchQuery.trim().length === 0) return;
+                
+                // Apply highlighting with improved options
+                setTimeout(() => {
+                    document.querySelectorAll('.diff-container').forEach(container => {
+                        const marker = new Mark(container);
+                        marker.mark(searchQuery, {
+                            element: 'span',
+                            className: 'search-term-highlight',
+                            accuracy: 'complementary',
+                            separateWordSearch: false,
+                            caseSensitive: false,
+                            diacritics: true,
+                            acrossElements: true,
+                            wildcards: 'enabled',
+                            ignoreJoiners: true,
+                            ignorePunctuation: ['.', ',', ':', ';', '-', '–', '—', '(', ')', '[', ']', '{', '}', '!', '?', '/', '\\', '+', '*']
+                        });
+                    });
+                    
+                    // Apply our custom highlighter from file-manager.js
+                    if (typeof window.highlightSearchTermsInDiffView === 'function') {
+                        document.querySelectorAll('.diff-container').forEach(container => {
+                            window.highlightSearchTermsInDiffView(container);
+                        });
+                    }
+                }, 100);
             }, [searchQuery, oldContent, newContent, newerContent, olderContent, diffMode, currentComparisonType]);
 
             // Fetch files from the API

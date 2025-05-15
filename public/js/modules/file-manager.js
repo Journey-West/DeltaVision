@@ -2115,11 +2115,13 @@ export function initFileManager() {
         if (!window.fileSearch || 
             typeof window.fileSearch.getCurrentQuery !== 'function' || 
             typeof window.fileSearch.isSearchActive !== 'function') {
+            console.warn('[highlightSearchTermsInDiffView] Search module not available');
             return; // Search module not available
         }
         
         const searchQuery = window.fileSearch.getCurrentQuery();
         if (!searchQuery || !window.fileSearch.isSearchActive()) {
+            console.log('[highlightSearchTermsInDiffView] No active search query');
             return; // No active search
         }
         
@@ -2127,126 +2129,163 @@ export function initFileManager() {
             console.log(`[highlightSearchTermsInDiffView] Highlighting search term: "${searchQuery}"`);
             
             // First, remove any existing highlights to avoid duplicates
-            const existingHighlights = container.querySelectorAll('.search-term-highlight');
+            const existingHighlights = document.querySelectorAll('.search-term-highlight');
             existingHighlights.forEach(highlight => {
                 // Replace the highlight span with its text content
                 const textNode = document.createTextNode(highlight.textContent);
                 highlight.parentNode.replaceChild(textNode, highlight);
             });
             
-            // Use the mark.js library if available (it's included in vendor/js/mark.min.js)
-            if (typeof Mark !== 'undefined') {
-                // Create a new instance of Mark targeting the container
-                const markInstance = new Mark(container);
-                
-                // Use mark.js to highlight the search term with proper options
-                markInstance.mark(searchQuery, {
-                    element: 'span',
-                    className: 'search-term-highlight',
-                    accuracy: 'exactly',
-                    separateWordSearch: false,
-                    caseSensitive: false,
-                    diacritics: true,
-                    acrossElements: true,
-                    exclude: ['.line-number', '.search-term-highlight'],
-                    done: function(count) {
-                        console.log(`[highlightSearchTermsInDiffView] Highlighted ${count} occurrences of "${searchQuery}" using mark.js`);
-                    }
-                });
-                
-                return; // Exit early since we're using mark.js
-            }
+            // DIRECT DOM MANIPULATION: Target all possible text containers in the diff view
+            const searchTermLower = searchQuery.toLowerCase();
+            let totalHighlighted = 0;
             
-            // Fallback to manual highlighting if mark.js is not available
-            // Get all text content from the diff view (the content cells)
-            const contentCells = container.querySelectorAll('td.content-cell');
-            if (!contentCells || contentCells.length === 0) {
-                return; // No content cells found
-            }
+            // Target all text-containing elements in the diff view
+            // This includes every possible element that might contain the search term
+            const textContainers = [
+                ...Array.from(document.querySelectorAll('.line-content')),
+                ...Array.from(document.querySelectorAll('.content-cell')),
+                ...Array.from(document.querySelectorAll('td:not(.line-number)')),
+                ...Array.from(document.querySelectorAll('.diff-line'))
+            ];
             
-            // Create a text node walker to find text nodes containing our search term
-            const walker = document.createTreeWalker(
-                container,
-                NodeFilter.SHOW_TEXT,
-                {
-                    acceptNode: function(node) {
-                        // Skip nodes that are empty or only whitespace
-                        if (!node.textContent.trim()) {
-                            return NodeFilter.FILTER_REJECT;
-                        }
+            console.log(`[highlightSearchTermsInDiffView] Found ${textContainers.length} potential text containers`);
+            
+            // Process each text container
+            textContainers.forEach(element => {
+                // Skip if the element is empty or is a line number
+                if (!element.textContent || !element.textContent.trim() || 
+                    element.classList.contains('line-number')) return;
+                
+                // Check if this element contains the search term (case insensitive)
+                if (element.textContent.toLowerCase().includes(searchTermLower)) {
+                    console.log(`[highlightSearchTermsInDiffView] Found match in element:`, element.textContent);
+                    
+                    // Process all text nodes within this element
+                    const walker = document.createTreeWalker(
+                        element,
+                        NodeFilter.SHOW_TEXT,
+                        { acceptNode: node => node.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT }
+                    );
+                    
+                    let textNode;
+                    while (textNode = walker.nextNode()) {
+                        const text = textNode.textContent;
                         
-                        // Skip nodes that are in line number cells
-                        let parent = node.parentNode;
-                        while (parent && parent !== container) {
-                            if (parent.classList && 
-                                (parent.classList.contains('line-number') || 
-                                 parent.classList.contains('search-term-highlight'))) {
-                                return NodeFilter.FILTER_REJECT;
+                        // Skip if this text node doesn't contain the search term
+                        if (!text.toLowerCase().includes(searchTermLower)) continue;
+                        
+                        // Create a simple regex that just looks for the term, case insensitive
+                        const escapedTerm = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regex = new RegExp(escapedTerm, 'gi');
+                        
+                        // Find all matches in this text node
+                        let match;
+                        let lastIndex = 0;
+                        let fragments = [];
+                        let matchesInNode = 0;
+                        
+                        while ((match = regex.exec(text)) !== null) {
+                            // Add text before the match
+                            if (match.index > lastIndex) {
+                                fragments.push(document.createTextNode(text.substring(lastIndex, match.index)));
                             }
-                            parent = parent.parentNode;
+                            
+                            // Create a span for the matched text with very visible styling
+                            const highlightSpan = document.createElement('span');
+                            highlightSpan.className = 'search-term-highlight';
+                            highlightSpan.style.backgroundColor = 'rgba(255, 165, 0, 0.6)';
+                            highlightSpan.style.color = '#000';
+                            highlightSpan.style.fontWeight = 'bold';
+                            highlightSpan.style.padding = '0 2px';
+                            highlightSpan.style.borderRadius = '2px';
+                            highlightSpan.style.display = 'inline';
+                            highlightSpan.style.verticalAlign = 'baseline';
+                            highlightSpan.textContent = match[0]; // Use the actual matched text
+                            
+                            fragments.push(highlightSpan);
+                            lastIndex = regex.lastIndex;
+                            totalHighlighted++;
+                            matchesInNode++;
                         }
                         
-                        // Accept nodes containing the search term (case insensitive)
-                        if (node.textContent.toLowerCase().includes(searchQuery.toLowerCase())) {
-                            return NodeFilter.FILTER_ACCEPT;
+                        // Add any remaining text after the last match
+                        if (lastIndex < text.length) {
+                            fragments.push(document.createTextNode(text.substring(lastIndex)));
                         }
                         
-                        return NodeFilter.FILTER_SKIP;
+                        // Only replace if we found matches
+                        if (fragments.length > 0 && matchesInNode > 0) {
+                            console.log(`[highlightSearchTermsInDiffView] Highlighting ${matchesInNode} matches in text node:`, text);
+                            
+                            // Create a document fragment to hold all the new nodes
+                            const fragment = document.createDocumentFragment();
+                            fragments.forEach(node => fragment.appendChild(node));
+                            
+                            // Replace the original text node with our fragment
+                            textNode.parentNode.replaceChild(fragment, textNode);
+                        }
                     }
                 }
-            );
+            });
             
-            // Process text nodes containing the search term
-            let currentNode;
-            let highlightCount = 0;
+            console.log(`[highlightSearchTermsInDiffView] Highlighted ${totalHighlighted} occurrences of "${searchQuery}"`);
             
-            while (currentNode = walker.nextNode()) {
-                const text = currentNode.textContent;
-                const parent = currentNode.parentNode;
+            // If we didn't find any matches with our direct approach, try mark.js
+            if (totalHighlighted === 0) {
+                console.log('[highlightSearchTermsInDiffView] No matches found with direct approach, trying mark.js');
                 
-                // Create a case-insensitive regex to find all instances of the search term
-                const escapedTerm = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(escapedTerm, 'gi');
-                
-                // Find all matches in the current text node
-                let match;
-                let lastIndex = 0;
-                let fragments = [];
-                
-                while ((match = regex.exec(text)) !== null) {
-                    // Add text before the match
-                    if (match.index > lastIndex) {
-                        fragments.push(document.createTextNode(text.substring(lastIndex, match.index)));
-                    }
+                if (typeof Mark !== 'undefined') {
+                    // Target the entire document body to ensure we catch everything
+                    const markInstance = new Mark(document.body);
                     
-                    // Create a span for the matched text
-                    const highlightSpan = document.createElement('span');
-                    highlightSpan.className = 'search-term-highlight';
-                    highlightSpan.textContent = match[0]; // Use the actual matched text
-                    fragments.push(highlightSpan);
-                    
-                    lastIndex = regex.lastIndex;
-                    highlightCount++;
-                }
-                
-                // Add any remaining text after the last match
-                if (lastIndex < text.length) {
-                    fragments.push(document.createTextNode(text.substring(lastIndex)));
-                }
-                
-                // Only replace the node if we found matches
-                if (fragments.length > 0) {
-                    // Create a document fragment to hold all the new nodes
-                    const fragment = document.createDocumentFragment();
-                    fragments.forEach(node => fragment.appendChild(node));
-                    
-                    // Replace the original text node with our fragment
-                    parent.replaceChild(fragment, currentNode);
+                    // Use mark.js with very permissive settings
+                    markInstance.mark(searchQuery, {
+                        element: 'span',
+                        className: 'search-term-highlight',
+                        accuracy: 'exactly', // Try exact matching first
+                        separateWordSearch: false,
+                        caseSensitive: false,
+                        exclude: ['.line-number'],
+                        done: function(count) {
+                            console.log(`[highlightSearchTermsInDiffView] Mark.js highlighted ${count} occurrences with 'exactly' setting`);
+                            
+                            // If no matches with 'exactly', try with 'partially'
+                            if (count === 0) {
+                                markInstance.mark(searchQuery, {
+                                    element: 'span',
+                                    className: 'search-term-highlight',
+                                    accuracy: 'partially',
+                                    separateWordSearch: false,
+                                    caseSensitive: false,
+                                    exclude: ['.line-number'],
+                                    done: function(count) {
+                                        console.log(`[highlightSearchTermsInDiffView] Mark.js highlighted ${count} occurrences with 'partially' setting`);
+                                        
+                                        // If still no matches, try with 'complementary'
+                                        if (count === 0) {
+                                            markInstance.mark(searchQuery, {
+                                                element: 'span',
+                                                className: 'search-term-highlight',
+                                                accuracy: 'complementary',
+                                                separateWordSearch: false,
+                                                caseSensitive: false,
+                                                wildcards: 'enabled',
+                                                exclude: ['.line-number'],
+                                                done: function(count) {
+                                                    console.log(`[highlightSearchTermsInDiffView] Mark.js highlighted ${count} occurrences with 'complementary' setting`);
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                } else {
+                    console.warn('[highlightSearchTermsInDiffView] Mark.js library not available');
                 }
             }
-            
-            console.log(`[highlightSearchTermsInDiffView] Highlighted ${highlightCount} occurrences of "${searchQuery}"`);
-            
         } catch (error) {
             console.error('Error highlighting search terms in diff view:', error);
         }
@@ -2254,6 +2293,7 @@ export function initFileManager() {
     
     // Expose key functions to the window for use by other components
     window.loadFileComparison = loadFileComparison;
+    window.highlightSearchTermsInDiffView = highlightSearchTermsInDiffView;
     
     // Setup file type filter
     function setupFileTypeFilter() {

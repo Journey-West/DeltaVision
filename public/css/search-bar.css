@@ -87,22 +87,25 @@
 
 /* Highlight search terms in diff view */
 .search-term-highlight {
-    background-color: rgba(255, 165, 0, 0.4); /* Orange background */
-    border-radius: 2px;
-    display: inline; /* Critical: use inline not inline-block */
-    position: static; /* Don't change the positioning context */
-    padding: 0; /* No padding */
-    margin: 0; /* No margin */
-    box-shadow: none; /* Remove box-shadow which can affect positioning */
+    background-color: rgba(255, 165, 0, 0.7) !important; /* Brighter orange background */
+    color: #000 !important; /* Black text for better contrast */
+    border-radius: 2px !important;
+    display: inline !important; /* Critical: use inline not inline-block */
+    position: static !important; /* Don't change the positioning context */
+    padding: 0 2px !important; /* Small horizontal padding for better visibility */
+    margin: 0 !important; /* No margin */
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3) !important; /* Subtle shadow for better visibility */
     vertical-align: baseline !important; /* Force baseline alignment */
-    line-height: normal !important; /* Use normal line height */
-    text-shadow: none; /* No text shadow */
-    font-weight: normal; /* No bold text */
-    font-size: inherit; /* Same font size as parent */
-    font-family: inherit; /* Same font family as parent */
-    animation: none; /* Remove animation which can cause issues */
-    border: none; /* No border */
-    text-decoration: none; /* No text decoration */
+    line-height: inherit !important; /* Use inherited line height */
+    text-shadow: none !important; /* No text shadow */
+    font-weight: bold !important; /* Bold text for better visibility */
+    font-size: inherit !important; /* Same font size as parent */
+    font-family: inherit !important; /* Same font family as parent */
+    animation: none !important; /* Remove animation which can cause issues */
+    border: none !important; /* No border */
+    text-decoration: none !important; /* No text decoration */
+    z-index: 100 !important; /* Ensure highlights appear above other content */
+    opacity: 1 !important; /* Ensure full opacity */
 }
 
 @keyframes pulse-highlight {
