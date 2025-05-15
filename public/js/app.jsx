@@ -83,7 +83,6 @@
                 <div className="file-list">
                     {isSearching && (
                         <div className="search-results-header">
-                            <span className="results-count">{displayedFiles.length} results found</span>
                             <button className="reset-button" onClick={() => window.location.reload()}>Reset</button>
                         </div>
                     )}
@@ -124,8 +123,6 @@
                                 fileTypeClass = 'same-command-diff';
                             }
                             
-                            // Get match count for search results (display in circle badge)
-                            let matchCount = null;
                             if (isSearching) {
                                 const entry = fileContents[`${file.type}-${origIdx}`] || {};
                                 const hayArray = [file.commandRan || ''];
@@ -143,14 +140,7 @@
                                 hayArray.push(entry.old || '', entry.new || '');
                                 const hay = hayArray.join(' ').toLowerCase();
                                 
-                                // Count occurrences of the search term
-                                let count = 0;
-                                let pos = hay.indexOf(lowerQuery);
-                                while (pos !== -1) {
-                                    count++;
-                                    pos = hay.indexOf(lowerQuery, pos + 1);
-                                }
-                                matchCount = count;
+                                // No need to count occurrences anymore
                             }
                             
                             return (
@@ -167,9 +157,7 @@
                                 >
                                     <div className="file-entry-content">
                                         {isOldNew ? file.commandRan : file.commandRan}
-                                        {matchCount !== null && (
-                                            <span className="match-count">{matchCount}</span>
-                                        )}
+
                                         {!isOldNew && (
                                             <div>
                                                 <span className="comparison-type type-time-label">Time Comparison</span>

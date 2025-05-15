@@ -6,7 +6,6 @@ export function initFileSearch(fileManager) {
     const clearButton = document.getElementById('clearSearchButton');
     const resetButton = document.getElementById('resetSearchButton');
     const searchStatus = document.getElementById('searchStatus');
-    const searchResultsCount = document.getElementById('searchResultsCount');
     
     // State
     let searchResults = [];
@@ -160,11 +159,9 @@ export function initFileSearch(fileManager) {
     function updateSearchResults(results, query) {
         console.log('[FileSearch] Processing search results:', results);
         const fileEntries = document.querySelectorAll('.file-entry');
-        const resultCount = results.length;
         
         // Update status display
         searchStatus.style.display = 'flex';
-        searchResultsCount.textContent = resultCount;
         
         // First, reset all entries to hidden state
         fileEntries.forEach(entry => {
@@ -203,7 +200,7 @@ export function initFileSearch(fileManager) {
         }
         
         // If no files were found matching the query, we're done (all files remain hidden)
-        if (resultCount === 0) {
+        if (results.length === 0) {
             return;
         }
         
@@ -225,11 +222,10 @@ export function initFileSearch(fileManager) {
         
         // Process each search result
         results.forEach(result => {
-            // Extract file paths and match count from the server response format
+            // Extract file paths from the server response format
             const oldFilePath = result.oldFile?.path;
             const newFilePath = result.newFile?.path;
-            const matchCount = result.matches || 1;
-            console.log(`[FileSearch] Processing result: ${oldFilePath || newFilePath} (${matchCount} matches)`);
+            console.log(`[FileSearch] Processing result: ${oldFilePath || newFilePath}`);
             
             // Find all entries matching this result
             fileEntries.forEach(entry => {
@@ -254,46 +250,7 @@ export function initFileSearch(fileManager) {
                     entry.classList.remove('search-hidden');
                     entry.classList.add('search-match');
                     
-                    // Add match count badge
-                    let badge = entry.querySelector('.match-count');
-                    if (!badge) {
-                        badge = document.createElement('span');
-                        badge.className = 'match-count';
-                        entry.appendChild(badge);
-                    }
-                    
-                    // Check if this is a comparison file (has both old and new paths)
-                    if (entryOldPath && entryNewPath) {
-                        // For comparison files, show separate counts for old and new files
-                        const oldMatches = result.oldFile?.matches || 0;
-                        const newMatches = result.newFile?.matches || 0;
-                        
-                        // Clear the badge content
-                        badge.innerHTML = '';
-                        
-                        // Create styled elements for the counts and separator
-                        const oldCountSpan = document.createElement('span');
-                        oldCountSpan.className = 'old-count';
-                        oldCountSpan.textContent = oldMatches;
-                        
-                        const separatorSpan = document.createElement('span');
-                        separatorSpan.className = 'separator';
-                        separatorSpan.textContent = '/';
-                        
-                        const newCountSpan = document.createElement('span');
-                        newCountSpan.className = 'new-count';
-                        newCountSpan.textContent = newMatches;
-                        
-                        // Append the elements to the badge
-                        badge.appendChild(oldCountSpan);
-                        badge.appendChild(separatorSpan);
-                        badge.appendChild(newCountSpan);
-                        
-                        badge.title = `${oldMatches} matches in old file, ${newMatches} matches in new file`;
-                    } else {
-                        // For single files (old-only or new-only), show the total count
-                        badge.textContent = matchCount;
-                    }
+                    // No match count badge display
                     
                     // Highlight the search term in the entry text
                     const strong = entry.querySelector('strong');
@@ -362,11 +319,7 @@ export function initFileSearch(fileManager) {
             entry.classList.remove('search-hidden');
             entry.classList.remove('search-match');
             
-            // Remove match count badges
-            const badge = entry.querySelector('.match-count');
-            if (badge) {
-                entry.removeChild(badge);
-            }
+            // No match count badges to remove
             
             // Reset any highlighting
             const strong = entry.querySelector('strong');
