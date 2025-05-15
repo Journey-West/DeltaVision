@@ -1254,14 +1254,16 @@ app.post('/api/search', async (req, res) => {
                     resultObj.oldFile = {
                       filename,
                       path: filePath,
-                      mtime: stats.mtime
+                      mtime: stats.mtime,
+                      matches: matches // Add match count to oldFile object
                     };
                   } else {
                     resultObj.fileType = 'new-only';
                     resultObj.newFile = {
                       filename,
                       path: filePath,
-                      mtime: stats.mtime
+                      mtime: stats.mtime,
+                      matches: matches // Add match count to newFile object
                     };
                   }
                   
@@ -1275,18 +1277,52 @@ app.post('/api/search', async (req, res) => {
                     // This is a comparison file (exists in both dirs)
                     resultObj.fileType = 'comparison';
                     
-                    if (isOldDir) {
-                      resultObj.newFile = {
-                        filename,
-                        path: otherPath,
-                        mtime: otherStats.mtime
-                      };
-                    } else {
-                      resultObj.oldFile = {
-                        filename,
-                        path: otherPath,
-                        mtime: otherStats.mtime
-                      };
+                    // Read the other file's content to count matches
+                    try {
+                      const otherContent = await fs.promises.readFile(otherPath, 'utf8');
+                      const otherSearchRegex = new RegExp(query, 'gi');
+                      const otherMatches = (otherContent.match(otherSearchRegex) || []).length;
+                      
+                      if (isOldDir) {
+                        // Current file is old, other file is new
+                        resultObj.oldFile.matches = matches; // Set matches for old file
+                        resultObj.newFile = {
+                          filename,
+                          path: otherPath,
+                          mtime: otherStats.mtime,
+                          matches: otherMatches // Add matches for new file
+                        };
+                      } else {
+                        // Current file is new, other file is old
+                        resultObj.newFile.matches = matches; // Set matches for new file
+                        resultObj.oldFile = {
+                          filename,
+                          path: otherPath,
+                          mtime: otherStats.mtime,
+                          matches: otherMatches // Add matches for old file
+                        };
+                      }
+                    } catch (otherReadErr) {
+                      console.error(`[Search] Error reading other file ${otherPath}: ${otherReadErr.message}`);
+                      
+                      // Still add the file but with 0 matches for the other file
+                      if (isOldDir) {
+                        resultObj.oldFile.matches = matches;
+                        resultObj.newFile = {
+                          filename,
+                          path: otherPath,
+                          mtime: otherStats.mtime,
+                          matches: 0
+                        };
+                      } else {
+                        resultObj.newFile.matches = matches;
+                        resultObj.oldFile = {
+                          filename,
+                          path: otherPath,
+                          mtime: otherStats.mtime,
+                          matches: 0
+                        };
+                      }
                     }
                   }
                   

@@ -262,8 +262,19 @@ export function initFileSearch(fileManager) {
                         entry.appendChild(badge);
                     }
                     
-                    // Update match count
-                    badge.textContent = matchCount;
+                    // Check if this is a comparison file (has both old and new paths)
+                    if (entryOldPath && entryNewPath) {
+                        // For comparison files, show separate counts for old and new files
+                        const oldMatches = result.oldFile?.matches || 0;
+                        const newMatches = result.newFile?.matches || 0;
+                        
+                        // Format as oldCount/newCount
+                        badge.textContent = `${oldMatches}/${newMatches}`;
+                        badge.title = `${oldMatches} matches in old file, ${newMatches} matches in new file`;
+                    } else {
+                        // For single files (old-only or new-only), show the total count
+                        badge.textContent = matchCount;
+                    }
                     
                     // Highlight the search term in the entry text
                     const strong = entry.querySelector('strong');

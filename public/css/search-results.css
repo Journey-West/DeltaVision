@@ -37,19 +37,28 @@
     background-color: var(--hover-color);
 }
 
-/* Match count badge styling */
+/* Match count badge styling - Retro version */
 .file-entry .match-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--bg-tertiary);
-    color: var(--text-color);
+    background-color: #000;
+    color: #33ff00; /* Classic terminal green */
+    font-family: 'Courier New', monospace;
     font-size: 12px;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    border-radius: 0; /* Square corners for retro look */
+    min-width: 24px;
+    height: 18px;
+    padding: 0 4px;
     margin-left: 8px;
-    font-weight: 500;
+    font-weight: bold;
+    white-space: nowrap;
+    cursor: default;
+    border: 1px solid #33ff00;
+    text-shadow: 0 0 5px #33ff00; /* Glow effect */
+    box-shadow: 0 0 5px rgba(51, 255, 0, 0.5); /* Subtle glow around the badge */
+    letter-spacing: 1px; /* Spread out the characters a bit */
+    transform: skew(-5deg); /* Slight slant for style */
 }
 
 /* Consistent time indicator styling for both views */
