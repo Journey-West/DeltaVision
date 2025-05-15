@@ -198,12 +198,10 @@
                         const isNewView = container.querySelector('.new-file-view');
                         const isOldView = container.querySelector('.old-file-view');
                         
-                        if (isDiffView) {
-                            // For diff view, use the original function
-                            originalHighlightFunction.call(this, container);
-                        } else if (isNewView || isOldView) {
-                            // For file views, use our enhanced approach
-                            const targetView = isNewView ? isNewView : isOldView;
+                        // For all view types, use our enhanced approach
+                        if (isDiffView || isNewView || isOldView) {
+                            // Determine the target container based on view type
+                            const targetView = isDiffView ? container : (isNewView ? isNewView : isOldView);
                             
                             // Get all line content elements
                             const lineContents = targetView.querySelectorAll('.line-content');
