@@ -268,8 +268,27 @@ export function initFileSearch(fileManager) {
                         const oldMatches = result.oldFile?.matches || 0;
                         const newMatches = result.newFile?.matches || 0;
                         
-                        // Format as oldCount/newCount
-                        badge.textContent = `${oldMatches}/${newMatches}`;
+                        // Clear the badge content
+                        badge.innerHTML = '';
+                        
+                        // Create styled elements for the counts and separator
+                        const oldCountSpan = document.createElement('span');
+                        oldCountSpan.className = 'old-count';
+                        oldCountSpan.textContent = oldMatches;
+                        
+                        const separatorSpan = document.createElement('span');
+                        separatorSpan.className = 'separator';
+                        separatorSpan.textContent = '/';
+                        
+                        const newCountSpan = document.createElement('span');
+                        newCountSpan.className = 'new-count';
+                        newCountSpan.textContent = newMatches;
+                        
+                        // Append the elements to the badge
+                        badge.appendChild(oldCountSpan);
+                        badge.appendChild(separatorSpan);
+                        badge.appendChild(newCountSpan);
+                        
                         badge.title = `${oldMatches} matches in old file, ${newMatches} matches in new file`;
                     } else {
                         // For single files (old-only or new-only), show the total count

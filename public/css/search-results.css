@@ -37,28 +37,39 @@
     background-color: var(--hover-color);
 }
 
-/* Match count badge styling - Retro version */
+/* Match count badge styling */
 .file-entry .match-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: #000;
-    color: #33ff00; /* Classic terminal green */
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    border-radius: 0; /* Square corners for retro look */
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    font-size: 11px;
+    border-radius: 4px;
     min-width: 24px;
     height: 18px;
-    padding: 0 4px;
+    padding: 0 5px;
     margin-left: 8px;
-    font-weight: bold;
+    font-weight: 600;
     white-space: nowrap;
     cursor: default;
-    border: 1px solid #33ff00;
-    text-shadow: 0 0 5px #33ff00; /* Glow effect */
-    box-shadow: 0 0 5px rgba(51, 255, 0, 0.5); /* Subtle glow around the badge */
-    letter-spacing: 1px; /* Spread out the characters a bit */
-    transform: skew(-5deg); /* Slight slant for style */
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.file-entry:hover .match-count {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Style for the slash separator in old/new counts */
+.file-entry .match-count span.separator {
+    opacity: 0.7;
+    margin: 0 1px;
 }
 
 /* Consistent time indicator styling for both views */
