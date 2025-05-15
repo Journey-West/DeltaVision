@@ -1,0 +1,25 @@
+/**
+ * Line Alignment Fix for DeltaVision
+ *
+ * This CSS targets ONLY the Old View and New View modes to fix text alignment
+ * without affecting the Diff View layout.
+ */
+
+/* ONLY target line content in old-file-view and new-file-view */
+.old-file-view .line-content,
+.new-file-view .line-content {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1.5;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+/* ONLY target line containers in old-file-view and new-file-view */
+.old-file-view .line,
+.new-file-view .line {
+    padding: 1px 0;
+    line-height: 1.5;
+}
+
+/* DO NOT target or modify diff view elements */

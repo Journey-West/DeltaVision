@@ -18,6 +18,8 @@
     <link href="/css/scroll-fix.css" rel="stylesheet">
     <link href="/css/search-results.css" rel="stylesheet">
     <link href="/css/filter-message.css" rel="stylesheet">
+    <link href="/css/search-highlight.css" rel="stylesheet">
+    <link href="/css/line-alignment-fix.css" rel="stylesheet">
     
     <!-- Additional stylesheets specific to components -->
     <style>
@@ -563,6 +565,9 @@
         import { initFileSearch } from './js/modules/file-search.js';
         import { initStyleManager } from './js/modules/style-manager.js';
         import { initThemeLoader, createThemeEditor } from './js/theme-loader.js';
+        
+        // Load search fix
+        import './js/search-fix.js';
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Initialize theme system first

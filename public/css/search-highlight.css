@@ -1,0 +1,44 @@
+/**
+ * Search Highlighting CSS for DeltaVision
+ * This stylesheet ensures search terms are properly highlighted in all view modes
+ */
+
+/* Create a custom CSS class for search term highlighting */
+.search-term-highlight {
+    background-color: rgba(255, 165, 0, 0.6) !important; /* Orange with transparency */
+    color: #000 !important;
+    font-weight: bold !important;
+    padding: 0 2px !important;
+    border-radius: 2px !important;
+    display: inline !important;
+    vertical-align: baseline !important;
+}
+
+/* Ensure the search-term-highlight class is visible in all view modes */
+.old-file-view .search-term-highlight,
+.new-file-view .search-term-highlight,
+.diff-viewer .search-term-highlight {
+    background-color: rgba(255, 165, 0, 0.6) !important;
+    color: #000 !important;
+}
+
+/* Make sure line content is properly styled for search highlighting */
+.line-content {
+    white-space: pre-wrap !important; /* Ensure proper wrapping */
+    word-break: break-word !important; /* Break words to avoid overflow */
+}
+
+/* Ensure proper display of highlighted content */
+.old-file-view .line,
+.new-file-view .line {
+    position: relative;
+    display: block;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+}
+
+/* Override any conflicting styles */
+.mark {
+    padding: 0 !important;
+    background-color: rgba(255, 165, 0, 0.6) !important;
+}
