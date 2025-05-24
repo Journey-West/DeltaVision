@@ -60,7 +60,7 @@ DeltaVision is designed to work completely offline without requiring internet co
 
 ### Offline Installation
 
-For air-gapped environments, you can use our offline packaging script:
+For offline environments, you can use our offline packaging script:
 
 ```bash
 ./package-offline.sh
@@ -70,7 +70,7 @@ This script will:
 1. Build the application
 2. Package it for Windows, macOS, and Linux
 3. Create a zip archive with all installers and installation instructions
-4. The resulting package can be transferred to air-gapped systems
+4. The resulting package can be transferred to offline systems
 
 ## Usage
 

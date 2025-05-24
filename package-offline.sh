@@ -1,9 +1,9 @@
 #!/bin/bash
-# Script to package DeltaVision for air-gapped environments
+# Script to package DeltaVision for offline environments
 # This script creates standalone installers that can be used in offline environments
 
 echo "=== DeltaVision Offline Packaging Tool ==="
-echo "This script will create standalone installers for air-gapped environments."
+echo "This script will create standalone installers for offline environments."
 
 # Check if npm is installed
 if ! command -v npm &> /dev/null; then
@@ -46,7 +46,7 @@ cat > "$PACKAGE_DIR/README.txt" << EOL
 DeltaVision Offline Installation
 ================================
 
-This package contains standalone installers for DeltaVision that can be used in air-gapped environments.
+This package contains standalone installers for DeltaVision that can be used in offline environments.
 
 Installation Instructions:
 -------------------------
