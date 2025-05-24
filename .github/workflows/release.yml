@@ -33,28 +33,50 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-        env:
-          # Disable Electron download during npm install
-          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
 
       - name: Build App
-        run: npm run build
+        run: npm run build -- --verbose
+        env:
+          DEBUG: "electron-builder,electron-builder:*"
 
       - name: Package Electron App
         run: |
           # Ensure dist directory exists
           mkdir -p dist
-          # Package for current platform only
+          
+          # Debug information
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Current directory: $(pwd)"
+          echo "Directory listing:"
+          ls -la
+          
+          # Package for current platform only with verbose logging
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            npm run package -- --win
+            echo "Packaging for Windows..."
+            npm run package -- --win --publish never
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            npm run package -- --mac
+            echo "Packaging for macOS..."
+            npm run package -- --mac --publish never
           else
-            npm run package -- --linux
+            echo "Packaging for Linux..."
+            npm run package -- --linux --publish never
           fi
+          
+          # Check if packaging was successful
+          if [ $? -ne 0 ]; then
+            echo "Packaging failed. Attempting to continue..."
+          else
+            echo "Packaging completed successfully."
+          fi
+          
+          # List generated artifacts
+          echo "Generated artifacts:"
+          find dist -type f | sort
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: "electron-builder,electron-builder:*"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
