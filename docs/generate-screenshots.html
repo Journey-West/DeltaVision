@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeltaVision Screenshot Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .app-container {
+            width: 800px;
+            height: 600px;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .app-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .app-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .app-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .app-sidebar {
+            width: 200px;
+            background-color: #f8f9fa;
+            border-right: 1px solid #e1e4e8;
+            padding: 15px;
+        }
+        
+        .app-main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .app-content {
+            flex: 1;
+            padding: 15px;
+            overflow: auto;
+        }
+        
+        .file-item {
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        
+        .file-item:hover {
+            background-color: #e9ecef;
+        }
+        
+        .file-selected {
+            background-color: #e2f0ff;
+        }
+        
+        .search-bar {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e1e4e8;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .diff-container {
+            display: flex;
+            height: 100%;
+        }
+        
+        .diff-pane {
+            flex: 1;
+            border: 1px solid #e1e4e8;
+            margin: 0 5px;
+            overflow: auto;
+        }
+        
+        .diff-header {
+            background-color: #f1f8ff;
+            padding: 8px;
+            border-bottom: 1px solid #e1e4e8;
+            font-weight: bold;
+        }
+        
+        .diff-line {
+            padding: 2px 8px;
+            font-family: monospace;
+            white-space: pre;
+            font-size: 14px;
+            line-height: 1.5;
+            display: flex;
+        }
+        
+        .diff-line-number {
+            color: #6c757d;
+            width: 40px;
+            text-align: right;
+            padding-right: 10px;
+            user-select: none;
+        }
+        
+        .diff-added {
+            background-color: #e6ffed;
+        }
+        
+        .diff-removed {
+            background-color: #ffeef0;
+        }
+        
+        .search-result {
+            margin-bottom: 15px;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .search-result-header {
+            background-color: #f1f8ff;
+            padding: 8px 12px;
+            font-weight: bold;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        
+        .search-result-content {
+            padding: 10px 12px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px;
+            border-radius: 2px;
+        }
+        
+        .status-bar {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e1e4e8;
+            padding: 5px 15px;
+            font-size: 12px;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Screenshot specific styles */
+        .screenshot {
+            margin-bottom: 50px;
+        }
+        
+        .screenshot-title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+        
+        .screenshot-description {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #6c757d;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .download-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        
+        .info {
+            max-width: 800px;
+            margin: 0 auto 50px;
+            padding: 20px;
+            background-color: #e2f0ff;
+            border-radius: 8px;
+            border-left: 5px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h1>DeltaVision Screenshot Generator</h1>
+        <p>This page contains mockups of the DeltaVision application interface for the GitHub Pages website. Use browser screenshot tools or screen capture software to save these images for use on the website.</p>
+        <p>Recommended: Take screenshots of each section below and save them with the filenames indicated in each section title.</p>
+    </div>
+
+    <!-- Main Application Screenshot -->
+    <div class="screenshot">
+        <h2 class="screenshot-title">Main Application Interface (app-screenshot.png)</h2>
+        <p class="screenshot-description">The main interface of DeltaVision showing the file browser and search functionality</p>
+        
+        <div class="app-container">
+            <div class="app-header">
+                <div class="app-title">DeltaVision</div>
+                <div class="app-controls">
+                    <button class="app-button">Select Files</button>
+                    <button class="app-button">Settings</button>
+                </div>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search files or content..." value="config">
+                <button class="app-button">Search</button>
+                <select>
+                    <option>Filename</option>
+                    <option selected>Content</option>
+                </select>
+            </div>
+            
+            <div class="app-main">
+                <div class="app-sidebar">
+                    <div class="file-item file-selected">src/</div>
+                    <div class="file-item">├─ main/</div>
+                    <div class="file-item">│  ├─ main.js</div>
+                    <div class="file-item">│  └─ preload.js</div>
+                    <div class="file-item">├─ renderer/</div>
+                    <div class="file-item">│  ├─ components/</div>
+                    <div class="file-item">│  └─ features/</div>
+                    <div class="file-item">package.json</div>
+                    <div class="file-item">README.md</div>
+                </div>
+                
+                <div class="app-content">
+                    <div class="search-result">
+                        <div class="search-result-header">src/main/main.js</div>
+                        <div class="search-result-content">
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
+
+// Load application <span class="highlight">config</span>uration
+const <span class="highlight">config</span> = require('./modules/<span class="highlight">config</span>');
+
+function createWindow() {
+  const mainWindow = new BrowserWindow({
+    width: <span class="highlight">config</span>.windowWidth,
+    height: <span class="highlight">config</span>.windowHeight,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+
+  mainWindow.loadFile('src/renderer/index.html');
+}</div>
+                    </div>
+                    
+                    <div class="search-result">
+                        <div class="search-result-header">src/main/modules/config.js</div>
+                        <div class="search-result-content">
+// Application <span class="highlight">config</span>uration
+module.exports = {
+  windowWidth: 1200,
+  windowHeight: 800,
+  maxSearchResults: 100,
+  supportedFileTypes: ['.txt', '.js', '.html', '.css', '.json', '.md'],
+  defaultTheme: 'light'
+};</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-bar">
+                <div>2 results found for "config"</div>
+                <div>Ready</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Diff View Screenshot -->
+    <div class="screenshot">
+        <h2 class="screenshot-title">File Comparison View (diff-view.png)</h2>
+        <p class="screenshot-description">Side-by-side comparison of two files with highlighted differences</p>
+        
+        <div class="app-container">
+            <div class="app-header">
+                <div class="app-title">DeltaVision - File Comparison</div>
+                <div class="app-controls">
+                    <button class="app-button">Select Files</button>
+                    <button class="app-button">Settings</button>
+                </div>
+            </div>
+            
+            <div class="app-main">
+                <div class="diff-container">
+                    <div class="diff-pane">
+                        <div class="diff-header">config.js (Original)</div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">1</span>
+                            <span>// Application configuration</span>
+                        </div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">2</span>
+                            <span>module.exports = {</span>
+                        </div>
+                        <div class="diff-line diff-removed">
+                            <span class="diff-line-number">3</span>
+                            <span>  windowWidth: 1024,</span>
+                        </div>
+                        <div class="diff-line diff-removed">
+                            <span class="diff-line-number">4</span>
+                            <span>  windowHeight: 768,</span>
+                        </div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">5</span>
+                            <span>  maxSearchResults: 100,</span>
+                        </div>
+                        <div class="diff-line diff-removed">
+                            <span class="diff-line-number">6</span>
+                            <span>  supportedFileTypes: ['.txt', '.js', '.html', '.css'],</span>
+                        </div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">7</span>
+                            <span>  defaultTheme: 'light'</span>
+                        </div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">8</span>
+                            <span>};</span>
+                        </div>
+                    </div>
+                    
+                    <div class="diff-pane">
+                        <div class="diff-header">config.js (Modified)</div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">1</span>
+                            <span>// Application configuration</span>
+                        </div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">2</span>
+                            <span>module.exports = {</span>
+                        </div>
+                        <div class="diff-line diff-added">
+                            <span class="diff-line-number">3</span>
+                            <span>  windowWidth: 1200,</span>
+                        </div>
+                        <div class="diff-line diff-added">
+                            <span class="diff-line-number">4</span>
+                            <span>  windowHeight: 800,</span>
+                        </div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">5</span>
+                            <span>  maxSearchResults: 100,</span>
+                        </div>
+                        <div class="diff-line diff-added">
+                            <span class="diff-line-number">6</span>
+                            <span>  supportedFileTypes: ['.txt', '.js', '.html', '.css', '.json', '.md'],</span>
+                        </div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">7</span>
+                            <span>  defaultTheme: 'light'</span>
+                        </div>
+                        <div class="diff-line">
+                            <span class="diff-line-number">8</span>
+                            <span>};</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-bar">
+                <div>3 differences found</div>
+                <div>config.js</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search View Screenshot -->
+    <div class="screenshot">
+        <h2 class="screenshot-title">Search Results View (search-view.png)</h2>
+        <p class="screenshot-description">Search results with context and highlighted matches</p>
+        
+        <div class="app-container">
+            <div class="app-header">
+                <div class="app-title">DeltaVision - Search Results</div>
+                <div class="app-controls">
+                    <button class="app-button">New Search</button>
+                    <button class="app-button">Settings</button>
+                </div>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search files or content..." value="highlight">
+                <button class="app-button">Search</button>
+                <select>
+                    <option>Filename</option>
+                    <option selected>Content</option>
+                </select>
+            </div>
+            
+            <div class="app-main">
+                <div class="app-sidebar">
+                    <div style="font-weight: bold; margin-bottom: 10px;">Search Results (5)</div>
+                    <div class="file-item file-selected">ContentHighlighter.js</div>
+                    <div class="file-item">ThemeHighlightExtension.js</div>
+                    <div class="file-item">FileContentViewer.svelte</div>
+                    <div class="file-item">SearchResultsList.svelte</div>
+                    <div class="file-item">KeywordToggle.svelte</div>
+                </div>
+                
+                <div class="app-content">
+                    <div class="search-result">
+                        <div class="search-result-header">src/renderer/features/highlight/ContentHighlighter.js</div>
+                        <div class="search-result-content">
+/**
+ * ContentHighlighter - Utility for <span class="highlight">highlight</span>ing text in content
+ * 
+ * Provides functions to <span class="highlight">highlight</span> keywords in text content
+ * with customizable styling options.
+ */
+class Content<span class="highlight">Highlight</span>er {
+  constructor(options = {}) {
+    this.options = {
+      caseSensitive: false,
+      className: '<span class="highlight">highlight</span>',
+      ...options
+    };
+  }
+  
+  /**
+   * <span class="highlight">Highlight</span> keywords in text
+   * @param {string} text - The text to process
+   * @param {string[]} keywords - Array of keywords to <span class="highlight">highlight</span>
+   * @returns {string} HTML with <span class="highlight">highlight</span>ed keywords
+   */
+  <span class="highlight">highlight</span>Text(text, keywords) {
+    if (!text || !keywords || keywords.length === 0) {
+      return text;
+    }
+    
+    // Implementation details...
+  }
+}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-bar">
+                <div>5 files with matches for "highlight"</div>
+                <div>Showing ContentHighlighter.js</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="button-container">
+        <p>After taking screenshots, save them to the docs/images directory with the filenames indicated above.</p>
+    </div>
+</body>
+</html>

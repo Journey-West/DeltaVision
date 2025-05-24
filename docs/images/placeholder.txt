@@ -1,8 +1,24 @@
-This is a placeholder file. Replace with actual screenshots of the DeltaVision application.
+# DeltaVision Screenshots Guide
 
-Recommended screenshots to add:
-1. app-screenshot.png - Main application interface
-2. diff-view.png - File comparison view
-3. search-view.png - Search results view
+This directory contains placeholder image files for the DeltaVision website. To generate actual screenshots of the application, follow these steps:
 
-Image dimensions should be approximately 800x600 pixels for best display on the website.
+## Required Screenshots
+
+1. **app-screenshot.png** - Main application interface showing the file browser and search functionality
+2. **diff-view.png** - Side-by-side file comparison view with highlighted differences
+3. **search-view.png** - Search results view with highlighted matches
+
+## How to Generate Screenshots
+
+1. Open the `generate-screenshots.html` file in a web browser (located in the parent directory)
+2. Use browser developer tools or a screen capture tool to take screenshots of each mockup
+3. Save the screenshots with the filenames listed above
+4. Replace the placeholder files in this directory with your actual screenshots
+
+## Image Specifications
+
+- Recommended dimensions: 800x600 pixels
+- Format: PNG (preferred) or JPG
+- File size: Keep under 300KB per image for optimal website performance
+
+Once you've replaced these placeholder images with actual screenshots, the website will automatically display them.
