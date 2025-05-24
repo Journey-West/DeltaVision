@@ -8,7 +8,8 @@
     "start:debug": "cross-env DEBUG=deltavision:* electron . --enable-logging",
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "package": "electron-builder",
+    "prepare-build": "node scripts/prepare-build.js",
+    "package": "npm run build && npm run prepare-build && electron-builder",
     "version:patch": "node scripts/version-bump.js patch",
     "version:minor": "node scripts/version-bump.js minor",
     "version:major": "node scripts/version-bump.js major"
@@ -41,18 +42,10 @@
       "buildResources": "build-resources"
     },
     "files": [
-      "src/**/*",
+      "src/main/**/*",
+      "build/**/*",
       "node_modules/**/*",
       "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "src/renderer/dist",
-        "to": "app/src/renderer/dist",
-        "filter": [
-          "**/*"
-        ]
-      }
     ],
     "asar": true,
     "mac": {

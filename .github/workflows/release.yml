@@ -40,7 +40,9 @@ jobs:
         run: npm ci
 
       - name: Build App
-        run: npm run build -- --verbose
+        run: |
+          npm run build -- --verbose
+          npm run prepare-build
         env:
           DEBUG: "electron-builder,electron-builder:*"
 
