@@ -67,9 +67,12 @@ header h1 {
 
 .screenshot {
     max-width: 100%;
+    height: auto;
     border-radius: 8px;
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
+    object-fit: contain;
+    margin-bottom: 10px;
 }
 
 .cta-buttons {
@@ -150,12 +153,26 @@ header h1 {
 
 .screenshot-gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 30px;
+    margin-bottom: 20px;
 }
 
 .screenshot-item {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    background-color: white;
+    transition: transform 0.3s ease;
+}
+
+.screenshot-item:hover {
+    transform: translateY(-5px);
 }
 
 .screenshot-item p {
