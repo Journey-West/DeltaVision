@@ -224,16 +224,79 @@
     let isEnabled = false;
     let port = '3000';
     let url = '';
+    let dataReceived = false;
+    
+    // Debug element for troubleshooting
+    const debugInfo = document.createElement('div');
+    debugInfo.style.display = 'none'; // Hidden by default
+    debugInfo.style.position = 'absolute';
+    debugInfo.style.bottom = '10px';
+    debugInfo.style.left = '10px';
+    debugInfo.style.fontSize = '10px';
+    debugInfo.style.color = '#666';
+    debugInfo.style.maxWidth = '380px';
+    debugInfo.style.wordBreak = 'break-all';
+    debugInfo.style.background = 'rgba(0,0,0,0.5)';
+    debugInfo.style.padding = '5px';
+    debugInfo.style.borderRadius = '3px';
+    debugInfo.textContent = 'Waiting for data...';
+    document.body.appendChild(debugInfo);
+    
+    // Toggle debug info with Alt+D
+    document.addEventListener('keydown', (e) => {
+      if (e.altKey && e.key === 'd') {
+        debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+    
+    // Helper function to log both to console and debug element
+    function logDebug(message) {
+      console.log(message);
+      const timestamp = new Date().toLocaleTimeString();
+      debugInfo.textContent = `${timestamp}: ${message}\n${debugInfo.textContent}`;
+    }
     
     // Get data via IPC
-    window.electronAPI.onNetworkStatusData((data) => {
-      console.log('Received network status data:', data);
-      isEnabled = data.enabled;
-      port = data.port || '3000';
-      url = data.url || '';
+    logDebug('Setting up IPC listener...');
+    
+    // Check if electronAPI exists
+    if (!window.electronAPI) {
+      logDebug('ERROR: electronAPI is not defined! Modal will not function correctly.');
+    } else {
+      logDebug('electronAPI is available.');
       
-      updateUI();
-    });
+      try {
+        window.electronAPI.onNetworkStatusData((data) => {
+          logDebug(`Received network status data: ${JSON.stringify(data)}`);
+          dataReceived = true;
+          isEnabled = data.enabled;
+          port = data.port || '3000';
+          url = data.url || '';
+          
+          updateUI();
+        });
+        logDebug('IPC listener registered successfully.');
+      } catch (error) {
+        logDebug(`ERROR setting up IPC listener: ${error.message}`);
+      }
+    }
+    
+    // Fallback: If no data received after 3 seconds, try to parse from URL
+    setTimeout(() => {
+      if (!dataReceived) {
+        logDebug('No IPC data received, trying URL parameters fallback...');
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          isEnabled = urlParams.get('enabled') === 'true';
+          port = urlParams.get('port') || '3000';
+          url = urlParams.get('url') || '';
+          logDebug(`Parsed from URL: enabled=${isEnabled}, port=${port}, url=${url}`);
+          updateUI();
+        } catch (error) {
+          logDebug(`Error parsing URL parameters: ${error.message}`);
+        }
+      }
+    }, 3000);
     
     // Update UI based on status
     const statusIndicator = document.getElementById('statusIndicator');

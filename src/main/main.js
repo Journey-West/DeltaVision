@@ -1,5 +1,6 @@
 const { app, BrowserWindow, dialog, Menu, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { registerIpcHandlers, masterGetNetworkStatus, masterToggleNetworkServer } = require('./modules/ipc-handlers');
 const { enforceOfflineMode } = require('./modules/offline-enforcer');
 const { startServer, stopServer, getServerStatus, getLocalIpAddress } = require('./modules/network-server');
@@ -372,12 +373,48 @@ async function toggleNetworkServer(enabled) { // Make async
 
       // Show a fancy custom modal for network status
       // Use the correct path for the modal HTML file in both development and production
+      // with multiple fallback options to ensure it works in all environments
       let modalPath;
+      let modalPathOptions = [];
+      
       if (app.isPackaged) {
-        modalPath = path.join(process.resourcesPath, 'app.asar', 'build', 'renderer', 'network-status-modal.html');
+        // Production environment - try multiple possible locations
+        modalPathOptions = [
+          path.join(process.resourcesPath, 'app.asar', 'build', 'renderer', 'network-status-modal.html'),
+          path.join(process.resourcesPath, 'app.asar.unpacked', 'build', 'renderer', 'network-status-modal.html'),
+          path.join(app.getAppPath(), 'build', 'renderer', 'network-status-modal.html'),
+          path.join(app.getPath('exe'), '..', 'resources', 'app.asar', 'build', 'renderer', 'network-status-modal.html')
+        ];
       } else {
-        modalPath = path.join(__dirname, '../renderer/network-status-modal.html');
+        // Development environment - try multiple possible locations
+        modalPathOptions = [
+          path.join(__dirname, '../renderer/network-status-modal.html'),
+          path.join(__dirname, '../../build/renderer/network-status-modal.html'),
+          path.join(process.cwd(), 'src/renderer/network-status-modal.html'),
+          path.join(process.cwd(), 'build/renderer/network-status-modal.html')
+        ];
       }
+      
+      // Find the first path that exists
+      modalPath = null;
+      for (const potentialPath of modalPathOptions) {
+        try {
+          if (fs.existsSync(potentialPath)) {
+            modalPath = potentialPath;
+            debug('Found network status modal at:', modalPath);
+            break;
+          }
+        } catch (err) {
+          // Ignore errors and try the next path
+        }
+      }
+      
+      if (!modalPath) {
+        debug('WARNING: Could not find network status modal HTML file!');
+        dialog.showErrorBox('Modal Error', 'Could not find network status modal HTML file. Network functionality may be limited.');
+        return;
+      }
+      
       debug('Loading network status modal from:', modalPath);
       
       // Instead of using loadURL with query parameters, pass the data via IPC
@@ -401,18 +438,57 @@ async function toggleNetworkServer(enabled) { // Make async
         }
       });
       
-      // Load the modal without query parameters
-      networkStatusWindow.loadFile(modalPath);
+      // Try to load the modal using both approaches for maximum compatibility
+      const networkData = {
+        enabled: networkServerEnabled,
+        port: networkServerPort,
+        url: networkServerEnabled && networkServerInfo ? networkServerInfo.networkUrl : null
+      };
       
-      // Wait for the window to finish loading, then send data via IPC
-      networkStatusWindow.webContents.on('did-finish-load', () => {
-        // Send network status data via IPC
-        networkStatusWindow.webContents.send('network-status-data', {
-          enabled: networkServerEnabled,
-          port: networkServerPort,
-          url: networkServerEnabled && networkServerInfo ? networkServerInfo.networkUrl : null
+      // Approach 1: Try loadFile with IPC
+      try {
+        debug('Attempting to load modal using loadFile + IPC approach');
+        networkStatusWindow.loadFile(modalPath);
+        
+        // Wait for the window to finish loading, then send data via IPC
+        networkStatusWindow.webContents.on('did-finish-load', () => {
+          debug('Modal loaded, sending data via IPC');
+          // Send network status data via IPC
+          networkStatusWindow.webContents.send('network-status-data', networkData);
         });
-      });
+        
+        // Set a timeout to check if the window loaded successfully
+        setTimeout(() => {
+          if (networkStatusWindow && !networkStatusWindow.isDestroyed()) {
+            debug('Modal window still exists after timeout - assuming success');
+          }
+        }, 2000);
+      } catch (loadFileError) {
+        debug('Error using loadFile approach:', loadFileError.message);
+        
+        // Approach 2: Fallback to loadURL with query parameters
+        try {
+          debug('Falling back to loadURL approach with query parameters');
+          // Construct URL with query parameters as fallback
+          const modalUrl = new URL(`file://${modalPath}`);
+          modalUrl.searchParams.append('enabled', networkServerEnabled);
+          if (networkServerEnabled && networkServerPort) {
+            modalUrl.searchParams.append('port', networkServerPort);
+          }
+          if (networkServerEnabled && networkServerInfo && networkServerInfo.networkUrl) {
+            modalUrl.searchParams.append('url', networkServerInfo.networkUrl);
+          }
+          
+          networkStatusWindow.loadURL(modalUrl.toString());
+        } catch (loadUrlError) {
+          debug('Error using loadURL approach:', loadUrlError.message);
+          dialog.showErrorBox('Modal Error', `Failed to load network status modal: ${loadUrlError.message}`);
+          if (networkStatusWindow && !networkStatusWindow.isDestroyed()) {
+            networkStatusWindow.close();
+          }
+          return;
+        }
+      }
       
       // Show window when ready
       networkStatusWindow.once('ready-to-show', () => {
