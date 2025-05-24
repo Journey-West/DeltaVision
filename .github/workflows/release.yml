@@ -132,17 +132,37 @@ jobs:
           # Get the previous tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           
-          # Create a temporary changelog file
-          if [ -n "$PREVIOUS_TAG" ]; then
-            echo "## Changes since $PREVIOUS_TAG" > changelog.md
-            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD >> changelog.md
-          else
-            echo "## Initial Release" > changelog.md
-            git log --pretty=format:"- %s (%h)" >> changelog.md
-          fi
+          # Create a comprehensive release notes file
+          {
+            echo "# DeltaVision v${GITHUB_REF#refs/tags/v}"
+            echo ""
+            
+            if [ -n "$PREVIOUS_TAG" ]; then
+              echo "## Changes since $PREVIOUS_TAG"
+              git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD
+            else
+              echo "## Initial Release"
+              git log --pretty=format:"- %s (%h)"
+            fi
+            
+            echo ""
+            echo "## Installation"
+            echo ""
+            echo "### Windows"
+            echo "Download and run the .exe installer"
+            echo ""
+            echo "### macOS"
+            echo "Download the .dmg file, open it, and drag DeltaVision to your Applications folder"
+            echo ""
+            echo "### Linux"
+            echo "Download the .AppImage file, make it executable (\`chmod +x *.AppImage\`), and run it"
+            echo ""
+            echo "## Offline Installation"
+            echo "For offline environments, download all installers and follow the [offline installation instructions](https://github.com/Journey-West/DeltaVision#offline-installation)"
+          } > release-notes.md
           
           # Set a simple output without multiline
-          echo "changelog_file=changelog.md" >> $GITHUB_OUTPUT
+          echo "changelog_file=release-notes.md" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Create Release
@@ -150,29 +170,12 @@ jobs:
         with:
           tag_name: v${{ steps.get_version.outputs.VERSION }}
           name: DeltaVision v${{ steps.get_version.outputs.VERSION }}
-          body: |
-            # DeltaVision v${{ steps.get_version.outputs.VERSION }}
-            
-            $(cat ${{ steps.changelog.outputs.changelog_file }})
-            
-            ## Installation
-            
-            ### Windows
-            Download and run the .exe installer
-            
-            ### macOS
-            Download the .dmg file, open it, and drag DeltaVision to your Applications folder
-            
-            ### Linux
-            Download the .AppImage file, make it executable (`chmod +x *.AppImage`), and run it
-            
-            ## Offline Installation
-            For offline environments, download all installers and follow the [offline installation instructions](https://github.com/Journey-West/DeltaVision#offline-installation)
+          body_path: ${{ steps.changelog.outputs.changelog_file }}
           files: artifacts/**/*
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
   # Build and publish offline package
   offline-package:
@@ -258,5 +261,6 @@ jobs:
         with:
           tag_name: v${{ steps.get_version.outputs.VERSION }}
           files: DeltaVision-Offline-Package.zip
+          append_body: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
