@@ -125,19 +125,15 @@ jobs:
           
           # If there's a previous tag, use it to generate changelog
           if [ -n "$PREVIOUS_TAG" ]; then
-            {
-              echo "CHANGELOG<<EOF"
-              echo "## Changes since $PREVIOUS_TAG"
-              git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            echo "## Changes since $PREVIOUS_TAG" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           else
-            {
-              echo "CHANGELOG<<EOF"
-              echo "## Initial Release"
-              git log --pretty=format:"- %s (%h)"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            echo "## Initial Release" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s (%h)" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           fi
         shell: bash
 
