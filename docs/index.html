@@ -3,102 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeltaVision - File Diffing, Searching, and Highlighting Tool</title>
+    <title>DeltaVision | Advanced File Comparison & Search Tool</title>
     <link rel="stylesheet" href="styles.css">
-    <meta name="description" content="DeltaVision is a desktop application for file diffing, searching, and highlighting built with Electron and Svelte">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="description" content="DeltaVision is a powerful desktop application for file diffing, searching, and highlighting built with Electron and Svelte">
 </head>
 <body>
-    <header>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+        </label>
+        <span class="theme-label">Light Mode</span>
+    </div>
+
+    <header class="site-header">
         <div class="container">
-            <h1>DeltaVision</h1>
-            <p class="tagline">Powerful file comparison and search for your desktop</p>
+            <div class="logo-container">
+                <div class="logo-icon"><i class="fas fa-code-compare"></i></div>
+                <h1 class="logo-text">DeltaVision</h1>
+            </div>
+            <p class="tagline">See beyond the code. Compare with clarity.</p>
+            <div class="cta-buttons">
+                <a href="https://github.com/Journey-West/DeltaVision/releases" class="button primary">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <a href="https://github.com/Journey-West/DeltaVision" class="button secondary">
+                    <i class="fab fa-github"></i> View on GitHub
+                </a>
+            </div>
         </div>
     </header>
 
-    <main class="container">
-        <section class="hero">
-            <div class="hero-content">
-                <h2>Simplify Your File Operations</h2>
-                <p>DeltaVision is a powerful desktop application that helps you compare files, search through directories, and highlight important content - all in one intuitive interface.</p>
-                <div class="cta-buttons">
-                    <a href="https://github.com/Journey-West/DeltaVision/releases" class="button primary">Download</a>
-                    <a href="https://github.com/Journey-West/DeltaVision" class="button secondary">View on GitHub</a>
-                </div>
-            </div>
-            <div class="hero-image">
-                <img src="images/FileSearch.png" alt="DeltaVision application screenshot" class="screenshot">
-            </div>
-        </section>
-
-        <section class="features">
-            <h2>Key Features</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h3>File Comparison</h3>
-                    <p>Compare two selected files and instantly see the differences highlighted in an intuitive side-by-side view.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>File & Content Search</h3>
-                    <p>Quickly find files by name or search for text content across multiple files with results displayed in context.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Keyword Highlighting</h3>
-                    <p>Easily spot important content with customizable keyword highlighting to identify critical information at a glance.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>File Streaming</h3>
-                    <p>Monitor files in real-time with the streaming feature, perfect for log files and changing documents.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Integrated Notes</h3>
-                    <p>Take and save notes while working with files, keeping all your observations organized in one place.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Completely Offline</h3>
-                    <p>Works entirely offline after installation - perfect for secure environments with no internet access.</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="screenshots">
-            <h2>Screenshots</h2>
-            <div class="screenshot-gallery">
-                <div class="screenshot-item">
-                    <img src="images/FileComparison.png" alt="File diff view" class="screenshot">
-                    <p>Side-by-side file comparison</p>
-                </div>
-                <div class="screenshot-item">
-                    <img src="images/FileSearch.png" alt="Search results" class="screenshot">
-                    <p>Search results with context</p>
-                </div>
-                <div class="screenshot-item">
-                    <img src="images/KeywordHighlight.png" alt="Keyword highlighting" class="screenshot">
-                    <p>Keyword highlighting in files</p>
-                </div>
-                <div class="screenshot-item">
-                    <img src="images/FileStream.png" alt="File streaming" class="screenshot">
-                    <p>Real-time file streaming</p>
-                </div>
-                <div class="screenshot-item">
-                    <img src="images/NotesTab.png" alt="Notes system" class="screenshot">
-                    <p>Integrated notes system</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="installation">
-            <h2>Installation</h2>
-            <p>DeltaVision is available for Windows, macOS, and Linux. Download the appropriate installer for your platform from the <a href="https://github.com/Journey-West/DeltaVision/releases">releases page</a>.</p>
-            <h3>For Offline Environments</h3>
-            <p>DeltaVision can be packaged for offline environments using our offline packaging script. See the <a href="https://github.com/Journey-West/DeltaVision#offline-installation">offline installation instructions</a> for details.</p>
-        </section>
-    </main>
-
-    <footer>
+    <section class="hero-section">
         <div class="container">
-            <p>&copy; 2025 Journey West. DeltaVision is open source software licensed under the MIT License.</p>
-            <p>Built with <a href="https://www.electronjs.org/">Electron</a> and <a href="https://svelte.dev/">Svelte</a>.</p>
+            <div class="hero-content">
+                <h2>Powerful File Analysis & Comparison</h2>
+                <p class="hero-description">
+                    DeltaVision is a sophisticated desktop application designed for developers, analysts, and data professionals who need to compare, search, and analyze files with precision and efficiency.
+                </p>
+                <div class="feature-highlights">
+                    <div class="feature-highlight">
+                        <i class="fas fa-code-branch"></i>
+                        <span>Intuitive Diff View</span>
+                    </div>
+                    <div class="feature-highlight">
+                        <i class="fas fa-search"></i>
+                        <span>Advanced Search</span>
+                    </div>
+                    <div class="feature-highlight">
+                        <i class="fas fa-highlighter"></i>
+                        <span>Smart Highlighting</span>
+                    </div>
+                    <div class="feature-highlight">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>100% Offline</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image-container">
+                <div class="hero-image-frame">
+                    <img src="images/FileSearch.png" alt="DeltaVision application screenshot" class="hero-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">Core Capabilities</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-code-compare"></i></div>
+                    <h3>Precision File Comparison</h3>
+                    <p>Compare files side-by-side with intelligent difference highlighting. Easily identify changes, additions, and deletions with our intuitive visual interface.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-search"></i></div>
+                    <h3>Deep Content Search</h3>
+                    <p>Search across multiple files and directories with powerful filtering options. Find exactly what you need with context-aware results and instant navigation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-highlighter"></i></div>
+                    <h3>Smart Keyword Highlighting</h3>
+                    <p>Highlight critical information with customizable keyword sets. Create visual patterns that help you identify important content at a glance.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-stream"></i></div>
+                    <h3>Real-time File Streaming</h3>
+                    <p>Monitor changing files in real-time with automatic updates. Perfect for log files, data feeds, and any dynamic content that requires continuous observation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-sticky-note"></i></div>
+                    <h3>Integrated Notes System</h3>
+                    <p>Capture observations and insights without switching applications. Keep your analysis organized with contextual notes tied directly to your files.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Complete Offline Security</h3>
+                    <p>Work with confidence in secure environments. DeltaVision operates entirely offline with no external dependencies or data transfers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="screenshots-section">
+        <div class="container">
+            <h2 class="section-title">DeltaVision in Action</h2>
+            <div class="screenshot-tabs">
+                <button class="tab-button active" data-tab="comparison">File Comparison</button>
+                <button class="tab-button" data-tab="search">Search</button>
+                <button class="tab-button" data-tab="highlighting">Highlighting</button>
+                <button class="tab-button" data-tab="streaming">Streaming</button>
+                <button class="tab-button" data-tab="notes">Notes</button>
+            </div>
+            <div class="screenshot-content">
+                <div class="tab-content active" id="comparison">
+                    <div class="screenshot-container">
+                        <img src="images/FileComparison.png" alt="File comparison view" class="feature-screenshot">
+                        <div class="screenshot-description">
+                            <h3>Intuitive Side-by-Side Comparison</h3>
+                            <p>DeltaVision's comparison view highlights differences between files with color-coded indicators for additions, deletions, and modifications. Navigate changes easily and understand exactly what's different at a glance.</p>
+                            <ul class="feature-points">
+                                <li>Color-coded difference highlighting</li>
+                                <li>Line-by-line comparison</li>
+                                <li>Jump between changes with keyboard shortcuts</li>
+                                <li>Syntax highlighting for numerous file formats</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="search">
+                    <div class="screenshot-container">
+                        <img src="images/FileSearch.png" alt="Search results" class="feature-screenshot">
+                        <div class="screenshot-description">
+                            <h3>Powerful Search Capabilities</h3>
+                            <p>Find what you need quickly with DeltaVision's advanced search. Search by filename or content across directories with results displayed in context for immediate understanding.</p>
+                            <ul class="feature-points">
+                                <li>Recursive directory search</li>
+                                <li>Regular expression support</li>
+                                <li>Context-aware results display</li>
+                                <li>Instant file preview</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="highlighting">
+                    <div class="screenshot-container">
+                        <img src="images/KeywordHighlight.png" alt="Keyword highlighting" class="feature-screenshot">
+                        <div class="screenshot-description">
+                            <h3>Smart Keyword Highlighting</h3>
+                            <p>Focus on what matters with customizable keyword highlighting. Create multiple highlight sets for different purposes and instantly identify important information in any file.</p>
+                            <ul class="feature-points">
+                                <li>Multiple highlight categories</li>
+                                <li>Customizable colors and styles</li>
+                                <li>Save and load highlight sets</li>
+                                <li>Quick navigation between highlights</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="streaming">
+                    <div class="screenshot-container">
+                        <img src="images/FileStream.png" alt="File streaming" class="feature-screenshot">
+                        <div class="screenshot-description">
+                            <h3>Real-time File Streaming</h3>
+                            <p>Monitor changing files as they update with DeltaVision's streaming capability. Watch log files, data outputs, or any dynamic content in real-time without manual refreshing.</p>
+                            <ul class="feature-points">
+                                <li>Automatic content updates</li>
+                                <li>Configurable refresh rates</li>
+                                <li>Highlight new content</li>
+                                <li>Filter streaming content on-the-fly</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="notes">
+                    <div class="screenshot-container">
+                        <img src="images/NotesTab.png" alt="Notes system" class="feature-screenshot">
+                        <div class="screenshot-description">
+                            <h3>Integrated Notes System</h3>
+                            <p>Capture thoughts and observations without leaving DeltaVision. The integrated notes system lets you document your analysis alongside your files for a seamless workflow.</p>
+                            <ul class="feature-points">
+                                <li>Context-aware notes</li>
+                                <li>Rich text formatting</li>
+                                <li>Automatic file references</li>
+                                <li>Export notes in multiple formats</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="installation-section">
+        <div class="container">
+            <h2 class="section-title">Get Started with DeltaVision</h2>
+            <div class="installation-grid">
+                <div class="installation-card">
+                    <div class="installation-icon"><i class="fab fa-windows"></i></div>
+                    <h3>Windows</h3>
+                    <p>Download the installer and run it to install DeltaVision on your Windows system.</p>
+                    <a href="https://github.com/Journey-West/DeltaVision/releases" class="download-link">Download for Windows</a>
+                </div>
+                <div class="installation-card">
+                    <div class="installation-icon"><i class="fab fa-apple"></i></div>
+                    <h3>macOS</h3>
+                    <p>Download the DMG file, open it, and drag DeltaVision to your Applications folder.</p>
+                    <a href="https://github.com/Journey-West/DeltaVision/releases" class="download-link">Download for macOS</a>
+                </div>
+                <div class="installation-card">
+                    <div class="installation-icon"><i class="fab fa-linux"></i></div>
+                    <h3>Linux</h3>
+                    <p>Download the AppImage, make it executable, and run it on your Linux system.</p>
+                    <a href="https://github.com/Journey-West/DeltaVision/releases" class="download-link">Download for Linux</a>
+                </div>
+            </div>
+            <div class="offline-installation">
+                <h3>For Offline Environments</h3>
+                <p>DeltaVision can be packaged for completely offline environments with no internet access required.</p>
+                <a href="https://github.com/Journey-West/DeltaVision#offline-installation" class="button secondary">
+                    <i class="fas fa-shield-alt"></i> Offline Installation Guide
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo-icon"><i class="fas fa-code-compare"></i></div>
+                    <h2 class="logo-text">DeltaVision</h2>
+                </div>
+                <div class="footer-links">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="https://github.com/Journey-West/DeltaVision">GitHub Repository</a></li>
+                        <li><a href="https://github.com/Journey-West/DeltaVision/issues">Issue Tracker</a></li>
+                        <li><a href="https://github.com/Journey-West/DeltaVision/releases">Releases</a></li>
+                        <li><a href="https://github.com/Journey-West/DeltaVision#readme">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Technology</h3>
+                    <ul>
+                        <li><a href="https://www.electronjs.org/">Electron</a></li>
+                        <li><a href="https://svelte.dev/">Svelte</a></li>
+                        <li><a href="https://nodejs.org/">Node.js</a></li>
+                        <li><a href="https://github.com/">GitHub</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Journey West. DeltaVision is open source software licensed under the MIT License.</p>
+            </div>
         </div>
     </footer>
+
+    <script>
+        // Theme switcher functionality
+        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+        const themeLabel = document.querySelector('.theme-label');
+        
+        function switchTheme(e) {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                themeLabel.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeLabel.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        toggleSwitch.addEventListener('change', switchTheme);
+        
+        // Check for saved theme preference
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        if (currentTheme === 'light') {
+            toggleSwitch.checked = true;
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeLabel.textContent = 'Dark Mode';
+        }
+        
+        // Screenshot tabs functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
 </body>
 </html>
