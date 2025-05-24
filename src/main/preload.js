@@ -8,6 +8,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('network-status-changed', (event, status) => callback(status));
     return () => ipcRenderer.removeListener('network-status-changed', callback);
   },
+  onNetworkStatusData: (callback) => {
+    ipcRenderer.on('network-status-data', (event, data) => callback(data));
+    return () => ipcRenderer.removeListener('network-status-data', callback);
+  },
   // Example API for getting app version
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   

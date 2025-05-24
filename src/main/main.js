@@ -295,7 +295,14 @@ function createApplicationMenu() {
           label: 'About DeltaVision',
           click: () => {
             // Show a fancy custom modal for About dialog
-            const modalPath = path.join(__dirname, '../renderer/about-modal.html');
+            // Use the correct path for the about modal in both development and production
+            let modalPath;
+            if (app.isPackaged) {
+              modalPath = path.join(process.resourcesPath, 'app.asar', 'build', 'renderer', 'about-modal.html');
+            } else {
+              modalPath = path.join(__dirname, '../renderer/about-modal.html');
+            }
+            debug('Loading about modal from:', modalPath);
             let aboutWindow = new BrowserWindow({
               width: 420,
               height: 450,
@@ -364,7 +371,17 @@ async function toggleNetworkServer(enabled) { // Make async
       networkServerInfo = result.status.url ? { networkUrl: result.status.url, port: result.status.port } : null;
 
       // Show a fancy custom modal for network status
-      const modalPath = path.join(__dirname, '../renderer/network-status-modal.html');
+      // Use the correct path for the modal HTML file in both development and production
+      let modalPath;
+      if (app.isPackaged) {
+        modalPath = path.join(process.resourcesPath, 'app.asar', 'build', 'renderer', 'network-status-modal.html');
+      } else {
+        modalPath = path.join(__dirname, '../renderer/network-status-modal.html');
+      }
+      debug('Loading network status modal from:', modalPath);
+      
+      // Instead of using loadURL with query parameters, pass the data via IPC
+      // This avoids file path issues with query parameters
       let networkStatusWindow = new BrowserWindow({
         width: 420,
         height: 340,
@@ -384,18 +401,18 @@ async function toggleNetworkServer(enabled) { // Make async
         }
       });
       
-      // Construct URL with query parameters
-      const modalUrl = new URL(`file://${modalPath}`);
-      modalUrl.searchParams.append('enabled', networkServerEnabled);
-      if (networkServerEnabled && networkServerPort) {
-        modalUrl.searchParams.append('port', networkServerPort);
-      }
-      if (networkServerEnabled && networkServerInfo && networkServerInfo.networkUrl) {
-        modalUrl.searchParams.append('url', networkServerInfo.networkUrl);
-      }
+      // Load the modal without query parameters
+      networkStatusWindow.loadFile(modalPath);
       
-      // Load the modal with parameters
-      networkStatusWindow.loadURL(modalUrl.toString());
+      // Wait for the window to finish loading, then send data via IPC
+      networkStatusWindow.webContents.on('did-finish-load', () => {
+        // Send network status data via IPC
+        networkStatusWindow.webContents.send('network-status-data', {
+          enabled: networkServerEnabled,
+          port: networkServerPort,
+          url: networkServerEnabled && networkServerInfo ? networkServerInfo.networkUrl : null
+        });
+      });
       
       // Show window when ready
       networkStatusWindow.once('ready-to-show', () => {
@@ -487,7 +504,14 @@ function showNetworkUrlDialog() {
   }
   
   // Show a fancy custom modal for network URL
-  const modalPath = path.join(__dirname, '../renderer/network-url-modal.html');
+  // Use the correct path for the network URL modal in both development and production
+  let modalPath;
+  if (app.isPackaged) {
+    modalPath = path.join(process.resourcesPath, 'app.asar', 'build', 'renderer', 'network-url-modal.html');
+  } else {
+    modalPath = path.join(__dirname, '../renderer/network-url-modal.html');
+  }
+  debug('Loading network URL modal from:', modalPath);
   let networkUrlWindow = new BrowserWindow({
     width: 480,
     height: 500,

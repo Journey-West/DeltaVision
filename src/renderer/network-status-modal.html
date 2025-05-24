@@ -220,11 +220,20 @@
   </div>
   
   <script>
-    // Get query parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const isEnabled = urlParams.get('enabled') === 'true';
-    const port = urlParams.get('port') || '3000';
-    const url = urlParams.get('url') || '';
+    // Default values
+    let isEnabled = false;
+    let port = '3000';
+    let url = '';
+    
+    // Get data via IPC
+    window.electronAPI.onNetworkStatusData((data) => {
+      console.log('Received network status data:', data);
+      isEnabled = data.enabled;
+      port = data.port || '3000';
+      url = data.url || '';
+      
+      updateUI();
+    });
     
     // Update UI based on status
     const statusIndicator = document.getElementById('statusIndicator');
@@ -234,6 +243,8 @@
     const urlContainer = document.getElementById('urlContainer');
     const urlText = document.getElementById('urlText');
     const copyButton = document.getElementById('copyButton');
+    
+    function updateUI() {
     
     if (isEnabled) {
       statusIndicator.classList.add('enabled');
@@ -251,6 +262,7 @@
       portInfo.style.display = 'none';
       urlContainer.style.display = 'none';
       copyButton.style.display = 'none';
+    }
     }
     
     // Copy URL functionality
