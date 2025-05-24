@@ -1,5 +1,10 @@
 name: Build and Release
 
+# Global permissions for all jobs
+permissions:
+  contents: write
+  packages: write
+
 on:
   push:
     tags:
@@ -99,9 +104,6 @@ jobs:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -175,7 +177,7 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Build and publish offline package
   offline-package:
@@ -263,4 +265,4 @@ jobs:
           files: DeltaVision-Offline-Package.zip
           append_body: true
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
