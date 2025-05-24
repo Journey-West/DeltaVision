@@ -101,6 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -111,6 +112,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          
+      - name: Debug Release Context
+        run: |
+          echo "Tag: $GITHUB_REF"
+          echo "Listing artifacts directory:"
+          find artifacts -type f | sort
+          echo "GitHub token permissions:"
+          echo "GITHUB_TOKEN has contents:write permission"
 
       - name: Get Version from Tag
         id: get_version
@@ -139,6 +148,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
           name: DeltaVision v${{ steps.get_version.outputs.VERSION }}
           body: |
             # DeltaVision v${{ steps.get_version.outputs.VERSION }}
@@ -246,6 +256,7 @@ jobs:
       - name: Attach Offline Package to Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
           files: DeltaVision-Offline-Package.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
