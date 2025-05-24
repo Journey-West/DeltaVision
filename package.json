@@ -1,6 +1,6 @@
 {
   "name": "delta-vision",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local file utility for diffing, searching, and highlighting",
   "main": "src/main/main.js",
   "scripts": {
