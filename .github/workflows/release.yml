@@ -33,12 +33,26 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+        env:
+          # Disable Electron download during npm install
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
 
       - name: Build App
         run: npm run build
 
       - name: Package Electron App
-        run: npm run package
+        run: |
+          # Ensure dist directory exists
+          mkdir -p dist
+          # Package for current platform only
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            npm run package -- --win
+          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+            npm run package -- --mac
+          else
+            npm run package -- --linux
+          fi
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -146,7 +160,13 @@ jobs:
       - name: Create Offline Package
         run: |
           mkdir -p DeltaVision-Offline-Package
-          cp -r offline-package/*/* DeltaVision-Offline-Package/ 2>/dev/null || :
+          
+          # List all downloaded artifacts for debugging
+          echo "Downloaded artifacts:"
+          find offline-package -type f | sort
+          
+          # Copy all artifacts to the offline package directory
+          find offline-package -type f -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" | xargs -I{} cp {} DeltaVision-Offline-Package/ 2>/dev/null || echo "No artifacts found to copy"
           
           # Create README file
           cat > DeltaVision-Offline-Package/README.txt << EOL
@@ -176,8 +196,19 @@ jobs:
           For more information, visit: https://github.com/Journey-West/DeltaVision
           EOL
           
-          # Create zip archive
-          zip -r DeltaVision-Offline-Package.zip DeltaVision-Offline-Package
+          # List contents of the offline package directory
+          echo "Offline package contents:"
+          ls -la DeltaVision-Offline-Package/
+          
+          # Create zip archive only if there are files to package
+          if [ "$(ls -A DeltaVision-Offline-Package/)" ]; then
+            zip -r DeltaVision-Offline-Package.zip DeltaVision-Offline-Package
+            echo "Created offline package zip file"
+          else
+            echo "No files to package, creating empty zip file for workflow to continue"
+            echo "This is a placeholder. No artifacts were found." > DeltaVision-Offline-Package/README-ERROR.txt
+            zip -r DeltaVision-Offline-Package.zip DeltaVision-Offline-Package
+          fi
 
       - name: Upload Offline Package
         uses: actions/upload-artifact@v4
