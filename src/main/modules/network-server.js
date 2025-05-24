@@ -68,9 +68,26 @@ function startServer(port = 3000, options = {}) {
   });
   
   // Serve static files from the renderer dist directory
-  const staticPath = path.join(__dirname, '../../renderer/dist');
+  // Determine the correct static path based on whether we're in development or production
+  let staticPath;
+  if (process.type === 'renderer') {
+    // We're in a renderer process (should not happen, but just in case)
+    staticPath = path.join(__dirname, '../../renderer/dist');
+  } else if (process.resourcesPath) {
+    // We're in a packaged app
+    staticPath = path.join(process.resourcesPath, 'app.asar', 'build', 'renderer', 'dist');
+  } else {
+    // We're in development
+    staticPath = path.join(__dirname, '../../renderer/dist');
+  }
+  
   debug(`Serving static files from: ${staticPath}`);
   app.use(express.static(staticPath));
+  
+  // Also serve the parent directory for modal HTML files
+  const parentPath = path.dirname(staticPath);
+  debug(`Serving modal HTML files from: ${parentPath}`);
+  app.use(express.static(parentPath));
   
   // API endpoints that mirror the IPC handlers
   
