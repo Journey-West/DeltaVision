@@ -123,18 +123,17 @@ jobs:
           # Get the previous tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           
-          # If there's a previous tag, use it to generate changelog
+          # Create a temporary changelog file
           if [ -n "$PREVIOUS_TAG" ]; then
-            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-            echo "## Changes since $PREVIOUS_TAG" >> $GITHUB_OUTPUT
-            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            echo "## Changes since $PREVIOUS_TAG" > changelog.md
+            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD >> changelog.md
           else
-            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-            echo "## Initial Release" >> $GITHUB_OUTPUT
-            git log --pretty=format:"- %s (%h)" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            echo "## Initial Release" > changelog.md
+            git log --pretty=format:"- %s (%h)" >> changelog.md
           fi
+          
+          # Set a simple output without multiline
+          echo "changelog_file=changelog.md" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Create Release
@@ -144,7 +143,7 @@ jobs:
           body: |
             # DeltaVision v${{ steps.get_version.outputs.VERSION }}
             
-            ${{ steps.changelog.outputs.CHANGELOG }}
+            $(cat ${{ steps.changelog.outputs.changelog_file }})
             
             ## Installation
             
