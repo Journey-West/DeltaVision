@@ -37,13 +37,22 @@
     "appId": "com.windsurf.deltavision",
     "productName": "DeltaVision",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build-resources"
     },
     "files": [
       "src/**/*",
       "node_modules/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "src/renderer/dist",
+        "to": "app/src/renderer/dist",
+        "filter": ["**/*"]
+      }
+    ],
+    "asar": true,
     "mac": {
       "category": "public.app-category.developer-tools"
     },

@@ -64,7 +64,41 @@ function createWindow() {
   debug('Main window created with ID:', mainWindow.id);
 
   // Load the index.html file from the renderer build output
-  const indexPath = path.join(__dirname, '../renderer/dist/index.html');
+  // Determine if we're running in development or production
+  let indexPath;
+  if (app.isPackaged) {
+    // In production (packaged app), try multiple possible paths
+    const possiblePaths = [
+      // Path for extraResources configuration
+      path.join(process.resourcesPath, 'app', 'src', 'renderer', 'dist', 'index.html'),
+      // Path for standard asar packaging
+      path.join(process.resourcesPath, 'app.asar', 'src', 'renderer', 'dist', 'index.html'),
+      // Fallback path
+      path.join(__dirname, '../renderer/dist/index.html')
+    ];
+    
+    // Find the first path that exists
+    for (const tryPath of possiblePaths) {
+      try {
+        if (require('fs').existsSync(tryPath)) {
+          indexPath = tryPath;
+          debug('Found index file at:', indexPath);
+          break;
+        }
+      } catch (err) {
+        debug('Error checking path:', tryPath, err);
+      }
+    }
+    
+    // If no path was found, use the first one as a fallback
+    if (!indexPath) {
+      indexPath = possiblePaths[0];
+      debug('No index file found, using fallback path:', indexPath);
+    }
+  } else {
+    // In development, use the path relative to the current directory
+    indexPath = path.join(__dirname, '../renderer/dist/index.html');
+  }
   debug('Loading index file from:', indexPath);
   mainWindow.loadFile(indexPath);
 
