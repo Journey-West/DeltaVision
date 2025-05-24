@@ -1,0 +1,8 @@
+This is a placeholder file. Replace with actual screenshots of the DeltaVision application.
+
+Recommended screenshots to add:
+1. app-screenshot.png - Main application interface
+2. diff-view.png - File comparison view
+3. search-view.png - Search results view
+
+Image dimensions should be approximately 800x600 pixels for best display on the website.
