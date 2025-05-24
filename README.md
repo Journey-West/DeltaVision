@@ -130,6 +130,55 @@ DeltaVision is built with security in mind:
 - Express: For optional network sharing
 - diff: For file comparison algorithms
 
+## Release Process
+
+DeltaVision uses GitHub Actions for automated builds and releases:
+
+### Automatic Releases
+
+1. Version bumping:
+   ```bash
+   # For a patch release (1.0.0 -> 1.0.1)
+   npm run version:patch
+   
+   # For a minor release (1.0.0 -> 1.1.0)
+   npm run version:minor
+   
+   # For a major release (1.0.0 -> 2.0.0)
+   npm run version:major
+   ```
+
+2. Push changes and tag to trigger the release workflow:
+   ```bash
+   git push origin main && git push origin v1.0.1  # Replace with your version
+   ```
+
+3. GitHub Actions will automatically:
+   - Build the application for Windows, macOS, and Linux
+   - Create a GitHub release with installers for all platforms
+   - Generate an offline package with all installers
+   - Publish release notes based on commits since the last release
+
+### Manual Release
+
+If needed, you can build and package the application manually:
+
+```bash
+# Build the Svelte app
+npm run build
+
+# Package for all platforms
+npm run package
+
+# Package for specific platform
+npm run package -- --win  # Windows
+npm run package -- --mac  # macOS
+npm run package -- --linux  # Linux
+
+# Create offline package
+./package-offline.sh
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
