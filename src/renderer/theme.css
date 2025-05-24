@@ -1,0 +1,164 @@
+/* Theme CSS Variables
+   This file will be imported in the main.js file
+   and will apply the theme colors throughout the application
+*/
+
+/* Base theme variables - these will be overridden by ThemeProvider */
+:root {
+  /* Light theme defaults */
+  --background: #ffffff;
+  --text: #333333;
+  --primary: #4a90e2;
+  --secondary: #f5f5f5;
+  --border: #e0e0e0;
+  --added: #e6ffed;
+  --removed: #ffeef0;
+  --added-text: #22863a;
+  --removed-text: #cb2431;
+  --unchanged: #ffffff;
+  --sidebar: #f8f8f8;
+  --sidebar-text: #333333;
+  --sidebar-hover: #e8e8e8;
+  --sidebar-active: #e0e0e0;
+  --header-background: #f0f0f0;
+  --header-text: #333333;
+  --button-background: #4a90e2;
+  --button-text: #ffffff;
+  --button-hover: #3a80d2;
+  --modal-background: #ffffff;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+}
+
+/* Theme classes for light and dark modes */
+.theme-light {
+  --background: #ffffff;
+  --text: #333333;
+  --primary: #4a90e2;
+  --secondary: #f5f5f5;
+  --border: #e0e0e0;
+  --added: #e6ffed;
+  --removed: #ffeef0;
+  --added-text: #22863a;
+  --removed-text: #cb2431;
+  --unchanged: #ffffff;
+  --sidebar: #f8f8f8;
+  --sidebar-text: #333333;
+  --sidebar-hover: #e8e8e8;
+  --sidebar-active: #e0e0e0;
+  --header-background: #f0f0f0;
+  --header-text: #333333;
+  --button-background: #4a90e2;
+  --button-text: #ffffff;
+  --button-hover: #3a80d2;
+  --modal-background: #ffffff;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+}
+
+.theme-dark {
+  --background: #1e1e1e;
+  --text: #e0e0e0;
+  --primary: #4a90e2;
+  --secondary: #2d2d2d;
+  --border: #3a3a3a;
+  --added: #133929;
+  --removed: #3b1d26;
+  --added-text: #85e89d;
+  --removed-text: #f97583;
+  --unchanged: #1e1e1e;
+  --sidebar: #252525;
+  --sidebar-text: #e0e0e0;
+  --sidebar-hover: #333333;
+  --sidebar-active: #3a3a3a;
+  --header-background: #252525;
+  --header-text: #e0e0e0;
+  --button-background: #4a90e2;
+  --button-text: #ffffff;
+  --button-hover: #3a80d2;
+  --modal-background: #2d2d2d;
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+}
+
+/* Apply theme variables to common elements */
+html, body, #app {
+  background-color: var(--background);
+  color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button {
+  background-color: var(--button-background);
+  color: var(--button-text);
+  border: 1px solid var(--border);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--button-hover);
+}
+
+.modal-overlay {
+  background-color: var(--modal-overlay);
+}
+
+.modal-container {
+  background-color: var(--modal-background);
+  border: 1px solid var(--border);
+}
+
+.modal-header {
+  border-bottom-color: var(--border);
+}
+
+/* Additional theme-specific styles */
+input, textarea, select {
+  background-color: var(--background);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+/* Ensure all text is properly themed */
+h1, h2, h3, h4, h5, h6, p, span, div, a {
+  color: var(--text);
+}
+
+/* Ensure proper contrast for links */
+a {
+  color: var(--primary);
+}
+
+/* Ensure proper styling for form elements */
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* Ensure proper styling for disabled elements */
+button:disabled, input:disabled, textarea:disabled, select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--secondary, #2d2d2d);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary, #4a90e2);
+  border-radius: 6px;
+  border: 3px solid var(--secondary, #2d2d2d);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--buttonHover, #3a80d2);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--secondary, #2d2d2d);
+}

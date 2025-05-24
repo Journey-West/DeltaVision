@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <title>About DeltaVision</title>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --primary-dark: #3a80d2;
+      --background: #282c34;
+      --text: #e6e6e6;
+      --secondary-text: #a0a0a0;
+      --border: #3a3a3a;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      user-select: none;
+    }
+    
+    .modal-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .modal-header {
+      background: linear-gradient(135deg, #3a4452 0%, #2c3440 100%);
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .modal-content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .app-info {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 25px;
+      width: 85%;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+    
+    .app-logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #4a90e2 0%, #3a80d2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px auto;
+    }
+    
+    .app-logo svg {
+      width: 50px;
+      height: 50px;
+      fill: white;
+    }
+    
+    .app-name {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      background: linear-gradient(135deg, #4a90e2 0%, #3a80d2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .app-version {
+      font-size: 14px;
+      color: var(--secondary-text);
+      margin-bottom: 20px;
+    }
+    
+    .app-description {
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    
+    .network-info {
+      background: rgba(74, 144, 226, 0.1);
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 15px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .network-info.disabled {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    /* Network icon styles removed */
+    
+    .network-text {
+      flex: 1;
+    }
+    
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .ok-button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .ok-button:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    .ok-button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div class="modal-container">
+    <div class="modal-header">
+      <h1>About DeltaVision</h1>
+    </div>
+    
+    <div class="modal-content">
+      <div class="app-info">
+        <div class="app-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10,19L12,15H9V10L7,14H10V19Z" />
+          </svg>
+        </div>
+        
+        <div class="app-name">DeltaVision</div>
+        <div class="app-version" id="appVersion">Version: 1.0.0</div>
+        
+        <div class="app-description">
+          A file comparison tool for offline environments.
+        </div>
+        
+        <div id="networkInfo" class="network-info">
+          <span class="network-text" id="networkText">Network URL: http://192.168.1.1:3000</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button id="okButton" class="ok-button">OK</button>
+    </div>
+  </div>
+  
+  <script>
+    // Get parameters from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const version = urlParams.get('version') || '1.0.0';
+    const networkEnabled = urlParams.get('networkEnabled') === 'true';
+    const networkUrl = urlParams.get('networkUrl') || '';
+    
+    // Update UI
+    document.getElementById('appVersion').textContent = `Version: ${version}`;
+    
+    const networkInfo = document.getElementById('networkInfo');
+    const networkText = document.getElementById('networkText');
+    
+    if (networkEnabled && networkUrl) {
+      networkInfo.classList.remove('disabled');
+      networkText.textContent = `Network URL: ${networkUrl}`;
+    } else {
+      networkInfo.classList.add('disabled');
+      networkText.textContent = 'Network access is disabled.';
+    }
+    
+    // Close the window when OK is clicked
+    document.getElementById('okButton').addEventListener('click', () => {
+      window.close();
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        window.close();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "name": "delta-vision",
+  "version": "1.0.0",
+  "description": "Local file utility for diffing, searching, and highlighting",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:debug": "cross-env DEBUG=deltavision:* electron . --enable-logging",
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "package": "electron-builder"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "cross-env": "^7.0.3",
+    "debug": "^4.4.1",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.6.4",
+    "rollup": "^4.6.0",
+    "rollup-plugin-css-only": "^4.5.0",
+    "rollup-plugin-svelte": "^7.1.6",
+    "svelte": "^4.2.8"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "cors": "^2.8.5",
+    "diff": "^5.1.0",
+    "express": "^5.1.0"
+  },
+  "build": {
+    "appId": "com.windsurf.deltavision",
+    "productName": "DeltaVision",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <title>Network Status</title>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --primary-dark: #3a80d2;
+      --success: #2ecc71;
+      --error: #e74c3c;
+      --background: #282c34;
+      --text: #e6e6e6;
+      --secondary-text: #a0a0a0;
+      --border: #3a3a3a;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      user-select: none;
+    }
+    
+    .modal-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .modal-header {
+      background: linear-gradient(135deg, #3a4452 0%, #2c3440 100%);
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .modal-content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .status-container {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 20px;
+      width: 85%;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 10px;
+      animation: pulse 2s infinite;
+    }
+    
+    .enabled .status-dot {
+      background-color: var(--success);
+    }
+    
+    .disabled .status-dot {
+      background-color: var(--error);
+      animation: none;
+    }
+    
+    .status-text {
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .port-info {
+      margin: 15px 0;
+      font-size: 15px;
+    }
+    
+    .url-container {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .url-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary);
+    }
+    
+    .url-text {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 14px;
+      word-break: break-all;
+      color: var(--primary);
+      margin-left: 8px;
+    }
+    
+    .copy-button {
+      background-color: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s ease;
+    }
+    
+    .copy-button:hover {
+      background-color: rgba(74, 144, 226, 0.1);
+    }
+    
+    .copy-button:active {
+      transform: scale(0.98);
+    }
+    
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .ok-button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .ok-button:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    .ok-button:active {
+      transform: scale(0.98);
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+      }
+    }
+    
+    /* Removed network icon animation */
+  </style>
+</head>
+<body>
+  <div class="modal-container">
+    <div class="modal-header">
+      <h1>Network Status</h1>
+    </div>
+    
+    <div class="modal-content">
+      
+      <div class="status-container">
+        <div id="statusIndicator" class="status-indicator enabled">
+          <div class="status-dot"></div>
+          <div class="status-text">Network access enabled</div>
+        </div>
+        
+        <div id="portInfo" class="port-info">
+          Connected on port <span id="portNumber">3000</span>
+        </div>
+        
+        <div id="urlContainer" class="url-container">
+          <div class="url-text" id="urlText">http://192.168.165.132:3000</div>
+        </div>
+        
+        <button id="copyButton" class="copy-button">Copy URL</button>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button id="okButton" class="ok-button">OK</button>
+    </div>
+  </div>
+  
+  <script>
+    // Get query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const isEnabled = urlParams.get('enabled') === 'true';
+    const port = urlParams.get('port') || '3000';
+    const url = urlParams.get('url') || '';
+    
+    // Update UI based on status
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusText = statusIndicator.querySelector('.status-text');
+    const portInfo = document.getElementById('portInfo');
+    const portNumber = document.getElementById('portNumber');
+    const urlContainer = document.getElementById('urlContainer');
+    const urlText = document.getElementById('urlText');
+    const copyButton = document.getElementById('copyButton');
+    
+    if (isEnabled) {
+      statusIndicator.classList.add('enabled');
+      statusIndicator.classList.remove('disabled');
+      statusText.textContent = 'Network access enabled';
+      portInfo.style.display = 'block';
+      urlContainer.style.display = 'block';
+      copyButton.style.display = 'block';
+      portNumber.textContent = port;
+      urlText.textContent = url;
+    } else {
+      statusIndicator.classList.add('disabled');
+      statusIndicator.classList.remove('enabled');
+      statusText.textContent = 'Network access disabled';
+      portInfo.style.display = 'none';
+      urlContainer.style.display = 'none';
+      copyButton.style.display = 'none';
+    }
+    
+    // Copy URL functionality
+    copyButton.addEventListener('click', () => {
+      navigator.clipboard.writeText(url).then(() => {
+        copyButton.textContent = 'Copied!';
+        setTimeout(() => {
+          copyButton.textContent = 'Copy URL';
+        }, 2000);
+      });
+    });
+    
+    // Close the window when OK is clicked
+    document.getElementById('okButton').addEventListener('click', () => {
+      window.close();
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        window.close();
+      }
+    });
+  </script>
+</body>
+</html>
